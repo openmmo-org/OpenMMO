@@ -17,6 +17,7 @@ import de.fiereu.openmmo.protocols.game.packets.InteractiveResponsePacket
 import de.fiereu.openmmo.protocols.game.packets.JoinGamePacket
 import de.fiereu.openmmo.protocols.game.packets.KeepAlivePacket
 import de.fiereu.openmmo.protocols.game.packets.LoadEntityPacket
+import de.fiereu.openmmo.protocols.game.packets.MapData
 import de.fiereu.openmmo.protocols.game.packets.MapTransitionAckPacket
 import de.fiereu.openmmo.protocols.game.packets.MapTransitionPacket
 import de.fiereu.openmmo.protocols.game.packets.MovementPacket
@@ -326,7 +327,20 @@ class GameProtocolHandler(
       log.info {
         "Sending LoadMap for ${info.positionRegionId}:${info.positionBankId}:${info.positionMapId}"
       }
+      // Login uses both flags for initial map load (interior start)
       event.respond(MapManager.createLoadMapPacket(map, reloadPlayer = true, deleteCache = true))
+      // Preload connected maps
+      for (conn in map.connections) {
+        val connectedMap = MapManager.getMap(1, conn.targetBank.toByte(), conn.targetMap.toByte())
+        if (connectedMap != null) {
+          event.ctx
+              .channel()
+              .writeAndFlush(
+                  MapManager.createLoadMapPacket(
+                      connectedMap, reloadPlayer = false, deleteCache = true))
+          log.info { "Preloaded connected map ${conn.targetBank}:${conn.targetMap}" }
+        }
+      }
     } else {
       log.warn {
         "Map not found for position ${info.positionRegionId}:${info.positionBankId}:${info.positionMapId}"
@@ -368,10 +382,12 @@ class GameProtocolHandler(
     }
     val info = stored.info
 
-    log.info { "Sending LoadEntity + 0x90 + RenderScreen for character '${info.name}'" }
+    log.info { "Sending LoadEntity + 0x90 for character '${info.name}'" }
     val facing = session.facingDirection
     val loadEntity = createLoadEntity(info, facing)
-    sendEntityWith90(event.ctx, loadEntity)
+    // Send LoadEntity + 0x90 first (RenderScreen(true) must come last)
+    event.ctx.channel().writeAndFlush(loadEntity)
+    send90(event.ctx, loadEntity.entityId, loadEntity.skin)
     spawnNpcsForMap(event.ctx, info.positionBankId.toInt(), info.positionMapId.toInt())
 
     // Multiplayer: broadcast LoadEntity of self to other players in same map,
@@ -394,20 +410,22 @@ class GameProtocolHandler(
     for (other in others) {
       val otherStored = CharacterStore.getCharacter(other.characterId ?: continue) ?: continue
       val otherParty = otherStored.pokemon
-      event.respond(
-          LoadEntityPacket(
-              entityId = other.characterId!!,
-              skin = SkinSet(),
-              name = otherStored.info.name,
-              regionId = other.regionId,
-              bankId = other.bankId,
-              mapId = other.mapId,
-              x = other.x.toInt(),
-              y = other.y.toInt(),
-              facing = other.facingDirection,
-              status = de.fiereu.openmmo.common.enums.EntityStatus.NONE,
-              hasFollower = otherParty.isNotEmpty(),
-              followerDexId = (otherParty.firstOrNull()?.dexId ?: 0).toShort()))
+      event.ctx
+          .channel()
+          .write(
+              LoadEntityPacket(
+                  entityId = other.characterId!!,
+                  skin = SkinSet(),
+                  name = otherStored.info.name,
+                  regionId = other.regionId,
+                  bankId = other.bankId,
+                  mapId = other.mapId,
+                  x = other.x.toInt(),
+                  y = other.y.toInt(),
+                  facing = other.facingDirection,
+                  status = de.fiereu.openmmo.common.enums.EntityStatus.NONE,
+                  hasFollower = otherParty.isNotEmpty(),
+                  followerDexId = (otherParty.firstOrNull()?.dexId ?: 0).toShort()))
     }
 
     // Broadcast LoadEntity of new player to all existing players in this map
@@ -428,6 +446,8 @@ class GameProtocolHandler(
     for (other in others) {
       other.channel.writeAndFlush(selfEntity)
     }
+    // RenderScreen(true) must be the last packet — real server sends it after all entities/NPCs
+    event.ctx.channel().writeAndFlush(RenderScreenPacket(true))
     log.info { "Player $charId spawned in bank=$bankId map=$mapId; ${others.size} others present" }
   }
 
@@ -547,8 +567,9 @@ class GameProtocolHandler(
     }
 
     // Real server warp sequence (from packets.db):
-    // MapTransition → RenderScreen(false) → LoadEntity → MapTransitionAck → LoadMap → LoadEntity →
-    // 0x90
+    // MapTransition → RenderScreen(false) → LoadEntity(0x05) → MapTransitionAck → LoadMap(×N) →
+    // [client sends RequestPlayer(0x05)] → LoadEntity + 0x90 + NpcSpawn + others' EntityInfo +
+    // RenderScreen(true)
     ctx.channel().writeAndFlush(MapTransitionPacket())
     ctx.channel().writeAndFlush(RenderScreenPacket(false))
     ctx.channel().writeAndFlush(createLoadEntity(newInfo))
@@ -556,71 +577,75 @@ class GameProtocolHandler(
 
     val map = MapManager.getMap(warp.targetRegionId, warp.targetBankId, warp.targetMapId)
     if (map != null) {
+      // Interior maps (no connections): flags=0x03 (both). Exterior: flags=0x01 (deleteCache only)
+      val isInterior = map.connections.isEmpty()
       ctx.channel()
           .writeAndFlush(
-              MapManager.createLoadMapPacket(map, reloadPlayer = true, deleteCache = true))
+              MapManager.createLoadMapPacket(map, reloadPlayer = isInterior, deleteCache = true))
+      // Preload connected maps — real server sends these AFTER MapTransitionAck with
+      // flags=02
+      // (reloadPlayer=true, deleteCache=false)
+      for (conn in map.connections) {
+        val connectedMap = MapManager.getMap(1, conn.targetBank.toByte(), conn.targetMap.toByte())
+        if (connectedMap != null) {
+          ctx.channel()
+              .writeAndFlush(
+                  MapManager.createLoadMapPacket(
+                      connectedMap, reloadPlayer = true, deleteCache = false))
+        }
+      }
     } else {
       log.warn {
         "Map not found for warp target ${warp.targetRegionId}:${warp.targetBankId}:${warp.targetMapId}"
       }
     }
 
-    // Post-LoadMap entity + skin (no RenderScreen(true) — client shows on its own)
-    ctx.channel().writeAndFlush(createLoadEntity(newInfo))
-    send90(ctx, newInfo.id, SkinSet())
-    spawnNpcsForMap(ctx, warp.targetBankId.toInt(), warp.targetMapId.toInt())
+    log.info { "Player $charId warped to bank=${warp.targetBankId} map=${warp.targetMapId}" }
+  }
 
-    // Multiplayer: broadcast LoadEntity to players on the new map
-    val newRegionId = warp.targetRegionId.toInt()
-    val newBankId = warp.targetBankId.toInt()
-    val newMapId = warp.targetMapId.toInt()
-    val stored2 = CharacterStore.getCharacter(charId)
-    val party = stored2?.pokemon ?: emptyList()
-    val selfEntity =
-        LoadEntityPacket(
-            entityId = charId,
-            skin = SkinSet(),
-            name = stored2?.info?.name ?: "Player",
-            regionId = newRegionId,
-            bankId = newBankId,
-            mapId = newMapId,
-            x = warp.targetX.toInt(),
-            y = warp.targetY.toInt(),
-            facing = session?.facingDirection ?: Direction.DOWN,
-            status = de.fiereu.openmmo.common.enums.EntityStatus.NONE,
-            hasFollower = party.isNotEmpty(),
-            followerDexId = (party.firstOrNull()?.dexId ?: 0).toShort())
-    val newMapPlayers = SessionManager.getOthersInMap(charId, newRegionId, newBankId, newMapId)
-    for (other in newMapPlayers) {
-      other.channel.write(selfEntity)
+  private fun edgeTransition(
+      ctx: ChannelHandlerContext,
+      charId: Long,
+      connection: MapData.GbaConnection,
+      targetX: Byte,
+      targetY: Byte,
+      direction: Direction
+  ) {
+    val targetBank = connection.targetBank.toByte()
+    val targetMap = connection.targetMap.toByte()
+    val map = MapManager.getMap(1, targetBank, targetMap) ?: return
+    // Update session + store to new map and position
+    val session = SessionManager.getSessionByCharacterId(charId)
+    session?.bankId = targetBank.toInt()
+    session?.mapId = targetMap.toInt()
+    session?.x = targetX.toShort()
+    session?.y = targetY.toShort()
+    CharacterStore.updatePosition(charId, targetX.toShort(), targetY.toShort())
+    // Real server sends LoadMap (flags=00) during edge transition (capture ID 108)
+    ctx.channel()
+        .writeAndFlush(
+            MapManager.createLoadMapPacket(map, reloadPlayer = false, deleteCache = false))
+    // Preload connected maps of the target map (deep preload — real server sends these
+    // at ID 108)
+    for (conn in map.connections) {
+      val nextMap = MapManager.getMap(1, conn.targetBank.toByte(), conn.targetMap.toByte())
+      if (nextMap != null) {
+        ctx.channel()
+            .writeAndFlush(
+                MapManager.createLoadMapPacket(nextMap, reloadPlayer = false, deleteCache = false))
+      }
     }
-    for (other in newMapPlayers) {
-      other.channel.flush()
-    }
-    // Send LoadEntity of new-map players to the warping player (batch without flushing)
-    for (other in newMapPlayers) {
-      val otherStored = CharacterStore.getCharacter(other.characterId ?: continue) ?: continue
-      val otherParty = otherStored.pokemon
-      ctx.channel()
-          .write(
-              LoadEntityPacket(
-                  entityId = other.characterId!!,
-                  skin = SkinSet(),
-                  name = otherStored.info.name,
-                  regionId = other.regionId,
-                  bankId = other.bankId,
-                  mapId = other.mapId,
-                  x = other.x.toInt(),
-                  y = other.y.toInt(),
-                  facing = other.facingDirection,
-                  status = de.fiereu.openmmo.common.enums.EntityStatus.NONE,
-                  hasFollower = otherParty.isNotEmpty(),
-                  followerDexId = (otherParty.firstOrNull()?.dexId ?: 0).toShort()))
-    }
-    ctx.channel().flush()
-    log.info {
-      "Player $charId warped to bank=$newBankId map=$newMapId; ${newMapPlayers.size} others present"
-    }
+    // Spawn NPCs of the new map
+    spawnNpcsForMap(ctx, targetBank.toInt(), targetMap.toInt())
+    // Send EntityMove to the moving player (movement confirmation) and broadcast to
+    // others
+    val seq = sequenceCounter.incrementAndGet().toByte()
+    val movePkt =
+        EntityMovePacket(
+            entityId = charId, x = targetX, y = targetY, direction = direction, seq = seq)
+    ctx.channel().writeAndFlush(movePkt)
+    broadcastExcept(ctx.channel(), movePkt)
+    log.info { "Player $charId edge-transitioned to bank=$targetBank map=$targetMap" }
   }
 
   private fun sendEntityWith90(ctx: ChannelHandlerContext, loadEntity: LoadEntityPacket) {
@@ -710,22 +735,8 @@ class GameProtocolHandler(
     val prevY = prevStored?.info?.positionY?.toInt()
     val isWallBump = prevX == msg.x && prevY == msg.y
 
-    CharacterStore.updatePosition(charId, msg.x.toShort(), msg.y.toShort())
-
-    // Update session position for multiplayer tracking
-    session.x = msg.x.toShort()
-    session.y = msg.y.toShort()
-
-    val seq = sequenceCounter.incrementAndGet().toByte()
-    broadcastExcept(
-        event.ctx.channel(),
-        EntityMovePacket(
-            entityId = charId,
-            x = msg.x.toByte(),
-            y = msg.y.toByte(),
-            direction = msg.direction,
-            seq = seq))
-
+    // Check for warps and edge transitions BEFORE updating position / broadcasting EntityMove.
+    // Real server sends LoadMap *before* EntityMove for edge transitions.
     val stored = CharacterStore.getCharacter(charId)
     if (stored != null) {
       val currentMap =
@@ -736,7 +747,7 @@ class GameProtocolHandler(
         if (session.justWarped) {
           session.justWarped = false
         } else {
-          // Direct warp: player stepped onto a warp tile (optional facing direction check)
+          // Direct warp: player stepped onto a warp tile
           val warp =
               currentMap.warps.find { w ->
                 w.x == msg.x &&
@@ -752,7 +763,6 @@ class GameProtocolHandler(
           }
 
           // Adjacent warp: player is standing in front of a door tile, facing it
-          // (matches real server behavior from packets.db)
           val adjX =
               msg.x +
                   when (msg.direction) {
@@ -782,61 +792,76 @@ class GameProtocolHandler(
           }
         }
 
-        // Edge transition: player walked off the map edge (out of bounds)
-        val gbaDirection =
-            when {
-              msg.x < 0 -> 3 // West
-              msg.x >= currentMap.width -> 4 // East
-              msg.y < 0 -> 2 // North
-              msg.y >= currentMap.height -> 1 // South
-              else -> null
-            }
-        if (gbaDirection != null) {
-          val connection = currentMap.connections.find { it.direction == gbaDirection }
-          if (connection != null) {
-            val targetMap =
-                MapManager.getMap(1, connection.targetBank.toByte(), connection.targetMap.toByte())
-            if (targetMap != null) {
-              val targetX: Int
-              val targetY: Int
-              when (gbaDirection) {
-                3 -> {
-                  targetX = targetMap.width - 1
-                  targetY = msg.y.coerceIn(0, targetMap.height - 1)
+        // Map edge transition: client pre-computes position on connected map.
+        // Detect by checking for an impossible single-step distance from the
+        // previous position, then use prevPos to identify the edge.
+        if (prevX != null && prevY != null && !isWallBump) {
+          val dx = kotlin.math.abs(msg.x - prevX)
+          val dy = kotlin.math.abs(msg.y - prevY)
+          if (dx > 1 || dy > 1) {
+            val gbaDirection =
+                when {
+                  prevY == 0 -> 2 // North
+                  prevY == currentMap.height - 1 -> 1 // South
+                  prevX == 0 -> 3 // West
+                  prevX == currentMap.width - 1 -> 4 // East
+                  else -> null
                 }
-                4 -> {
-                  targetX = 0
-                  targetY = msg.y.coerceIn(0, targetMap.height - 1)
+            if (gbaDirection != null) {
+              val connection = currentMap.connections.find { it.direction == gbaDirection }
+              if (connection != null) {
+                val targetMap =
+                    MapManager.getMap(
+                        1, connection.targetBank.toByte(), connection.targetMap.toByte())
+                if (targetMap != null) {
+                  val targetX =
+                      when (gbaDirection) {
+                        3 -> targetMap.width - 1
+                        4 -> 0
+                        else -> msg.x.coerceIn(0, targetMap.width - 1)
+                      }
+                  val targetY =
+                      when (gbaDirection) {
+                        1 -> 0
+                        2 -> targetMap.height - 1
+                        else -> msg.y.coerceIn(0, targetMap.height - 1)
+                      }
+                  log.info {
+                    "MAP TRANSITION prev=($prevX, $prevY) dir=${msg.direction} → bank=${connection.targetBank} map=${connection.targetMap} ($targetX, $targetY)"
+                  }
+                  edgeTransition(
+                      event.ctx,
+                      charId,
+                      connection,
+                      targetX.toByte(),
+                      targetY.toByte(),
+                      msg.direction)
+                  return
                 }
-                2 -> {
-                  targetX = msg.x.coerceIn(0, targetMap.width - 1)
-                  targetY = targetMap.height - 1
-                }
-                1 -> {
-                  targetX = msg.x.coerceIn(0, targetMap.width - 1)
-                  targetY = 0
-                }
-                else -> return
               }
-              val edgeWarp =
-                  WarpTile(
-                      x = msg.x.coerceIn(0, currentMap.width - 1),
-                      y = msg.y.coerceIn(0, currentMap.height - 1),
-                      targetRegionId = 1,
-                      targetBankId = connection.targetBank.toByte(),
-                      targetMapId = connection.targetMap.toByte(),
-                      targetX = targetX,
-                      targetY = targetY,
-                  )
-              log.info {
-                "EDGE TRANSITION at (${msg.x}, ${msg.y}) dir=${msg.direction} → bank=${connection.targetBank} map=${connection.targetMap} ($targetX, $targetY)"
-              }
-              warpCharacter(event.ctx, charId, edgeWarp)
-              return
             }
           }
         }
       }
+    }
+
+    // No transition: normal movement update + EntityMove broadcast
+    CharacterStore.updatePosition(charId, msg.x.toShort(), msg.y.toShort())
+    session.x = msg.x.toShort()
+    session.y = msg.y.toShort()
+    if (!isWallBump) {
+      val seq = sequenceCounter.incrementAndGet().toByte()
+      val movePkt =
+          EntityMovePacket(
+              entityId = charId,
+              x = msg.x.toByte(),
+              y = msg.y.toByte(),
+              direction = msg.direction,
+              seq = seq)
+      // Send EntityMove to the moving player (movement confirmation) and broadcast to
+      // others
+      event.ctx.channel().writeAndFlush(movePkt)
+      broadcastExcept(event.ctx.channel(), movePkt)
     }
   }
 
@@ -850,14 +875,15 @@ class GameProtocolHandler(
 
     val seq = sequenceCounter.incrementAndGet().toByte()
     val stored = CharacterStore.getCharacter(charId) ?: return
-    broadcastExcept(
-        event.ctx.channel(),
+    val movePkt =
         EntityMovePacket(
             entityId = charId,
             x = stored.info.positionX.toByte(),
             y = stored.info.positionY.toByte(),
             direction = msg.direction,
-            seq = seq))
+            seq = seq)
+    event.ctx.channel().writeAndFlush(movePkt)
+    broadcastExcept(event.ctx.channel(), movePkt)
   }
 
   fun onEntityInteract(event: PacketEvent<EntityInteractPacket>) {
