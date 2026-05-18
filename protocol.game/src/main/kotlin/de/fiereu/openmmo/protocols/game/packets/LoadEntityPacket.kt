@@ -31,7 +31,7 @@ data class LoadEntityPacket(
 class LoadEntitySerializer : PacketSerializer<LoadEntityPacket> {
   override fun serialize(packet: LoadEntityPacket, buffer: ByteBuf) =
       buffer.run {
-        writeLong(packet.entityId)
+        writeLongLE(packet.entityId)
         writeByte(0)
         writeSkinsLE(packet.skin)
         writeUtf16LE(packet.name)
