@@ -20,7 +20,7 @@ abstract class ProtocolHandler(
   serverConfig: ServerConfig
 ) : ChannelDuplexHandler() {
 
-  private val compressor = Compressor(serverConfig)
+  protected val compressor = Compressor(serverConfig)
 
   override fun channelRead(ctx: ChannelHandlerContext, msg: Any) {
     if (msg !is ByteBuf) {
@@ -34,10 +34,13 @@ abstract class ProtocolHandler(
         return
       }
       val opcodeValue = msg.readUnsignedByte().toUByte()
+      val remainingBytes = msg.readableBytes()
+
+      log.debug { "<< RX $opcodeValue (${remainingBytes}b) from ${ctx.channel().remoteAddress()}" }
 
       val deserializer = protocol.getDeserializer(opcodeValue)
       if (deserializer == null) {
-        log.warn { "No deserializer found for ${PacketDirection.CLIENT_TO_SERVER} opcode $opcodeValue" }
+        log.warn { "No deserializer found for ${PacketDirection.CLIENT_TO_SERVER} opcode $opcodeValue (${remainingBytes}b remaining)" }
         return
       }
 
@@ -52,7 +55,7 @@ abstract class ProtocolHandler(
        */
       onPacketReceived(PacketEvent(ctx, packetData))
     } catch (e: Exception) {
-      log.error(e) { "Error processing packet" }
+      log.error(e) { "Error processing packet: ${e.message}" }
     } finally {
       msg.release()
     }
@@ -84,22 +87,40 @@ abstract class ProtocolHandler(
        */
       if (!protocol.compressed) {
         serializer.serializeObject(msg, buffer)
+        log.debug { ">> TX $opcode (${buffer.readableBytes() - 1}b payload)" }
       } else {
         val uncompressedBuffer = Unpooled.buffer()
         serializer.serializeObject(msg, uncompressedBuffer)
-        buffer.writeBytes(
-          compressor.compress(uncompressedBuffer)
-        )
+        val uncompressedSize = uncompressedBuffer.readableBytes()
+        val compressed = compressor.compress(uncompressedBuffer)
+        buffer.writeBytes(compressed)
+        log.debug { ">> TX $opcode (payload: ${uncompressedSize}b -> ${compressed.readableBytes()}b compressed)" }
       }
 
       ctx.write(buffer, promise)
     } catch (e: Exception) {
-      log.error(e) { "Error processing packet" }
+      log.error(e) { "Error processing packet: ${e.message}" }
     }
   }
 
   override fun channelActive(ctx: ChannelHandlerContext) {
     onActive(ctx)
+  }
+
+  protected fun sendRaw(ctx: ChannelHandlerContext, opcode: UByte, data: ByteArray) {
+    val buffer = ctx.alloc().buffer()
+    buffer.writeByte(opcode.toInt())
+    val dataBuf = Unpooled.wrappedBuffer(data)
+    buffer.writeBytes(compressor.compress(dataBuf))
+    ctx.write(buffer)
+  }
+
+  protected fun sendRawAndFlush(ctx: ChannelHandlerContext, opcode: UByte, data: ByteArray) {
+    val buffer = ctx.alloc().buffer()
+    buffer.writeByte(opcode.toInt())
+    val dataBuf = Unpooled.wrappedBuffer(data)
+    buffer.writeBytes(compressor.compress(dataBuf))
+    ctx.writeAndFlush(buffer)
   }
 
   abstract fun onPacketReceived(event: PacketEvent<*>)

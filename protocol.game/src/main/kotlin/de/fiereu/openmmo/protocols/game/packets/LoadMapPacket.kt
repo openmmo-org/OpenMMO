@@ -36,6 +36,13 @@ sealed interface MapData {
   data class NdsMapData(val lighting: Lighting, val weather: Weather, val mapType: MapType) :
       MapData
 
+  data class GbaConnection(
+      val direction: Int,
+      val unknown: Int,
+      val targetBank: Int,
+      val targetMap: Int,
+  )
+
   data class GbaMapData(
       val width: Int,
       val height: Int,
@@ -43,11 +50,14 @@ sealed interface MapData {
       val paletteIdx2: Int,
       val borderWidth: Int,
       val borderHeight: Int,
+      val unknownShort: Int = 0,
+      val unknownByte: Int = 0,
       val borderTiles: List<Tile2D>,
       val lighting: Lighting,
       val weather: Weather,
       val mapType: MapType,
-      val encounterType: EncounterType
+      val encounterType: EncounterType,
+      val connections: List<GbaConnection> = emptyList(),
   ) : MapData {
     init {
       require(borderWidth * borderHeight == borderTiles.size) {
@@ -93,8 +103,8 @@ class LoadMapPacketSerializer : PacketSerializer<LoadMapPacket> {
           writeIntLE(packet.mapData.paletteIdx2)
           writeByte(packet.mapData.borderWidth)
           writeByte(packet.mapData.borderHeight)
-          writeShortLE(0)
-          writeByte(0)
+          writeShortLE(packet.mapData.unknownShort)
+          writeByte(packet.mapData.unknownByte)
           writeByte(packet.mapData.lighting.ordinal)
           writeByte(packet.mapData.weather.ordinal)
           writeByte(packet.mapData.mapType.ordinal)
@@ -112,13 +122,13 @@ class LoadMapPacketSerializer : PacketSerializer<LoadMapPacket> {
             writeBytes(unknown.gzipCompress())
           }
 
-          val connectionCount = 0
-          writeByte(0)
-          for (i in 0 until connectionCount) {
-            writeByte(0)
-            writeIntLE(0)
-            writeByte(0)
-            writeByte(0)
+          val connections = packet.mapData.connections
+          writeByte(connections.size)
+          for (conn in connections) {
+            writeByte(conn.direction)
+            writeIntLE(conn.unknown)
+            writeByte(conn.targetBank)
+            writeByte(conn.targetMap)
           }
 
           val hasUnknown2 = false
@@ -166,8 +176,8 @@ class LoadMapPacketDeserializer : PacketDeserializer<LoadMapPacket> {
               val paletteIdx2 = buffer.readIntLE()
               val borderWidth = buffer.readByte().toInt()
               val borderHeight = buffer.readByte().toInt()
-              buffer.readShortLE()
-              buffer.readByte()
+              val unknownShort = buffer.readShortLE().toInt()
+              val unknownByte = buffer.readByte().toInt()
               val lighting = Lighting.entries[buffer.readByte().toInt()]
               val weather = Weather.entries[buffer.readByte().toInt()]
               val mapType = MapType.entries[buffer.readByte().toInt()]
@@ -187,11 +197,13 @@ class LoadMapPacketDeserializer : PacketDeserializer<LoadMapPacket> {
               }
 
               val connectionCount = buffer.readByte().toInt()
+              val connections = mutableListOf<MapData.GbaConnection>()
               for (i in 0 until connectionCount) {
-                buffer.readByte()
-                buffer.readIntLE()
-                buffer.readByte()
-                buffer.readByte()
+                val direction = buffer.readByte().toInt()
+                val unknown = buffer.readIntLE()
+                val targetBank = buffer.readByte().toInt()
+                val targetMap = buffer.readByte().toInt()
+                connections.add(MapData.GbaConnection(direction, unknown, targetBank, targetMap))
               }
 
               val hasUnknown2 = buffer.readBoolean()
@@ -207,11 +219,14 @@ class LoadMapPacketDeserializer : PacketDeserializer<LoadMapPacket> {
                   paletteIdx2,
                   borderWidth,
                   borderHeight,
+                  unknownShort,
+                  unknownByte,
                   borderTiles,
                   lighting,
                   weather,
                   mapType,
-                  encounterType)
+                  encounterType,
+                  connections = connections)
             }
 
         LoadMapPacket(reloadPlayer, deleteCache, regionId, bankId, mapId, mapData)

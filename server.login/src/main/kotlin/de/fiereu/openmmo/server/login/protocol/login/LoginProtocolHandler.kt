@@ -11,6 +11,7 @@ import de.fiereu.openmmo.protocols.tls.packets.JoinGameServerPacket
 import de.fiereu.openmmo.protocols.tls.packets.LoginRequestPacket
 import de.fiereu.openmmo.protocols.tls.packets.RequestGameServerListPacket
 import de.fiereu.openmmo.server.config.ServerConfig
+import de.fiereu.openmmo.server.login.auth.UserService
 import de.fiereu.openmmo.server.login.protocol.login.ext.respondForAuthedUser
 import de.fiereu.openmmo.server.login.protocol.login.ext.respondTo
 import de.fiereu.openmmo.server.login.protocol.login.ext.respondWithServers
@@ -28,6 +29,7 @@ class LoginProtocolHandler(
     protocol: Protocol,
     serverConfig: ServerConfig,
     private val coroutineScope: CoroutineScope,
+    private val userService: UserService,
 ) : ProtocolHandler(protocol, serverConfig) {
 
   override fun onActive(ctx: ChannelHandlerContext) {
@@ -48,9 +50,22 @@ class LoginProtocolHandler(
   }
 
   fun onLoginRequest(event: PacketEvent<LoginRequestPacket>) {
-    log.info { "Received login request for user '${event.packet.username}'" }
-    // TODO proper authentication
-    event.respondWithState(LoginState.AUTHED)
+    val username = event.packet.username
+    val method = event.packet.method
+    if (method !is de.fiereu.openmmo.protocols.tls.packets.PasswordLogin) {
+      log.warn { "Unsupported login method: ${method::class.simpleName}" }
+      event.respondWithState(LoginState.INVALID_PASSWORD)
+      return
+    }
+    val password = method.password
+    log.info { "Login attempt for user '$username'" }
+    val result = userService.authenticate(username, password)
+    if (result.state != LoginState.AUTHED) {
+      log.warn { "Failed login for user '$username': ${result.state}" }
+    } else {
+      log.info { "Successful login for user '$username' (userId=${result.userId})" }
+    }
+    event.respondWithState(result.state)
   }
 
   fun onGameServerListRequest(event: PacketEvent<RequestGameServerListPacket>) {

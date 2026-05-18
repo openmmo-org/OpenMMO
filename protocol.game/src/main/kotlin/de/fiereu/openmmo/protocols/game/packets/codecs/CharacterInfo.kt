@@ -54,7 +54,7 @@ fun ByteBuf.writeCharacterInfoLE(useLong: Boolean, characterInfo: CharacterInfo)
   writeShortLE(characterInfo.lureItemId.toInt())
   writeShortLE(characterInfo.lureLeft.toInt())
   val bytes = ByteArray(0)
-  writeByte(bytes.size)
+  writeShortLE(bytes.size)
   writeBytes(bytes)
 }
 
@@ -104,7 +104,7 @@ fun ByteBuf.readCharacterInfoLE(useLong: Boolean): CharacterInfo = let {
   readByte()
   val lureItemId = readShortLE()
   val lureLeft = readShortLE()
-  val arraySize = readByte().toInt()
+  val arraySize = readShortLE().toInt()
   if (arraySize > 0) {
     val bytes = ByteArray(arraySize)
     readBytes(bytes)

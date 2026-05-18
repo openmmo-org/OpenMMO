@@ -18,8 +18,8 @@ class SelectCharacterSerializer : PacketSerializer<SelectCharacterPacket> {
 class SelectCharacterDeserializer : PacketDeserializer<SelectCharacterPacket> {
   override fun deserialize(buffer: ByteBuf): SelectCharacterPacket =
       buffer.run {
-        val characterId = buffer.readLong()
-        val characterIdHash = buffer.readLong()
+        val characterId = buffer.readLongLE()
+        val characterIdHash = buffer.readLongLE()
         return SelectCharacterPacket(characterId, characterIdHash)
       }
 }

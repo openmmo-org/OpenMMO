@@ -6,6 +6,7 @@ import de.fiereu.openmmo.server.config.ServerConfig
 import de.fiereu.openmmo.server.config.TlsConfig
 import de.fiereu.openmmo.server.io.resource
 import de.fiereu.openmmo.server.keys.KeyLoader
+import de.fiereu.openmmo.server.login.auth.InMemoryUserStore
 import de.fiereu.openmmo.server.login.protocol.login.LoginProtocolHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,6 +16,7 @@ fun main() {
   val serverConfig = ServerConfig(port = 2106)
   val tlsConfig = TlsConfig(checksumSize = 16)
   val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+  val userService = InMemoryUserStore()
   val server =
       ServerBuilder.create()
           .withCoroutineScope(coroutineScope)
@@ -23,7 +25,7 @@ fun main() {
           .withPublicKey(KeyLoader.loadPemECPublicKey(resource("game.public.pem")))
           .withPrivateKey(KeyLoader.loadPemECPrivateKey(resource("game.private.pem")))
           .withChannelHandlerProvider {
-            LoginProtocolHandler(LoginServerProtocol(), serverConfig, coroutineScope)
+            LoginProtocolHandler(LoginServerProtocol(), serverConfig, coroutineScope, userService)
           }
           .build()
   server.start()
