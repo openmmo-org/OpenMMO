@@ -41,77 +41,55 @@ function resolveMap(name) {
   return mapToAddress[name] || mapNameLookup[normalizeMapName(name)];
 }
 
-// ---- Known palette mappings from capture ----
-// tileset_pair_key (primary_secondary) -> [paletteIdx1, paletteIdx2]
-const knownPalettes = {
-  'gTileset_Building_gTileset_BrendansMaysHouse': [116, 142],
-  'gTileset_Building_gTileset_Lab': [116, 143],
-  'gTileset_Building_gTileset_ContestHall': [106, 123],
-  'gTileset_Building_gTileset_GenericBuilding': [98, 128],
-  'gTileset_Building_gTileset_PlayersRoom': [100, 134],
-  'gTileset_Building_gTileset_PokemonCenter': [87, 121],
-  'gTileset_Building_gTileset_PokemonCenterHoenn': [87, 121],
-  'gTileset_Building_gTileset_PokemonCenterContest': [87, 121],
-  'gTileset_Building_gTileset_MauvilleGym': [84, 120],
-  'gTileset_Building_gTileset_DewfordGym': [90, 124],
-  'gTileset_Building_gTileset_RustboroGym': [82, 118],
-  'gTileset_Building_gTileset_LilycoveContestLobby': [104, 136],
-  'gTileset_Building_gTileset_MossdeepGym': [108, 138],
-  'gTileset_Building_gTileset_SootopolisGym': [110, 140],
-  'gTileset_Building_gTileset_SlateportGym': [86, 122],
-  'gTileset_Building_gTileset_FortreeGym': [94, 126],
-  'gTileset_Building_gTileset_LavaridgeGym': [92, 128],
-  'gTileset_Building_gTileset_ShoalCaveGym': [96, 130],
-  'gTileset_Building_gTileset_Cave': [82, 144],
-  'gTileset_Building_gTileset_SeaCave': [82, 144],
-  'gTileset_Building_gTileset_OceanicMuseum': [102, 135],
-  'gTileset_Building_gTileset_ArtisanCave': [84, 146],
-  'gTileset_General_gTileset_Petalburg': [100, 101],
-  'gTileset_General_gTileset_Route104': [92, 113],
-  'gTileset_General_gTileset_Route110': [92, 115],
-  'gTileset_General_gTileset_Route119': [94, 117],
-  'gTileset_General_gTileset_Fortree': [94, 126],
-  'gTileset_General_gTileset_Mauville': [84, 120],
-  'gTileset_General_gTileset_Slateport': [86, 122],
-  'gTileset_General_gTileset_Lilycove': [104, 136],
-  'gTileset_General_gTileset_Mossdeep': [108, 138],
-  'gTileset_General_gTileset_Pacifidlog': [112, 148],
-  'gTileset_General_gTileset_Sootopolis': [110, 140],
-  'gTileset_General_gTileset_EverGrande': [96, 130],
-  'gTileset_General_gTileset_Rustboro': [82, 118],
-  'gTileset_General_gTileset_Dewford': [90, 124],
-  'gTileset_General_gTileset_Lavaridge': [92, 128],
-  'gTileset_General_gTileset_Fallarbor': [88, 126],
-  'gTileset_General_gTileset_Verdanturf': [96, 132],
-  'gTileset_General_gTileset_PacifidlogWait': [112, 148],
-  'gTileset_General_gTileset_BattleFrontier': [114, 150],
-  'gTileset_General_gTileset_Oldale': [98, 128],
-  'gTileset_Cave_gTileset_Cave': [82, 144],
-  'gTileset_Cave_gTileset_SeaCave': [82, 144],
-  'gTileset_Cave_gTileset_IcyCave': [80, 140],
-  'gTileset_Cave_gTileset_Desert': [88, 146],
-  'gTileset_Cave_gTileset_Underwater': [86, 148],
-  'gTileset_Cave_gTileset_GraniteCave': [84, 146],
-  'gTileset_Cave_gTileset_MagmaHideout': [85, 147],
-  'gTileset_Cave_gTileset_AquaHideout': [86, 148],
-};
-
-// Map type -> default palette ranges
-function guessPalette(primaryTileset, secondaryTileset, mapType) {
-  const key = `${primaryTileset}_${secondaryTileset}`;
-  if (knownPalettes[key]) return knownPalettes[key];
-  // Assign unique IDs based on tileset names (stable hash-like)
-  let h1 = 0, h2 = 0;
-  const s = key;
-  for (let i = 0; i < s.length; i++) {
-    h1 = (h1 * 31 + s.charCodeAt(i)) & 0xFFFF;
-    h2 = (h2 * 17 + s.charCodeAt(i)) & 0xFFFF;
+// ---- Music ID lookup (from songs.h) ----
+const musicIds = {};
+(function buildMusicTable() {
+  const songsH = fs.readFileSync(`${POKEEMERALD}/include/constants/songs.h`, 'utf-8');
+  for (const line of songsH.split('\n')) {
+    const m = line.match(/^#define\s+(MUS_\w+)\s+(\d+)/);
+    if (m) musicIds[m[1]] = parseInt(m[2], 10);
   }
-  return [80 + (h1 % 60), 80 + (h2 % 60)];
+})();
+
+// ---- MAPSEC index lookup (from region_map_sections.json) ----
+const mapsecIds = {};
+(function buildMapsecTable() {
+  const sectionsJson = JSON.parse(fs.readFileSync(`${POKEEMERALD}/src/data/region_map/region_map_sections.json`, 'utf-8'));
+  const sections = sectionsJson.map_sections || [];
+  for (let i = 0; i < sections.length; i++) {
+    mapsecIds[sections[i].id] = i;
+  }
+})();
+
+// ---- Tileset palette index lookup (from headers.h order, starting at 100) ----
+const tilesetPaletteIds = {};
+(function buildTilesetPaletteTable() {
+  const headersH = fs.readFileSync(`${POKEEMERALD}/src/data/tilesets/headers.h`, 'utf-8');
+  let index = 0;
+  for (const line of headersH.split('\n')) {
+    const m = line.match(/^const struct Tileset\s+(gTileset_\w+)\s*=/);
+    if (m) {
+      tilesetPaletteIds[m[1]] = 100 + index;
+      index++;
+    }
+  }
+})();
+
+function getPalette(primaryTileset, secondaryTileset) {
+  const pal1 = tilesetPaletteIds[primaryTileset];
+  const pal2 = tilesetPaletteIds[secondaryTileset];
+  if (pal1 !== undefined && pal2 !== undefined) return [pal1, pal2];
+  // Fallback for unknown tilesets
+  return [80, 82];
+}
+
+// Map type -> default palette ranges (fallback only)
+function guessPalette(primaryTileset, secondaryTileset, mapType) {
+  return getPalette(primaryTileset, secondaryTileset);
 }
 
 // ---- Direction mapping ----
-const dirMap = { south: 1, north: 2, west: 3, east: 4 };
+const dirMap = { down: 1, up: 2, left: 3, right: 4, dive: 5, emerge: 6 };
 
 // Movement type name -> value lookup
 const movementTypes = {
@@ -213,8 +191,14 @@ const gfxIds = {};
 
 const facingDirection = { south: 0, north: 1, west: 2, east: 3 };
 function movementToFaceDir(movementType) {
-  // Extract initial facing direction from movement type
-  if (movementType >= 7 && movementType <= 10) return movementType - 7; // FACE_UP=7→1, FACE_DOWN=8→0, FACE_LEFT=9→2, FACE_RIGHT=10→3
+  // Extract initial facing direction from movement type.
+  // GBA facing values: DOWN=0, UP=1, LEFT=2, RIGHT=3
+  if (movementType >= 7 && movementType <= 10) {
+    // FACE_UP=7→UP(1), FACE_DOWN=8→DOWN(0), FACE_LEFT=9→LEFT(2), FACE_RIGHT=10→RIGHT(3)
+    if (movementType == 7) return 1;  // UP → north
+    if (movementType == 8) return 0;  // DOWN → south
+    return movementType - 7;          // 9→2 (west), 10→3 (east)
+  }
   if (movementType >= 64 && movementType <= 67) return movementType - 64; // WALK_IN_PLACE_DOWN=64→0, etc.
   if (movementType >= 68 && movementType <= 71) return movementType - 68; // JOG_IN_PLACE_DOWN=68→0, etc.
   if (movementType >= 72 && movementType <= 75) return movementType - 72; // RUN_IN_PLACE_DOWN=72→0, etc.
@@ -255,7 +239,7 @@ const lightingMap = {
 };
 const mapTypeMap = {
   MAP_TYPE_INDOOR: 'MapType.INSIDE',
-  MAP_TYPE_TOWN: 'MapType.CITY',
+  MAP_TYPE_TOWN: 'MapType.UNKNOWN_0x01',
   MAP_TYPE_CITY: 'MapType.CITY',
   MAP_TYPE_ROUTE: 'MapType.ROUTE',
   MAP_TYPE_UNDERGROUND: 'MapType.UNDERGROUND',
@@ -265,8 +249,8 @@ const mapTypeMap = {
 };
 const encounterMap = {
   MAP_TYPE_INDOOR: 'EncounterType.RANDOM',
-  MAP_TYPE_TOWN: 'EncounterType.GYM_STYLE',
-  MAP_TYPE_CITY: 'EncounterType.GYM_STYLE',
+  MAP_TYPE_TOWN: 'EncounterType.RANDOM',
+  MAP_TYPE_CITY: 'EncounterType.RANDOM',
   MAP_TYPE_ROUTE: 'EncounterType.RANDOM',
   MAP_TYPE_UNDERGROUND: 'EncounterType.RANDOM',
   MAP_TYPE_UNDERWATER: 'EncounterType.UNKNOWN_0x03',
@@ -309,12 +293,11 @@ for (let gi = 0; gi < groupOrder.length; gi++) {
     // Palette
     const [pal1, pal2] = guessPalette(primaryTileset, secondaryTileset, mapType);
 
-    // Per-map overrides (from real server captures)
-    let mapUnknownShort = 405;
-    let mapUnknownByte = 0;
-    if (mapJson.id === 'MAP_LITTLEROOT_TOWN_PROFESSOR_BIRCHS_LAB') {
-      mapUnknownShort = 383;
-    }
+    // Music → unknownShort, MAPSEC → unknownByte
+    const musicStr = mapJson.music || 'MUS_NONE';
+    const mapsecStr = mapJson.region_map_section || 'MAPSEC_NONE';
+    const mapUnknownShort = musicIds[musicStr] !== undefined ? musicIds[musicStr] : 405;
+    const mapUnknownByte = mapsecIds[mapsecStr] !== undefined ? mapsecIds[mapsecStr] : 0;
 
     // Border tiles
     let borderTilesStr = 'listOf(Tile2D(8, 0), Tile2D(8, 0), Tile2D(8, 0), Tile2D(8, 0))';
@@ -328,12 +311,16 @@ for (let gi = 0; gi < groupOrder.length; gi++) {
     // Connections
     const connections = mapJson.connections || [];
     const connStrs = connections.map(c => {
-      const dir = dirMap[c.direction] || 2;
+      const dir = dirMap[c.direction];
+      if (dir === undefined) {
+        throw new Error(`Unknown connection direction "${c.direction}" in ${mapName}`);
+      }
       const addr = resolveMap(c.map);
       if (!addr) return null;
       const bank = addr.groupIndex + 50;
       const mapNum = addr.mapIndex;
-      return `GbaConnection(direction = ${dir}, unknown = 0, targetBank = ${bank}, targetMap = ${mapNum})`;
+      const offset = Number.isInteger(c.offset) ? c.offset : parseInt(c.offset || 0, 10) || 0;
+      return `GbaConnection(direction = ${dir}, unknown = ${offset}, targetBank = ${bank}, targetMap = ${mapNum})`;
     }).filter(Boolean);
 
     // Warps

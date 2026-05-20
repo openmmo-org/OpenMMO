@@ -87,6 +87,8 @@ object CharacterStore {
       characterId: Long,
       x: Short,
       y: Short,
+      bankId: Byte? = null,
+      mapId: Byte? = null,
   ) {
     val stored = characters[characterId] ?: return
     val oldInfo = stored.info
@@ -94,6 +96,8 @@ object CharacterStore {
         oldInfo.copy(
             positionX = x,
             positionY = y,
+            positionBankId = bankId ?: oldInfo.positionBankId,
+            positionMapId = mapId ?: oldInfo.positionMapId,
         )
     characters[characterId] = stored.copy(info = newInfo)
   }
