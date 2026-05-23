@@ -69,11 +69,15 @@ class WarpService(
       }
     }
 
+    val playerZ =
+        destMap?.warps?.find { it.x == warp.targetX && it.y == warp.targetY }?.elevation
+            ?: warp.targetElevation
+
     log.info {
       "WARP EXIT: source=${sourceMap?.bankId}:${sourceMap?.mapId} ${sourceMap?.mapType} " +
           "dest=${destMap?.bankId}:${destMap?.mapId} ${destMap?.mapType} " +
           "target=(${warp.targetX},${warp.targetY}) final=($offsetX,$offsetY) " +
-          "facing=$warpFacing autoStep=$shouldAutoStepOffWarp"
+          "z=$playerZ facing=$warpFacing autoStep=$shouldAutoStepOffWarp"
     }
 
     val newInfo =
@@ -110,7 +114,7 @@ class WarpService(
     // Real server warp sequence (from packets.db):
     ctx.channel().writeAndFlush(MapTransitionPacket())
     ctx.channel().writeAndFlush(RenderScreenPacket(false))
-    ctx.channel().writeAndFlush(mapLoadService.createLoadEntity(newInfo, warpFacing))
+    ctx.channel().writeAndFlush(mapLoadService.createLoadEntity(newInfo, warpFacing, playerZ))
     ctx.channel().writeAndFlush(MapTransitionAckPacket(0))
 
     if (destMap != null) {
