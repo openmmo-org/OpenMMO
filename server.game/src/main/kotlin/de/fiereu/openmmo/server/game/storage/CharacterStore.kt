@@ -60,7 +60,7 @@ object CharacterStore {
             positionBankId = 51,
             positionMapId = 3,
             positionX = 4,
-            positionY = 2,
+            positionY = 4,
             repelLeft = 0,
             repelItemId = 0,
             lureLeft = 0,

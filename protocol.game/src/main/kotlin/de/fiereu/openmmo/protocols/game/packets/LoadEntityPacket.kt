@@ -22,7 +22,10 @@ data class LoadEntityPacket(
     val mapId: Int,
     val x: Int,
     val y: Int,
+    val z: Int,
     val facing: Direction,
+    val transportation: Int = 0,
+    val entityNameplateType: Int = 0,
     val status: EntityStatus,
     val hasFollower: Boolean,
     val followerDexId: Short,
@@ -40,11 +43,10 @@ class LoadEntitySerializer : PacketSerializer<LoadEntityPacket> {
         writeByte(packet.mapId)
         writeShortLE(packet.x)
         writeShortLE(packet.y)
+        writeByte(packet.z)
         writeByte(packet.facing.ordinal)
-        writeByte(0)
-
-        writeByte(0)
-        writeByte(packet.status.ordinal)
+        writeByte(packet.transportation)
+        writeByte(packet.entityNameplateType)
 
         var flags = 0
         if (packet.hasFollower) flags = flags or 0x04
@@ -85,11 +87,10 @@ class LoadEntityDeserializer : PacketDeserializer<LoadEntityPacket> {
         val mapId = readByte().toInt()
         val x = readShortLE()
         val y = readShortLE()
+        val z = readByte().toInt()
         val facing = Direction.entries[readByte().toInt()]
-        readByte() // Skip padding byte
-
-        readByte() // Skip padding byte
-        val status = EntityStatus.entries[readByte().toInt()]
+        val transportation = readByte().toInt()
+        val entityNameplateType = readByte().toInt()
 
         val flags = readUnsignedShortLE()
         if (flags and 0x01 != 0) {
@@ -127,8 +128,11 @@ class LoadEntityDeserializer : PacketDeserializer<LoadEntityPacket> {
             mapId = mapId,
             x = x.toInt(),
             y = y.toInt(),
+            z = z,
             facing = facing,
-            status = status,
+            transportation = transportation,
+            entityNameplateType = entityNameplateType,
+            status = EntityStatus.NONE,
             hasFollower = hasFollower,
             followerDexId = followerDexId,
         )

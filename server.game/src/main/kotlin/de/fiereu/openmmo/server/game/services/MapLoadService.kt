@@ -18,6 +18,7 @@ class MapLoadService(private val packetSender: PacketSender) {
   fun createLoadEntity(
       info: CharacterInfo,
       facing: Direction = Direction.DOWN,
+      z: Int = 0,
   ): LoadEntityPacket {
     return LoadEntityPacket(
         entityId = info.id,
@@ -28,6 +29,7 @@ class MapLoadService(private val packetSender: PacketSender) {
         mapId = info.positionMapId.toInt(),
         x = info.positionX.toInt(),
         y = info.positionY.toInt(),
+        z = z,
         facing = facing,
         status = de.fiereu.openmmo.common.enums.EntityStatus.NONE,
         hasFollower = false,

@@ -4,6 +4,9 @@ const path = require('path');
 const POKEEMERALD = 'D:/openmmo/pokeemerald';
 const OUTPUT = 'D:/openmmo/server.game/src/main/kotlin/de/fiereu/openmmo/server/game/world/MapManager.kt';
 
+// Bank group index offset: maps in group 0 are bank (50+0)=50, group 1 = 51, etc.
+const BANK_GROUP_OFFSET = 50;
+
 // ---- Load data ----
 const mapGroups = JSON.parse(fs.readFileSync(`${POKEEMERALD}/data/maps/map_groups.json`, 'utf-8'));
 const layoutsJson = JSON.parse(fs.readFileSync(`${POKEEMERALD}/data/layouts/layouts.json`, 'utf-8'));
@@ -317,7 +320,7 @@ for (let gi = 0; gi < groupOrder.length; gi++) {
       }
       const addr = resolveMap(c.map);
       if (!addr) return null;
-      const bank = addr.groupIndex + 50;
+      const bank = addr.groupIndex + BANK_GROUP_OFFSET;
       const mapNum = addr.mapIndex;
       const offset = Number.isInteger(c.offset) ? c.offset : parseInt(c.offset || 0, 10) || 0;
       return `GbaConnection(direction = ${dir}, unknown = ${offset}, targetBank = ${bank}, targetMap = ${mapNum})`;
@@ -328,11 +331,12 @@ for (let gi = 0; gi < groupOrder.length; gi++) {
     const warpStrs = warps.map(w => {
       const destAddr = resolveMap(w.dest_map);
       if (!destAddr) return null;
-      const destBank = destAddr.groupIndex + 50;
+      const destBank = destAddr.groupIndex + BANK_GROUP_OFFSET;
       const destMapNum = destAddr.mapIndex;
       // Find dest warp position in destination map
       const destMapDir = `${POKEEMERALD}/data/maps/${destAddr.mapName}`;
       let destX = w.x, destY = w.y; // fallback
+      let targetElevation = 0;
       try {
         const destMapJson = JSON.parse(fs.readFileSync(`${destMapDir}/map.json`, 'utf-8'));
         const destWarps = destMapJson.warp_events || [];
@@ -341,11 +345,13 @@ for (let gi = 0; gi < groupOrder.length; gi++) {
           const targetWarp = destWarps[targetWarpIdx];
           destX = targetWarp.x;
           destY = targetWarp.y;
+          targetElevation = targetWarp.elevation !== undefined ? Math.max(0, targetWarp.elevation - 1) : 0;
         }
       } catch (e) {
         // use fallback
       }
-      return `WarpTile(x = ${w.x}, y = ${w.y}, targetRegionId = 1, targetBankId = ${destBank}, targetMapId = ${destMapNum}, targetX = ${destX}, targetY = ${destY})`;
+      const elevation = w.elevation !== undefined ? Math.max(0, w.elevation - 1) : 0;
+      return `WarpTile(x = ${w.x}, y = ${w.y}, elevation = ${elevation}, targetRegionId = 1, targetBankId = ${destBank}, targetMapId = ${destMapNum}, targetX = ${destX}, targetY = ${destY}, targetElevation = ${targetElevation})`;
     }).filter(Boolean);
 
     // NPCs / object events
@@ -399,7 +405,7 @@ for (let gi = 0; gi < groupOrder.length; gi++) {
 
     // Region: always 1 for now
     const region = 1;
-    const bank = gi + 50;
+    const bank = gi + BANK_GROUP_OFFSET;
 
     // Generate MapDef
     const comment = `// ${mapName} (${mapJson.id})`;
@@ -475,11 +481,13 @@ data class WildPokemon(
 data class WarpTile(
     val x: Int,
     val y: Int,
+    val elevation: Int = 0,
     val targetRegionId: Byte,
     val targetBankId: Byte,
     val targetMapId: Byte,
     val targetX: Int,
     val targetY: Int,
+    val targetElevation: Int = 0,
     val facingDirection: de.fiereu.openmmo.common.enums.Direction? = null,
 )
 
