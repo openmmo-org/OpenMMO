@@ -1,0 +1,15 @@
+# Normalize all text files to LF on commit; check out as LF on every platform
+* text=auto eol=lf
+
+# Windows shell scripts must keep CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary blobs
+*.pem binary
+*.jar binary
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
