@@ -14,6 +14,7 @@ rootProject.name = "openmmo"
 include(":keys")
 include(":patcher")
 include(":common")
+include(":bytecodec")
 include(":protocol")
 include(":protocol.tls")
 include(":protocol.login")
