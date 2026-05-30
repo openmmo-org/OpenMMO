@@ -9,5 +9,6 @@ kotlin {
 dependencies {
   implementation(libs.kotlinGradlePlugin)
   implementation(libs.spotlessGradlePlugin)
+  implementation(libs.sonarlintGradlePlugin)
   implementation(libs.junit5)
 }

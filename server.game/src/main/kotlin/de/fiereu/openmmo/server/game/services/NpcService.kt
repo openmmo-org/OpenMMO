@@ -1,14 +1,21 @@
 package de.fiereu.openmmo.server.game.services
 
-import de.fiereu.openmmo.protocols.game.packets.NpcSpawnPacket
-import de.fiereu.openmmo.server.game.world.MapManager
+import de.fiereu.network.SessionContext
+import de.fiereu.openmmo.maps.MapManager
+import de.fiereu.openmmo.net.game.packets.NpcSpawnPacket
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.netty.channel.ChannelHandlerContext
 import java.util.concurrent.atomic.AtomicLong
+import javax.inject.Inject
+import javax.inject.Singleton
 
 private val log = KotlinLogging.logger {}
 
-class NpcService {
+@Singleton
+class NpcService
+@Inject
+constructor(
+    private val mapManager: MapManager,
+) {
 
   private val npcEntityIdCounter = AtomicLong(0x1A69000000000000L)
   private val npcEntityIds = mutableMapOf<String, Long>()
@@ -17,13 +24,9 @@ class NpcService {
     return npcEntityIds["$bankId:$mapId:$entityIdx"]
   }
 
-  fun spawnNpcsForMap(ctx: ChannelHandlerContext, bankId: Int, mapId: Int) {
-    val map = MapManager.getMap(1, bankId.toByte(), mapId.toByte())
-    if (map == null) return
-    val entityIds = mutableListOf<Long>()
+  fun spawnNpcsForMap(ctx: SessionContext, bankId: Int, mapId: Int) {
+    val map = mapManager.getMap(1, bankId, mapId) ?: return
 
-    // Petalburg Woods (bank=74, map=11) — send all 16 NPCs (0-15),
-    // using exact values from real server packets.db rows 3895-3910
     if (bankId == 74 && mapId == 11) {
       data class NpcEntry(
           val entityIdx: Int,
@@ -34,7 +37,7 @@ class NpcService {
           val unk3: Int,
           val unk4: Int,
           val facing: Int,
-          val unk6: Int
+          val unk6: Int,
       )
       val all16 =
           listOf(
@@ -59,7 +62,7 @@ class NpcService {
       for (npc in all16) {
         val entityId = baseEntityId or npc.entityIdx.toLong()
         log.info {
-          ">> Petalburg NpcSpawn[${npc.entityIdx}] entId=0x${entityId.toString(16)} pos=(${npc.x},${npc.y}) gfx=${npc.gfx} unk3=${npc.unk3} unk4=${npc.unk4}"
+          ">> Petalburg NpcSpawn[${npc.entityIdx}] entId=0x${entityId.toString(16)} pos=(${npc.x},${npc.y}) gfx=${npc.gfx}"
         }
         val spawnPacket =
             NpcSpawnPacket(
@@ -77,13 +80,11 @@ class NpcService {
                 unk5 = 2,
                 unk6 = npc.unk6,
             )
-        ctx.channel().write(spawnPacket)
-        entityIds.add(entityId)
+        ctx.send(spawnPacket)
       }
       return
     }
 
-    // All other maps: send visible NPCs from MapDef
     for (npc in map.npcs) {
       val key = "$bankId:$mapId:${npc.entityIdx}"
       val entityId = npcEntityIds.getOrPut(key) { npcEntityIdCounter.incrementAndGet() }
@@ -110,8 +111,7 @@ class NpcService {
               unk5 = 2,
               unk6 = 8,
           )
-      ctx.channel().write(spawnPacket)
-      entityIds.add(entityId)
+      ctx.send(spawnPacket)
     }
   }
 }

@@ -1,123 +1,36 @@
-import org.flywaydb.gradle.task.AbstractFlywayTask
-
-buildscript { dependencies { classpath(libs.flyway.postgresql) } }
-
 plugins {
   application
-  distribution
   id("buildsrc.convention.kotlin-jvm")
   id("buildsrc.convention.spotless")
+  id("buildsrc.convention.sonarlint")
   id("buildsrc.common.keys")
-  alias(libs.plugins.kotlin.serialization)
-  alias(libs.plugins.jooq)
-  alias(libs.plugins.flyway)
+  alias(libs.plugins.ksp)
 }
 
 group = "de.fiereu.openmmo"
 
 version = "0.1.0"
 
+application { mainClass.set("de.fiereu.openmmo.server.game.MainKt") }
+
 dependencies {
-  implementation(project(":server"))
-  implementation(project(":protocol.game"))
-  implementation(libs.logback)
+  api(project(":network"))
+  api(project(":protocols.game"))
+  api(project(":common"))
+  api(project(":maps"))
+
+  implementation(libs.dagger)
+  ksp(libs.dagger.compiler)
+
+  implementation(libs.typesafe.config)
   implementation(libs.kotlinx.coroutines)
+  implementation(libs.kotlin.logging)
+  implementation(libs.logback)
 
   testImplementation(libs.bundles.kotest)
   testImplementation(libs.kotlinx.coroutines.test)
-  testImplementation(libs.mockk)
 }
 
-application { mainClass.set("de.fiereu.openmmo.server.game.GameServerKt") }
-
-fun env(key: String): Any {
-  val value =
-      property(key)
-          ?: System.getenv(key)
-          ?: throw IllegalArgumentException(
-              "Environment variable or system property '$key' is not set.")
-  fun interpolate(value: String): Any {
-    val PATTERN_WORD = Regex("\\$([a-zA-Z0-9_]+)")
-    val PATTERN_MULTI = Regex("\\$\\{([a-zA-Z0-9_]+)\\}")
-    return (PATTERN_WORD.findAll(value) + PATTERN_MULTI.findAll(value)).distinct().fold(value) {
-        acc,
-        match ->
-      val envName = match.groupValues[1]
-      val envValue = System.getProperty(envName) ?: System.getProperty(envName)
-      if (envValue == null) {
-        throw IllegalArgumentException(
-            "Environment variable or system property '$envName' is not set.")
-      }
-      acc.replace(match.value, envValue)
-    }
-  }
-  return if (value is String && (value.contains('$') || value.contains('{'))) {
-    interpolate(value)
-  } else value
+listOf("classes", "processResources").forEach { taskName ->
+  tasks.named(taskName) { dependsOn("copyPublicKeyGame", "copyPrivateKeyGame") }
 }
-
-val dbPort = env("openmmo.db.game.port") as String
-val dbName = env("openmmo.db.game.name") as String
-val dbUser = env("openmmo.db.game.user") as String
-val dbPassword = env("openmmo.db.game.password") as String
-
-jooq {
-  configuration {
-    jdbc {
-      driver = "org.postgresql.Driver"
-      url = "jdbc:postgresql://localhost:$dbPort/$dbName"
-      user = dbUser
-      password = dbPassword
-    }
-    generator {
-      database {
-        name = "org.jooq.meta.postgres.PostgresDatabase"
-        includes = ".*"
-        excludes =
-            """
-          flyway_schema_history |
-          pgp_armor_headers
-        """
-        inputSchema = "public"
-      }
-
-      generate { name = "org.jooq.codegen.KotlinGenerator" }
-      target {
-        packageName = "de.fiereu.openmmo.server.game.jooq"
-        directory = "src/main/jooq"
-      }
-    }
-  }
-}
-
-flyway {
-  driver = "org.postgresql.Driver"
-  url = "jdbc:postgresql://localhost:$dbPort/$dbName"
-  user = dbUser
-  password = dbPassword
-  schemas = arrayOf("public")
-  locations = arrayOf("filesystem:src/main/resources/db/migration")
-  cleanDisabled = false
-}
-
-// Fuck this shit uhh we are not gonna update our gradle plugin bc all our enterprise customers are
-// stuck on Java 1.6 and gradle 5 anyway
-tasks.withType<AbstractFlywayTask>().configureEach {
-  notCompatibleWithConfigurationCache("https://github.com/flyway/flyway/issues/3550")
-}
-
-tasks.register("cleanMigrateAndGenerate") {
-  group = "openmmo"
-  description = "Cleans the database, migrates it and generates the jOOQ classes."
-  dependsOn("flywayClean", "flywayMigrate", "jooqCodegen")
-}
-
-spotless { kotlin { targetExclude("src/main/jooq/**") } }
-
-// If someone knows a better way then this please please please help me :(
-listOf("classes", "processResources", "spotlessKotlin", "spotlessKotlinGradle", "spotlessMisc")
-    .forEach { taskName ->
-      tasks.named(taskName) {
-        listOf("copyPublicKeyGame", "copyPrivateKeyGame").forEach { dependsOn(it) }
-      }
-    }

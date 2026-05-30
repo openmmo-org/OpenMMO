@@ -1,35 +1,41 @@
 package de.fiereu.openmmo.server.game.services
 
+import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.enums.Direction
-import de.fiereu.openmmo.protocols.game.packets.EntityLeavePacket
-import de.fiereu.openmmo.protocols.game.packets.MapTransitionAckPacket
-import de.fiereu.openmmo.protocols.game.packets.MapTransitionPacket
-import de.fiereu.openmmo.protocols.game.packets.RenderScreenPacket
-import de.fiereu.openmmo.server.game.session.SessionManager
+import de.fiereu.openmmo.maps.MapManager
+import de.fiereu.openmmo.maps.WarpTile
+import de.fiereu.openmmo.net.game.packets.EntityLeavePacket
+import de.fiereu.openmmo.net.game.packets.MapTransitionAckPacket
+import de.fiereu.openmmo.net.game.packets.MapTransitionPacket
+import de.fiereu.openmmo.net.game.packets.RenderScreenPacket
+import de.fiereu.openmmo.server.game.session.PLAYER_STATE
+import de.fiereu.openmmo.server.game.session.SessionRegistry
 import de.fiereu.openmmo.server.game.storage.CharacterStore
-import de.fiereu.openmmo.server.game.world.MapManager
 import de.fiereu.openmmo.server.game.world.WarpExitRules
-import de.fiereu.openmmo.server.game.world.WarpTile
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.netty.channel.ChannelHandlerContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
 private val log = KotlinLogging.logger {}
 
-class WarpService(
+@Singleton
+class WarpService
+@Inject
+constructor(
     private val mapLoadService: MapLoadService,
+    private val mapManager: MapManager,
+    private val characterStore: CharacterStore,
+    private val sessionRegistry: SessionRegistry,
 ) {
 
-  fun executeWarp(ctx: ChannelHandlerContext, charId: Long, warp: WarpTile) {
-    val session = SessionManager.getSessionByCharacterId(charId)
-    if (session != null) {
-      session.justWarped = true
-    }
-    val stored = CharacterStore.getCharacter(charId) ?: return
+  fun executeWarp(ctx: SessionContext, charId: Long, warp: WarpTile) {
+    val state = ctx.attributes[PLAYER_STATE]
+    state?.justWarped = true
+    val stored = characterStore.getCharacter(charId) ?: return
 
-    val destMap = MapManager.getMap(warp.targetRegionId, warp.targetBankId, warp.targetMapId)
-
+    val destMap = mapManager.getMap(warp.targetRegionId, warp.targetBankId, warp.targetMapId)
     val sourceMap =
-        MapManager.getMap(
+        mapManager.getMap(
             stored.info.positionRegionId, stored.info.positionBankId, stored.info.positionMapId)
 
     val knownOverride =
@@ -42,21 +48,19 @@ class WarpService(
                 destMap = destMap,
                 destX = warp.targetX,
                 destY = warp.targetY,
-                sourceMap = sourceMap)
+                sourceMap = sourceMap,
+            )
 
-    session?.facingDirection = warpFacing
+    state?.facingDirection = warpFacing
 
     var offsetX = warp.targetX
     var offsetY = warp.targetY
 
     val shouldAutoStepOffWarp =
         knownOverride?.autoStep
-            ?: WarpExitRules.shouldAutoStep(
-                sourceMap = sourceMap,
-                destMap = destMap,
-            )
-    if (shouldAutoStepOffWarp) {
-      val destWarp = destMap?.warps?.find { it.x == offsetX && it.y == offsetY }
+            ?: WarpExitRules.shouldAutoStep(sourceMap = sourceMap, destMap = destMap)
+    if (shouldAutoStepOffWarp && destMap != null) {
+      val destWarp = destMap.warps.find { it.x == offsetX && it.y == offsetY }
       if (destWarp != null) {
         when (warpFacing) {
           Direction.UP -> offsetY--
@@ -64,8 +68,8 @@ class WarpService(
           Direction.LEFT -> offsetX--
           Direction.RIGHT -> offsetX++
         }
-        offsetX = offsetX.coerceIn(0, destMap!!.width - 1)
-        offsetY = offsetY.coerceIn(0, destMap!!.height - 1)
+        offsetX = offsetX.coerceIn(0, destMap.width - 1)
+        offsetY = offsetY.coerceIn(0, destMap.height - 1)
       }
     }
 
@@ -74,10 +78,7 @@ class WarpService(
             ?: warp.targetElevation
 
     log.info {
-      "WARP EXIT: source=${sourceMap?.bankId}:${sourceMap?.mapId} ${sourceMap?.mapType} " +
-          "dest=${destMap?.bankId}:${destMap?.mapId} ${destMap?.mapType} " +
-          "target=(${warp.targetX},${warp.targetY}) final=($offsetX,$offsetY) " +
-          "z=$playerZ facing=$warpFacing autoStep=$shouldAutoStepOffWarp"
+      "WARP EXIT: source=${sourceMap?.bankId}:${sourceMap?.mapId} dest=${destMap?.bankId}:${destMap?.mapId} target=(${warp.targetX},${warp.targetY}) final=($offsetX,$offsetY) z=$playerZ facing=$warpFacing autoStep=$shouldAutoStepOffWarp"
     }
 
     val newInfo =
@@ -88,43 +89,34 @@ class WarpService(
             positionX = offsetX.toShort(),
             positionY = offsetY.toShort(),
         )
-    CharacterStore.updateCharacter(newInfo)
+    characterStore.updateCharacter(newInfo)
 
-    // Multiplayer: broadcast EntityLeave to old-map players before position update
-    val oldRegionId = session?.regionId
-    val oldBankId = session?.bankId
-    val oldMapId = session?.mapId
+    val oldRegionId = state?.regionId
+    val oldBankId = state?.bankId
+    val oldMapId = state?.mapId
     if (oldBankId != null && oldMapId != null) {
       val oldMapPlayers =
-          SessionManager.getOthersInMap(charId, oldRegionId ?: 1, oldBankId, oldMapId)
+          sessionRegistry.getOthersInMap(charId, oldRegionId ?: 1, oldBankId, oldMapId)
       for (other in oldMapPlayers) {
-        other.channel.writeAndFlush(EntityLeavePacket(charId))
+        other.send(EntityLeavePacket(charId))
       }
     }
 
-    // Update session position for multiplayer tracking
-    if (session != null) {
-      session.regionId = warp.targetRegionId.toInt()
-      session.bankId = warp.targetBankId.toInt()
-      session.mapId = warp.targetMapId.toInt()
-      session.x = offsetX.toShort()
-      session.y = offsetY.toShort()
+    if (state != null) {
+      state.regionId = warp.targetRegionId.toInt()
+      state.bankId = warp.targetBankId.toInt()
+      state.mapId = warp.targetMapId.toInt()
+      state.x = offsetX.toShort()
+      state.y = offsetY.toShort()
     }
 
-    // Real server warp sequence (from packets.db):
-    ctx.channel().writeAndFlush(MapTransitionPacket())
-    ctx.channel().writeAndFlush(RenderScreenPacket(false))
-    ctx.channel().writeAndFlush(mapLoadService.createLoadEntity(newInfo, warpFacing, playerZ))
-    ctx.channel().writeAndFlush(MapTransitionAckPacket(0))
+    ctx.send(MapTransitionPacket())
+    ctx.send(RenderScreenPacket(false))
+    ctx.send(mapLoadService.createLoadEntity(newInfo, warpFacing, playerZ))
+    ctx.send(MapTransitionAckPacket(0))
 
     if (destMap != null) {
-      ctx.channel()
-          .writeAndFlush(
-              MapManager.createLoadMapPacket(
-                  destMap,
-                  reloadPlayer = true,
-                  deleteCache = true,
-              ))
+      ctx.send(mapManager.createLoadMapPacket(destMap, reloadPlayer = true, deleteCache = true))
       mapLoadService.preloadConnectedMaps(ctx, destMap, depth = 1, reloadPlayer = true)
     } else {
       log.warn {

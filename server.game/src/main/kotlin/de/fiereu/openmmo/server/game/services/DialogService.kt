@@ -1,20 +1,21 @@
 package de.fiereu.openmmo.server.game.services
 
-import de.fiereu.openmmo.protocols.game.packets.DialogChoicePacket
-import de.fiereu.openmmo.protocols.game.packets.DialogStatePacket
-import de.fiereu.openmmo.protocols.game.packets.InteractiveResponsePacket
+import de.fiereu.network.PacketEvent
+import de.fiereu.network.SessionContext
+import de.fiereu.openmmo.net.game.packets.DialogChoicePacket
+import de.fiereu.openmmo.net.game.packets.DialogStatePacket
+import de.fiereu.openmmo.net.game.packets.InteractivePacket
+import de.fiereu.openmmo.net.game.packets.InteractiveResponsePacket
+import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.session.ScriptPage
-import de.fiereu.openmmo.server.game.session.SessionManager
-import de.fiereu.openmmo.server.protocol.PacketEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.netty.buffer.Unpooled
-import io.netty.channel.ChannelHandlerContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
 private val log = KotlinLogging.logger {}
 
-class DialogService(
-    private val packetSender: PacketSender,
-) {
+@Singleton
+class DialogService @Inject constructor() {
 
   fun scriptParams(script: String): List<ScriptPage>? {
     if (script == "0x0") return null
@@ -42,7 +43,7 @@ class DialogService(
   }
 
   fun sendInteractive(
-      ctx: ChannelHandlerContext,
+      ctx: SessionContext,
       id: Int,
       entityId: Long,
       type: Int = 0x04,
@@ -50,64 +51,60 @@ class DialogService(
       unk2: Int = 0x1F10,
       unk3: Int = 0x0708,
   ) {
-    val buf = Unpooled.buffer(19)
-    buf.writeByte(id)
-    buf.writeByte(type)
-    buf.writeShortLE(unk1)
-    buf.writeShortLE(unk2)
-    buf.writeLongLE(entityId)
-    buf.writeShortLE(unk3)
-    buf.writeShortLE(0)
-    buf.writeByte(0)
-    val raw = ByteArray(buf.readableBytes())
-    buf.readBytes(raw)
-    buf.release()
-    packetSender.sendRaw(ctx, 0x21u, raw)
+    ctx.send(
+        InteractivePacket(
+            id = id,
+            type = type,
+            unk1 = unk1,
+            unk2 = unk2,
+            targetEntityId = entityId,
+            unk3 = unk3,
+            unk4 = 0,
+        ))
   }
 
   fun onInteractive(event: PacketEvent<InteractiveResponsePacket>) {
-    val session = SessionManager.getSessionByChannel(event.ctx.channel())
-    if (session == null) return
-    val charId = session.characterId ?: return
+    val ctx = event.session
+    val state = ctx.attributes[PLAYER_STATE] ?: return
+    val charId = state.characterId ?: return
 
-    if (session.inDialog) {
+    if (state.inDialog) {
       val respId = event.packet.id
       log.info {
-        "Interactive response: id=$respId for char $charId (page ${session.dialogPageIndex + 1}/${session.dialogPages.size})"
+        "Interactive response: id=$respId for char $charId (page ${state.dialogPageIndex + 1}/${state.dialogPages.size})"
       }
-      val nextPageIndex = session.dialogPageIndex + 1
-      if (nextPageIndex < session.dialogPages.size) {
-        val seqId = session.dialogSeqId++
-        val page = session.dialogPages[nextPageIndex]
-        session.dialogPageIndex = nextPageIndex
+      val nextPageIndex = state.dialogPageIndex + 1
+      if (nextPageIndex < state.dialogPages.size) {
+        val seqId = state.dialogSeqId++
+        val page = state.dialogPages[nextPageIndex]
+        state.dialogPageIndex = nextPageIndex
         sendInteractive(
-            event.ctx,
+            ctx,
             seqId,
-            session.dialogNpcEntityId,
+            state.dialogNpcEntityId,
             page.type,
             page.unk1,
             page.unk2,
             page.unk3,
         )
-        event.ctx.channel().flush()
       } else {
-        event.ctx.channel().writeAndFlush(DialogStatePacket(false))
-        session.inDialog = false
-        session.dialogNpcEntityId = 0
-        session.dialogPages = emptyList()
-        session.dialogPageIndex = 0
+        ctx.send(DialogStatePacket(false))
+        state.inDialog = false
+        state.dialogNpcEntityId = 0
+        state.dialogPages = emptyList()
+        state.dialogPageIndex = 0
       }
     }
   }
 
   fun onDialogChoice(event: PacketEvent<DialogChoicePacket>) {
-    val session = SessionManager.getSessionByChannel(event.ctx.channel())
-    if (session == null) return
+    val ctx = event.session
+    val state = ctx.attributes[PLAYER_STATE] ?: return
     log.info { "Dialog choice received: unk1=${event.packet.unk1}, unk2=${event.packet.unk2}" }
-    if (session.inDialog) {
-      event.ctx.channel().writeAndFlush(DialogStatePacket(false))
-      session.inDialog = false
-      session.dialogNpcEntityId = 0
+    if (state.inDialog) {
+      ctx.send(DialogStatePacket(false))
+      state.inDialog = false
+      state.dialogNpcEntityId = 0
     }
   }
 }
