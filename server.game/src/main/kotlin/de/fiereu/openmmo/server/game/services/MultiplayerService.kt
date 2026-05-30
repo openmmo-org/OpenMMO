@@ -1,24 +1,31 @@
 package de.fiereu.openmmo.server.game.services
 
-import de.fiereu.openmmo.server.game.session.SessionManager
-import io.netty.channel.Channel
+import de.fiereu.network.SessionContext
+import de.fiereu.openmmo.server.game.session.SessionRegistry
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class MultiplayerService {
+@Singleton
+class MultiplayerService
+@Inject
+constructor(
+    private val sessionRegistry: SessionRegistry,
+) {
 
   fun broadcastMessage(packet: Any) {
-    for (characterId in SessionManager.getOnlineCharacterIds()) {
-      val s = SessionManager.getSessionByCharacterId(characterId) ?: continue
-      if (s.channel.isActive) {
-        s.channel.writeAndFlush(packet)
+    for (characterId in sessionRegistry.onlineCharacterIds()) {
+      val ctx = sessionRegistry.getByCharacterId(characterId) ?: continue
+      if (ctx.channel.isActive) {
+        ctx.send(packet)
       }
     }
   }
 
-  fun broadcastExcept(channel: Channel, packet: Any) {
-    for (characterId in SessionManager.getOnlineCharacterIds()) {
-      val s = SessionManager.getSessionByCharacterId(characterId) ?: continue
-      if (s.channel.isActive && s.channel != channel) {
-        s.channel.writeAndFlush(packet)
+  fun broadcastExcept(exclude: SessionContext, packet: Any) {
+    for (characterId in sessionRegistry.onlineCharacterIds()) {
+      val ctx = sessionRegistry.getByCharacterId(characterId) ?: continue
+      if (ctx.channel.isActive && ctx.channel != exclude.channel) {
+        ctx.send(packet)
       }
     }
   }

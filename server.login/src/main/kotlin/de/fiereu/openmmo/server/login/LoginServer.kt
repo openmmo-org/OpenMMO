@@ -1,32 +1,56 @@
 package de.fiereu.openmmo.server.login
 
-import de.fiereu.openmmo.protocols.tls.LoginServerProtocol
-import de.fiereu.openmmo.server.ServerBuilder
-import de.fiereu.openmmo.server.config.ServerConfig
-import de.fiereu.openmmo.server.config.TlsConfig
-import de.fiereu.openmmo.server.io.resource
-import de.fiereu.openmmo.server.keys.KeyLoader
-import de.fiereu.openmmo.server.login.auth.InMemoryUserStore
-import de.fiereu.openmmo.server.login.protocol.login.LoginProtocolHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import de.fiereu.network.PipelineOptions
+import de.fiereu.network.SessionIdentity
+import de.fiereu.network.installNetwork
+import de.fiereu.openmmo.net.login.LoginProtocol
+import de.fiereu.openmmo.server.login.config.LoginServerConfig
+import de.fiereu.openmmo.server.login.handler.LoginAppHandler
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.netty.bootstrap.ServerBootstrap
+import io.netty.channel.ChannelOption
+import io.netty.channel.EventLoopGroup
+import io.netty.channel.socket.nio.NioServerSocketChannel
+import java.security.interfaces.ECPrivateKey
+import javax.inject.Inject
+import javax.inject.Named
+import javax.inject.Provider
+import javax.inject.Singleton
 
-fun main() {
-  val serverConfig = ServerConfig(port = 2106)
-  val tlsConfig = TlsConfig(checksumSize = 16)
-  val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-  val userService = InMemoryUserStore()
-  val server =
-      ServerBuilder.create()
-          .withCoroutineScope(coroutineScope)
-          .withConfig(serverConfig)
-          .withTlsConfig(tlsConfig)
-          .withPublicKey(KeyLoader.loadPemECPublicKey(resource("game.public.pem")))
-          .withPrivateKey(KeyLoader.loadPemECPrivateKey(resource("game.private.pem")))
-          .withChannelHandlerProvider {
-            LoginProtocolHandler(LoginServerProtocol(), serverConfig, coroutineScope, userService)
-          }
-          .build()
-  server.start()
+private val log = KotlinLogging.logger {}
+
+@Singleton
+class LoginServer
+@Inject
+constructor(
+    private val config: LoginServerConfig,
+    @Named("boss") private val bossGroup: EventLoopGroup,
+    @Named("worker") private val workerGroup: EventLoopGroup,
+    private val rootKey: ECPrivateKey,
+    private val handlerProvider: Provider<LoginAppHandler>,
+) {
+  fun start() {
+    val channel =
+        ServerBootstrap()
+            .group(bossGroup, workerGroup)
+            .channel(NioServerSocketChannel::class.java)
+            .option(ChannelOption.SO_BACKLOG, 128)
+            .childOption(ChannelOption.TCP_NODELAY, true)
+            .installNetwork(
+                identity = SessionIdentity.ServerRoot(rootKey),
+                applicationProtocol = LoginProtocol,
+                applicationHandlerFactory = { handlerProvider.get() },
+                options = PipelineOptions(checksumSize = config.checksumSize),
+            )
+            .bind(config.host, config.port)
+            .sync()
+            .channel()
+    log.info { "Login server listening on ${channel.localAddress()}" }
+    channel.closeFuture().sync()
+  }
+
+  fun shutdown() {
+    workerGroup.shutdownGracefully()
+    bossGroup.shutdownGracefully()
+  }
 }

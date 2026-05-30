@@ -205,7 +205,7 @@ fun <A, B> Codec<A>.then(other: Codec<B>): Codec<Pair<A, B>> {
   }
 }
 
-interface BitsBuilder {
+fun interface BitsBuilder {
   fun bit(index: Int, name: String)
 }
 
@@ -254,14 +254,11 @@ internal constructor(
 
 fun bitsLE(backing: Codec<Int>, builder: BitsBuilder.() -> Unit): BitsCodec {
   val map = LinkedHashMap<String, Int>()
-  val b =
-      object : BitsBuilder {
-        override fun bit(index: Int, name: String) {
-          require(index in 0..31) { "bit index out of range: $index" }
-          require(name !in map) { "duplicate bit name: $name" }
-          map[name] = index
-        }
-      }
+  val b = BitsBuilder { index, name ->
+    require(index in 0..31) { "bit index out of range: $index" }
+    require(name !in map) { "duplicate bit name: $name" }
+    map[name] = index
+  }
   b.builder()
   return BitsCodec(backing, map)
 }
