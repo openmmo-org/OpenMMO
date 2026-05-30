@@ -1,39 +1,42 @@
 package de.fiereu.openmmo.server.game.services
 
+import de.fiereu.network.PacketEvent
 import de.fiereu.openmmo.common.enums.Direction
-import de.fiereu.openmmo.protocols.game.packets.DialogStatePacket
-import de.fiereu.openmmo.protocols.game.packets.EntityInteractPacket
-import de.fiereu.openmmo.server.game.session.SessionManager
+import de.fiereu.openmmo.maps.MapManager
+import de.fiereu.openmmo.net.game.packets.DialogStatePacket
+import de.fiereu.openmmo.net.game.packets.EntityInteractPacket
+import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
-import de.fiereu.openmmo.server.game.world.MapManager
-import de.fiereu.openmmo.server.protocol.PacketEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.netty.buffer.Unpooled
+import javax.inject.Inject
+import javax.inject.Singleton
 
 private val log = KotlinLogging.logger {}
 
-class InteractionService(
+@Singleton
+class InteractionService
+@Inject
+constructor(
     private val npcService: NpcService,
     private val dialogService: DialogService,
-    private val packetSender: PacketSender,
+    private val mapManager: MapManager,
+    private val characterStore: CharacterStore,
 ) {
 
   fun onEntityInteract(event: PacketEvent<EntityInteractPacket>) {
-    val session = SessionManager.getSessionByChannel(event.ctx.channel())
-    if (session == null) return
-    val charId = session.characterId ?: return
+    val ctx = event.session
+    val state = ctx.attributes[PLAYER_STATE] ?: return
+    val charId = state.characterId ?: return
 
     val npcEntityId = event.packet.entityId
-    val stored = CharacterStore.getCharacter(charId) ?: return
+    val stored = characterStore.getCharacter(charId) ?: return
     val currentMap =
-        MapManager.getMap(
+        mapManager.getMap(
             stored.info.positionRegionId,
             stored.info.positionBankId,
             stored.info.positionMapId,
-        )
-    if (currentMap == null) return
+        ) ?: return
 
-    // Find which NPC this entityId belongs to
     val bankId = stored.info.positionBankId.toInt()
     val mapId = stored.info.positionMapId.toInt()
     for (npc in currentMap.npcs) {
@@ -46,25 +49,15 @@ class InteractionService(
         if (npc.script != "0x0") {
           val params = dialogService.scriptParams(npc.script)
           if (params != null) {
-            log.info {
-              "NPC entityIdx=${npc.entityIdx} script=${npc.script} — starting dialog (${params.size} pages)"
-            }
-            session.inDialog = true
-            session.dialogNpcEntityId = npcEntityId
-            session.dialogPages = params
-            session.dialogPageIndex = 0
-            val seqId = session.dialogSeqId++
+            state.inDialog = true
+            state.dialogNpcEntityId = npcEntityId
+            state.dialogPages = params
+            state.dialogPageIndex = 0
+            val seqId = state.dialogSeqId++
             val page = params[0]
-            event.ctx.channel().write(DialogStatePacket(true))
-            val confirmBuf = Unpooled.buffer(9)
-            confirmBuf.writeLongLE(npcEntityId)
-            confirmBuf.writeByte(0xFF)
-            val confirmBytes = ByteArray(9)
-            confirmBuf.readBytes(confirmBytes)
-            confirmBuf.release()
-            packetSender.sendRaw(event.ctx, 0x07u, confirmBytes)
+            ctx.send(DialogStatePacket(true))
             dialogService.sendInteractive(
-                event.ctx,
+                ctx,
                 seqId,
                 npcEntityId,
                 page.type,
@@ -72,61 +65,45 @@ class InteractionService(
                 page.unk2,
                 page.unk3,
             )
-            event.ctx.channel().flush()
-          } else {
-            log.info { "NPC entityIdx=${npc.entityIdx} script=${npc.script} — no known params" }
           }
-        } else {
-          log.info { "NPC entityIdx=${npc.entityIdx} has no script (0x0) — no interaction" }
         }
         return
       }
     }
 
-    // No NPC found — check for bg_event at tile player is facing
     val facingX =
-        when (session.facingDirection) {
+        when (state.facingDirection) {
           Direction.RIGHT -> stored.info.positionX.toInt() + 1
           Direction.LEFT -> stored.info.positionX.toInt() - 1
           else -> stored.info.positionX.toInt()
         }
     val facingY =
-        when (session.facingDirection) {
+        when (state.facingDirection) {
           Direction.UP -> stored.info.positionY.toInt() - 1
           Direction.DOWN -> stored.info.positionY.toInt() + 1
           else -> stored.info.positionY.toInt()
         }
     val facingDirOk: (String) -> Boolean = { dir ->
       dir == "BG_EVENT_PLAYER_FACING_ANY" ||
-          (dir == "BG_EVENT_PLAYER_FACING_NORTH" && session.facingDirection == Direction.UP) ||
-          (dir == "BG_EVENT_PLAYER_FACING_SOUTH" && session.facingDirection == Direction.DOWN) ||
-          (dir == "BG_EVENT_PLAYER_FACING_WEST" && session.facingDirection == Direction.LEFT) ||
-          (dir == "BG_EVENT_PLAYER_FACING_EAST" && session.facingDirection == Direction.RIGHT)
+          (dir == "BG_EVENT_PLAYER_FACING_NORTH" && state.facingDirection == Direction.UP) ||
+          (dir == "BG_EVENT_PLAYER_FACING_SOUTH" && state.facingDirection == Direction.DOWN) ||
+          (dir == "BG_EVENT_PLAYER_FACING_WEST" && state.facingDirection == Direction.LEFT) ||
+          (dir == "BG_EVENT_PLAYER_FACING_EAST" && state.facingDirection == Direction.RIGHT)
     }
     val bgEvent =
         currentMap.bgEvents.find { it.x == facingX && it.y == facingY && facingDirOk(it.facingDir) }
     if (bgEvent != null) {
       val params = dialogService.scriptParams(bgEvent.script)
       if (params != null) {
-        log.info {
-          "BG event script=${bgEvent.script} at ($facingX,$facingY) — starting dialog (${params.size} pages)"
-        }
-        session.inDialog = true
-        session.dialogNpcEntityId = npcEntityId
-        session.dialogPages = params
-        session.dialogPageIndex = 0
-        val seqId = session.dialogSeqId++
+        state.inDialog = true
+        state.dialogNpcEntityId = npcEntityId
+        state.dialogPages = params
+        state.dialogPageIndex = 0
+        val seqId = state.dialogSeqId++
         val page = params[0]
-        event.ctx.channel().write(DialogStatePacket(true))
-        val confirmBuf = Unpooled.buffer(9)
-        confirmBuf.writeLongLE(npcEntityId)
-        confirmBuf.writeByte(0xFF)
-        val confirmBytes = ByteArray(9)
-        confirmBuf.readBytes(confirmBytes)
-        confirmBuf.release()
-        packetSender.sendRaw(event.ctx, 0x07u, confirmBytes)
+        ctx.send(DialogStatePacket(true))
         dialogService.sendInteractive(
-            event.ctx,
+            ctx,
             seqId,
             npcEntityId,
             page.type,
@@ -134,15 +111,10 @@ class InteractionService(
             page.unk2,
             page.unk3,
         )
-        event.ctx.channel().flush()
-      } else {
-        log.info {
-          "BG event interaction: script=${bgEvent.script} at ($facingX,$facingY) — no known params"
-        }
       }
       return
     }
 
-    log.info { "Entity interaction for entity $npcEntityId — not found on current map" }
+    log.info { "Entity interaction for entity $npcEntityId not found on current map" }
   }
 }

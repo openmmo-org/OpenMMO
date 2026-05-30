@@ -5,6 +5,8 @@ import de.fiereu.openmmo.common.Pokemon
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
+import javax.inject.Inject
+import javax.inject.Singleton
 
 data class StoredCharacter(
     val info: CharacterInfo,
@@ -13,11 +15,11 @@ data class StoredCharacter(
     val items: MutableMap<Int, Int>,
 )
 
-object CharacterStore {
+@Singleton
+class CharacterStore @Inject constructor() {
   private val characters = ConcurrentHashMap<Long, StoredCharacter>()
   private val charactersByUser = ConcurrentHashMap<Int, MutableList<Long>>()
   private val nextCharId = AtomicLong(1)
-  private val nextPokemonId = AtomicLong(1)
 
   init {
     ensureTestCharacter()

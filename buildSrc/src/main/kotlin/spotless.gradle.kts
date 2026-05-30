@@ -11,13 +11,13 @@ spotless {
   lineEndings = LineEnding.UNIX
   kotlinGradle {
     target("**/*.gradle.kts")
-    ktfmt()
+    ktfmt("0.54")
     trimTrailingWhitespace()
     endWithNewline()
   }
   kotlin {
     target("**/src/**/*.kt")
-    ktfmt()
+    ktfmt("0.54")
     trimTrailingWhitespace()
     endWithNewline()
   }

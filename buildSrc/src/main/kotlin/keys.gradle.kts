@@ -61,3 +61,9 @@ tasks.register("copyKeys") {
   description = "Copies all keys from \":keys\" to the current projects resources directory"
   dependsOn("copyKeysChat", "copyKeysGame")
 }
+
+val keyCopyTasks =
+    listOf("copyPublicKeyChat", "copyPrivateKeyChat", "copyPublicKeyGame", "copyPrivateKeyGame")
+
+tasks.matching { it.name.startsWith("spotless") || it.name.startsWith("sonarlint") }
+    .configureEach { mustRunAfter(keyCopyTasks) }

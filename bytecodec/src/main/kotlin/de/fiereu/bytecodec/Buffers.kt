@@ -67,7 +67,7 @@ class NioReadBuffer(private val nio: ByteBuffer) : ReadBuffer {
   override fun readByte(): Byte = nio.get()
 
   override fun readBytes(dst: ByteArray, offset: Int, length: Int) {
-    nio.get(dst, offset, length)
+    nio[dst, offset, length]
   }
 
   override fun skip(n: Int) {
