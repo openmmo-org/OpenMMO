@@ -75,9 +75,9 @@ constructor(
       log.warn { "Create character from unknown session" }
       return
     }
-    val name = event.packet.name
-    log.info { "Creating character '$name' for userId=${state.userId}" }
-    characterStore.createCharacter(state.userId, name)
+    val packet = event.packet
+    log.info { "Creating character '${packet.name}' for userId=${state.userId}" }
+    characterStore.createCharacter(state.userId, packet.name, packet.gender, packet.cosmetics)
     ctx.send(buildCharacterList(state.userId))
   }
 

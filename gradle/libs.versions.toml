@@ -16,6 +16,7 @@ mockk = "1.14.5"
 jooq = "3.20.6"
 postgresql = "42.7.7"
 flyway = "11.10.4"
+hikari = "6.3.0"
 netty = "4.2.4.Final"
 typesafe-config = "1.4.4"
 dagger = "2.57"
@@ -51,6 +52,7 @@ jooq-codegen = { module = "org.jooq:jooq-codegen", version.ref = "jooq" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
+hikari = { module = "com.zaxxer:HikariCP", version.ref = "hikari" }
 netty = { module = "io.netty:netty-all", version.ref = "netty" }
 typesafe-config = { module = "com.typesafe:config", version.ref = "typesafe-config" }
 dagger = { module = "com.google.dagger:dagger", version.ref = "dagger" }

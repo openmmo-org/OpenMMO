@@ -2,9 +2,7 @@ package de.fiereu.openmmo.server.game.storage
 
 import de.fiereu.openmmo.common.CharacterInfo
 import de.fiereu.openmmo.common.Pokemon
-import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,73 +14,41 @@ data class StoredCharacter(
 )
 
 @Singleton
-class CharacterStore @Inject constructor() {
-  private val characters = ConcurrentHashMap<Long, StoredCharacter>()
-  private val charactersByUser = ConcurrentHashMap<Int, MutableList<Long>>()
-  private val nextCharId = AtomicLong(1)
-
-  init {
-    ensureTestCharacter()
-  }
-
-  private fun ensureTestCharacter() {
-    if (characters.isEmpty()) {
-      createCharacter(userId = 1, name = "Test")
-    }
-  }
-
-  private fun generateEntityId(): Long {
-    val uniqueId = nextCharId.getAndIncrement()
-    return (uniqueId shl 16) or 0x9000L
-  }
+class CharacterStore @Inject constructor(
+    private val characterRepository: CharacterRepository,
+) {
+  private val cache = ConcurrentHashMap<Long, StoredCharacter>()
 
   fun createCharacter(
       userId: Int,
       name: String,
+      gender: Byte = 0,
+      cosmetics: ByteArray? = null,
   ): StoredCharacter {
-    val id = generateEntityId()
-    val now = LocalDateTime.now()
-    val info =
-        CharacterInfo(
-            id = id,
-            name = name,
-            namePrefix = "",
-            userId = userId,
-            rivalSex = 0,
-            lastLogin = now,
-            createdAt = now,
-            money = 3000,
-            permissions = 8,
-            remainingSafariSteps = 0,
-            remainingSafariBalls = 0,
-            pcExtraSlots = 0,
-            battleBoxExtraSlots = 0,
-            templateAmount = 0,
-            positionRegionId = 1,
-            positionBankId = 51,
-            positionMapId = 3,
-            positionX = 4,
-            positionY = 4,
-            repelLeft = 0,
-            repelItemId = 0,
-            lureLeft = 0,
-            lureItemId = 0,
-        )
+    val info = characterRepository.create(userId, name, gender, cosmetics)
     val stored = StoredCharacter(info, mutableListOf(), mutableListOf(), mutableMapOf())
-    characters[id] = stored
-    charactersByUser.getOrPut(userId) { mutableListOf() }.add(id)
+    cache[info.id] = stored
     return stored
   }
 
-  fun getCharacter(id: Long): StoredCharacter? = characters[id]
+  fun getCharacter(id: Long): StoredCharacter? {
+    val cached = cache[id]
+    if (cached != null) return cached
+    val info = characterRepository.getById(id) ?: return null
+    val stored = StoredCharacter(info, mutableListOf(), mutableListOf(), mutableMapOf())
+    cache[id] = stored
+    return stored
+  }
 
   fun getCharactersByUser(userId: Int): List<StoredCharacter> {
-    return charactersByUser[userId]?.mapNotNull { characters[it] } ?: emptyList()
+    return characterRepository.getByUserId(userId).map { info ->
+      cache.getOrPut(info.id) { StoredCharacter(info, mutableListOf(), mutableListOf(), mutableMapOf()) }
+    }
   }
 
   fun updateCharacter(info: CharacterInfo) {
-    val stored = characters[info.id] ?: return
-    characters[info.id] = stored.copy(info = info)
+    characterRepository.update(info.id, info)
+    cache[info.id]?.let { cache[info.id] = it.copy(info = info) }
   }
 
   fun updatePosition(
@@ -92,7 +58,8 @@ class CharacterStore @Inject constructor() {
       bankId: Byte? = null,
       mapId: Byte? = null,
   ) {
-    val stored = characters[characterId] ?: return
+    characterRepository.updatePosition(characterId, x, y, bankId, mapId)
+    val stored = cache[characterId] ?: return
     val oldInfo = stored.info
     val newInfo =
         oldInfo.copy(
@@ -101,16 +68,17 @@ class CharacterStore @Inject constructor() {
             positionBankId = bankId ?: oldInfo.positionBankId,
             positionMapId = mapId ?: oldInfo.positionMapId,
         )
-    characters[characterId] = stored.copy(info = newInfo)
+    cache[characterId] = stored.copy(info = newInfo)
   }
 
   fun addPokemon(characterId: Long, pokemon: Pokemon) {
-    characters[characterId]?.pokemon?.add(pokemon)
+    cache[characterId]?.pokemon?.add(pokemon)
   }
 
   fun addMoney(characterId: Long, amount: Int) {
-    val stored = characters[characterId] ?: return
+    val stored = cache[characterId] ?: return
     val newInfo = stored.info.copy(money = stored.info.money + amount)
-    characters[characterId] = stored.copy(info = newInfo)
+    characterRepository.update(characterId, newInfo)
+    cache[characterId] = stored.copy(info = newInfo)
   }
 }

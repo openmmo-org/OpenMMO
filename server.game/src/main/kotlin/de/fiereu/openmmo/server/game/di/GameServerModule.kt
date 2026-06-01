@@ -6,12 +6,14 @@ import de.fiereu.openmmo.common.auth.SessionTokenVerifier
 import de.fiereu.openmmo.common.io.PemKeyLoader
 import de.fiereu.openmmo.common.io.resource
 import de.fiereu.openmmo.server.game.config.GameServerConfig
+import de.fiereu.openmmo.server.game.storage.DatabaseManager
 import io.netty.channel.EventLoopGroup
 import io.netty.channel.MultiThreadIoEventLoopGroup
 import io.netty.channel.nio.NioIoHandler
 import java.security.interfaces.ECPrivateKey
 import javax.inject.Named
 import javax.inject.Singleton
+import javax.sql.DataSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -42,4 +44,8 @@ object GameServerModule {
   @Provides
   @Singleton
   fun coroutineScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+  @Provides
+  @Singleton
+  fun dataSource(db: DatabaseManager): DataSource = db.dataSource
 }

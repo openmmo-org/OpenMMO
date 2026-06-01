@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const POKEEMERALD = 'D:/openmmo/pokeemerald';
+const POKEEMERALD = 'D:/openmmo/decomp/pokeemerald';
 const OUTPUT = 'D:/openmmo/server.game/src/main/kotlin/de/fiereu/openmmo/server/game/world/MapManager.kt';
 
 // Bank group index offset: maps in group 0 are bank (50+0)=50, group 1 = 51, etc.
