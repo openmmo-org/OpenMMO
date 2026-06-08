@@ -30,6 +30,11 @@ dependencies {
   testImplementation(libs.kotlinx.coroutines.test)
 }
 
+tasks.named<JavaExec>("run") {
+  listOf("OPENMMO_SESSION_SECRET", "LOGIN_DB_PORT", "LOGIN_DB_NAME", "LOGIN_DB_USER", "LOGIN_DB_PASSWORD")
+    .forEach { key -> env.fetchOrNull(key)?.let { environment(key, it) } }
+}
+
 listOf("classes", "processResources").forEach { taskName ->
   tasks.named(taskName) { dependsOn("copyPublicKeyGame", "copyPrivateKeyGame") }
 }
