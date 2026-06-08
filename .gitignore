@@ -40,3 +40,10 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
++### Local environment / secrets ###
++# Never commit local config or secrets. Use `.env.example` as the template.
++.env
++.env.*
++!.env.example
++docker-compose.override.yml
