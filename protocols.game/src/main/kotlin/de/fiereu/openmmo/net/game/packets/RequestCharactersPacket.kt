@@ -6,5 +6,5 @@ import de.fiereu.bytecodec.PacketCodec
 class RequestCharactersPacket
 
 object RequestCharactersPacketCodec : PacketCodec<RequestCharactersPacket>() {
-  override fun CodecScope<RequestCharactersPacket>.body() = RequestCharactersPacket()
+    override fun CodecScope<RequestCharactersPacket>.body() = RequestCharactersPacket()
 }
