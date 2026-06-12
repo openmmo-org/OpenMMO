@@ -1,0 +1,29 @@
+services:
+  login-db:
+    image: postgres:18
+    container_name: login-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${LOGIN_DB_NAME:-openmmo_login_db}
+      POSTGRES_USER: ${LOGIN_DB_USER:-openmmo_login_user}
+      POSTGRES_PASSWORD: ${LOGIN_DB_PASSWORD:?LOGIN_DB_PASSWORD is required (see .env.example)}
+    ports:
+      - ${LOGIN_DB_PORT:-20011}:5432
+    volumes:
+      - login_db_data:/var/lib/postgresql
+  game-db:
+    image: postgres:18
+    container_name: game-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${GAME_DB_NAME:-openmmo_game_db}
+      POSTGRES_USER: ${GAME_DB_USER:-openmmo_game_user}
+      POSTGRES_PASSWORD: ${GAME_DB_PASSWORD:?GAME_DB_PASSWORD is required (see .env.example)}
+    ports:
+      - ${GAME_DB_PORT:-20021}:5432
+    volumes:
+      - game_db_data:/var/lib/postgresql
+
+volumes:
+  login_db_data:
+  game_db_data:

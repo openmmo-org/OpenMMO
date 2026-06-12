@@ -21,6 +21,7 @@ typesafe-config = "1.4.4"
 dagger = "2.57"
 ksp = "2.3.8"
 ineter = "0.3.1"
+dotenv = "4.0.0"
 
 [libraries]
 kotlinGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -69,3 +70,4 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 jooq = { id = "org.jooq.jooq-codegen-gradle", version.ref = "jooq" }
 flyway = { id = "org.flywaydb.flyway", version.ref = "flyway" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+dotenv = { id = "co.uzzu.dotenv.gradle", version.ref = "dotenv" }
