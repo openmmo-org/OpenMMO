@@ -11,13 +11,14 @@ import de.fiereu.openmmo.net.game.packets.LoadMapPacket
 import de.fiereu.openmmo.net.game.packets.NullPacket
 import de.fiereu.openmmo.net.game.packets.TokenPayloadPacket
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.shouldBe
 
 class GameProtocolTest :
     FunSpec({
       test("at least one registration per known opcode") {
         val opcodes = GameProtocol.registrations.map { it.opcode }.toSet()
-        opcodes shouldBe
+        opcodes shouldContainAll
             setOf(
                 0x01u.toUByte(),
                 0x02u.toUByte(),

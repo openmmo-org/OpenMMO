@@ -271,11 +271,11 @@ object GameProtocol : Protocol() {
         c2s<UnblockPlayerPacket>(0x61u, UnblockPlayerPacketCodec)
         s2c<EntityCoordSyncPacket>(0x61u, EntityCoordSyncPacketCodec)
 
-        c2s<RemoveFriendPacket>(0x62u, RemoveFriendPacketCodec)
+        c2s<AddFriendPacket>(0x62u, AddFriendPacketCodec)
         s2c<SocialActionOutcomePacket>(0x62u, SocialActionOutcomePacketCodec)
 
-        c2s<SetPlayerTitlePacket>(0x63u, SetPlayerTitlePacketCodec)
-        s2c<ContactRosterPacket>(0x63u, ContactRosterPacketCodec)
+        c2s<RemoveFriendPacket>(0x63u, RemoveFriendPacketCodec)
+        s2c<FriendListPacket>(0x63u, FriendListPacketCodec)
 
         c2s<FriendProfileRequestPacket>(0x64u, FriendProfileRequestPacketCodec)
         s2c<ContactInsertPacket>(0x64u, ContactInsertPacketCodec)

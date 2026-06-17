@@ -42,6 +42,7 @@ constructor(
     private val mapLoadService: MapLoadService,
     private val npcService: NpcService,
     private val multiplayerService: MultiplayerService,
+    private val socialService: SocialService,
     private val sessionRegistry: SessionRegistry,
     private val mapManager: MapManager,
     private val characterStore: CharacterStore,
@@ -283,6 +284,9 @@ constructor(
     }
 
     ctx.send(RenderScreenPacket(true))
+
+    socialService.sendFriendList(ctx)
+
     log.info { "Player $charId spawned in bank=$bankId map=$mapId; ${others.size} others present" }
   }
 }
