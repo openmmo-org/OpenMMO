@@ -3,28 +3,29 @@ package de.fiereu.openmmo.net.game.packets
 import de.fiereu.bytecodec.CodecScope
 import de.fiereu.bytecodec.PacketCodec
 import de.fiereu.bytecodec.S16LE
+import de.fiereu.openmmo.common.enums.GuildPermission
+import de.fiereu.openmmo.common.enums.GuildRank
 
 data class GuildRankPermissionUpdatePacket(
-    val permCategory1: Short,
-    val permCategory2: Short,
-    val permCategory3: Short,
-    val permCategory4: Short,
-    val permCategory5: Short,
+    val permissions: Map<GuildRank, Set<GuildPermission>>,
 )
 
+private val EDITABLE_RANKS: List<GuildRank> =
+    GuildRank.entries.filter { it != GuildRank.BOSS }.reversed()
+
+private fun maskToPermissions(mask: Short): Set<GuildPermission> =
+    GuildPermission.entries.filterTo(mutableSetOf()) { (mask.toInt() and (1 shl it.ordinal)) != 0 }
+
+private fun permissionsToMask(perms: Set<GuildPermission>): Short =
+    perms.fold(0) { acc, p -> acc or (1 shl p.ordinal) }.toShort()
+
 object GuildRankPermissionUpdatePacketCodec : PacketCodec<GuildRankPermissionUpdatePacket>() {
-  override fun CodecScope<GuildRankPermissionUpdatePacket>.body(): GuildRankPermissionUpdatePacket {
-    val permCategory1 = field(S16LE) { it.permCategory1 }
-    val permCategory2 = field(S16LE) { it.permCategory2 }
-    val permCategory3 = field(S16LE) { it.permCategory3 }
-    val permCategory4 = field(S16LE) { it.permCategory4 }
-    val permCategory5 = field(S16LE) { it.permCategory5 }
-    return GuildRankPermissionUpdatePacket(
-        permCategory1,
-        permCategory2,
-        permCategory3,
-        permCategory4,
-        permCategory5,
-    )
-  }
+    override fun CodecScope<GuildRankPermissionUpdatePacket>.body(): GuildRankPermissionUpdatePacket {
+        val permissions = LinkedHashMap<GuildRank, Set<GuildPermission>>()
+        for (rank in EDITABLE_RANKS) {
+            val mask = field(S16LE) { permissionsToMask(it.permissions[rank].orEmpty()) }
+            permissions[rank] = maskToPermissions(mask)
+        }
+        return GuildRankPermissionUpdatePacket(permissions)
+    }
 }
