@@ -9,10 +9,10 @@ data class SetChatUserIgnoredPacket(
 )
 
 object SetChatUserIgnoredPacketCodec : PacketCodec<SetChatUserIgnoredPacket>() {
-    override fun CodecScope<SetChatUserIgnoredPacket>.body(): SetChatUserIgnoredPacket {
-        val channelType = field(S8) { it.channelType }
-        val userId = field(S16LE) { it.userId }
-        val ignored = field(Bool) { it.ignored }
-        return SetChatUserIgnoredPacket(channelType, userId, ignored)
-    }
+  override fun CodecScope<SetChatUserIgnoredPacket>.body(): SetChatUserIgnoredPacket {
+    val channelType = field(S8) { it.channelType }
+    val userId = field(S16LE) { it.userId }
+    val ignored = field(Bool) { it.ignored }
+    return SetChatUserIgnoredPacket(channelType, userId, ignored)
+  }
 }

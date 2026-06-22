@@ -11,10 +11,10 @@ data class WorldVersionPacket(
 )
 
 object WorldVersionPacketCodec : PacketCodec<WorldVersionPacket>() {
-    override fun CodecScope<WorldVersionPacket>.body(): WorldVersionPacket {
-        val major = field(S16LE) { it.major }
-        val build = field(S16LE) { it.build }
-        val minor = field(S16LE) { it.minor }
-        return WorldVersionPacket(major, build, minor)
-    }
+  override fun CodecScope<WorldVersionPacket>.body(): WorldVersionPacket {
+    val major = field(S16LE) { it.major }
+    val build = field(S16LE) { it.build }
+    val minor = field(S16LE) { it.minor }
+    return WorldVersionPacket(major, build, minor)
+  }
 }

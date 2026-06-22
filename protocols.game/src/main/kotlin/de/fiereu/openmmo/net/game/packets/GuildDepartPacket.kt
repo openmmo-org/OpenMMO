@@ -6,7 +6,7 @@ import de.fiereu.bytecodec.PacketCodec
 class GuildDepartPacket
 
 object GuildDepartPacketCodec : PacketCodec<GuildDepartPacket>() {
-    override fun CodecScope<GuildDepartPacket>.body(): GuildDepartPacket {
-        return GuildDepartPacket()
-    }
+  override fun CodecScope<GuildDepartPacket>.body(): GuildDepartPacket {
+    return GuildDepartPacket()
+  }
 }

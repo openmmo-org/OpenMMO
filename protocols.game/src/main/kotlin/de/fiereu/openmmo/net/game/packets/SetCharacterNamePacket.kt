@@ -11,9 +11,9 @@ data class SetCharacterNamePacket(
 )
 
 object SetCharacterNamePacketCodec : PacketCodec<SetCharacterNamePacket>() {
-    override fun CodecScope<SetCharacterNamePacket>.body(): SetCharacterNamePacket {
-        val characterEntityId = field(S64LE) { it.characterEntityId }
-        val newName = field(Utf16LeNullTerminated) { it.newName }
-        return SetCharacterNamePacket(characterEntityId, newName)
-    }
+  override fun CodecScope<SetCharacterNamePacket>.body(): SetCharacterNamePacket {
+    val characterEntityId = field(S64LE) { it.characterEntityId }
+    val newName = field(Utf16LeNullTerminated) { it.newName }
+    return SetCharacterNamePacket(characterEntityId, newName)
+  }
 }

@@ -14,16 +14,16 @@ data class EntityMovePacket(
 )
 
 object EntityMovePacketCodec : PacketCodec<EntityMovePacket>() {
-    private val DirectionCodec = enumByOrdinalByte<Direction>()
+  private val DirectionCodec = enumByOrdinalByte<Direction>()
 
-    override fun CodecScope<EntityMovePacket>.body(): EntityMovePacket {
-        val entityId = field(S64BE) { it.entityId }
-        val marker = field(S8) { it.marker }
-        val subtype = field(S8) { it.subtype }
-        val seq = field(S8) { it.seq }
-        val x = field(S8) { it.x }
-        val y = field(S8) { it.y }
-        val direction = field(DirectionCodec) { it.direction }
-        return EntityMovePacket(entityId, marker, subtype, seq, x, y, direction)
-    }
+  override fun CodecScope<EntityMovePacket>.body(): EntityMovePacket {
+    val entityId = field(S64BE) { it.entityId }
+    val marker = field(S8) { it.marker }
+    val subtype = field(S8) { it.subtype }
+    val seq = field(S8) { it.seq }
+    val x = field(S8) { it.x }
+    val y = field(S8) { it.y }
+    val direction = field(DirectionCodec) { it.direction }
+    return EntityMovePacket(entityId, marker, subtype, seq, x, y, direction)
+  }
 }

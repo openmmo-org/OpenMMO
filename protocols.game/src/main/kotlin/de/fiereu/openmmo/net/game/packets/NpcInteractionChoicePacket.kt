@@ -9,8 +9,8 @@ data class NpcInteractionChoicePacket(
 )
 
 object NpcInteractionChoicePacketCodec : PacketCodec<NpcInteractionChoicePacket>() {
-    override fun CodecScope<NpcInteractionChoicePacket>.body(): NpcInteractionChoicePacket {
-        val targetId = field(S64LE) { it.targetId }
-        return NpcInteractionChoicePacket(targetId)
-    }
+  override fun CodecScope<NpcInteractionChoicePacket>.body(): NpcInteractionChoicePacket {
+    val targetId = field(S64LE) { it.targetId }
+    return NpcInteractionChoicePacket(targetId)
+  }
 }

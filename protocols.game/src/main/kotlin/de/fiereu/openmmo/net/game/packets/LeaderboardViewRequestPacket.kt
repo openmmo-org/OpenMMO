@@ -9,8 +9,8 @@ data class LeaderboardViewRequestPacket(
 )
 
 object LeaderboardViewRequestPacketCodec : PacketCodec<LeaderboardViewRequestPacket>() {
-    override fun CodecScope<LeaderboardViewRequestPacket>.body(): LeaderboardViewRequestPacket {
-        val categoryId = field(S8) { it.categoryId }
-        return LeaderboardViewRequestPacket(categoryId)
-    }
+  override fun CodecScope<LeaderboardViewRequestPacket>.body(): LeaderboardViewRequestPacket {
+    val categoryId = field(S8) { it.categoryId }
+    return LeaderboardViewRequestPacket(categoryId)
+  }
 }

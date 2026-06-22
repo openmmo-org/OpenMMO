@@ -12,10 +12,10 @@ data class ExchangeItemRequestPacket(
 )
 
 object ExchangeItemRequestPacketCodec : PacketCodec<ExchangeItemRequestPacket>() {
-    override fun CodecScope<ExchangeItemRequestPacket>.body(): ExchangeItemRequestPacket {
-        val itemEntityRef = field(S16LE) { it.itemEntityRef }
-        val quantity = field(S16LE) { it.quantity }
-        val exchangeTypeIndex = field(S8) { it.exchangeTypeIndex }
-        return ExchangeItemRequestPacket(itemEntityRef, quantity, exchangeTypeIndex)
-    }
+  override fun CodecScope<ExchangeItemRequestPacket>.body(): ExchangeItemRequestPacket {
+    val itemEntityRef = field(S16LE) { it.itemEntityRef }
+    val quantity = field(S16LE) { it.quantity }
+    val exchangeTypeIndex = field(S8) { it.exchangeTypeIndex }
+    return ExchangeItemRequestPacket(itemEntityRef, quantity, exchangeTypeIndex)
+  }
 }

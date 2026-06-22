@@ -9,8 +9,8 @@ data class GuildMotdUpdatePacket(
 )
 
 object GuildMotdUpdatePacketCodec : PacketCodec<GuildMotdUpdatePacket>() {
-    override fun CodecScope<GuildMotdUpdatePacket>.body(): GuildMotdUpdatePacket {
-        val motdText = field(Utf16LeNullTerminated) { it.motdText }
-        return GuildMotdUpdatePacket(motdText)
-    }
+  override fun CodecScope<GuildMotdUpdatePacket>.body(): GuildMotdUpdatePacket {
+    val motdText = field(Utf16LeNullTerminated) { it.motdText }
+    return GuildMotdUpdatePacket(motdText)
+  }
 }

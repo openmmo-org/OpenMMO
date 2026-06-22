@@ -10,9 +10,9 @@ data class SendDirectMessagePacket(
 )
 
 object SendDirectMessagePacketCodec : PacketCodec<SendDirectMessagePacket>() {
-    override fun CodecScope<SendDirectMessagePacket>.body(): SendDirectMessagePacket {
-        val senderContextId = field(S64LE) { it.senderContextId }
-        val recipientId = field(S64LE) { it.recipientId }
-        return SendDirectMessagePacket(senderContextId, recipientId)
-    }
+  override fun CodecScope<SendDirectMessagePacket>.body(): SendDirectMessagePacket {
+    val senderContextId = field(S64LE) { it.senderContextId }
+    val recipientId = field(S64LE) { it.recipientId }
+    return SendDirectMessagePacket(senderContextId, recipientId)
+  }
 }

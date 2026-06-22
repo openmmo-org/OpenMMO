@@ -6,7 +6,7 @@ import de.fiereu.bytecodec.PacketCodec
 class BattleTransitionReadyPacket
 
 object BattleTransitionReadyPacketCodec : PacketCodec<BattleTransitionReadyPacket>() {
-    override fun CodecScope<BattleTransitionReadyPacket>.body(): BattleTransitionReadyPacket {
-        return BattleTransitionReadyPacket()
-    }
+  override fun CodecScope<BattleTransitionReadyPacket>.body(): BattleTransitionReadyPacket {
+    return BattleTransitionReadyPacket()
+  }
 }

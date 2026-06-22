@@ -10,11 +10,11 @@ data class CreateMarketListingPacket(
 )
 
 object CreateMarketListingPacketCodec : PacketCodec<CreateMarketListingPacket>() {
-    override fun CodecScope<CreateMarketListingPacket>.body(): CreateMarketListingPacket {
-        val entryKind = field(S8) { it.entryKind }
-        val entityId = field(S64LE) { it.entityId }
-        val price = field(S32LE) { it.price }
-        val quantity = field(S16LE) { it.quantity }
-        return CreateMarketListingPacket(entryKind, entityId, price, quantity)
-    }
+  override fun CodecScope<CreateMarketListingPacket>.body(): CreateMarketListingPacket {
+    val entryKind = field(S8) { it.entryKind }
+    val entityId = field(S64LE) { it.entityId }
+    val price = field(S32LE) { it.price }
+    val quantity = field(S16LE) { it.quantity }
+    return CreateMarketListingPacket(entryKind, entityId, price, quantity)
+  }
 }

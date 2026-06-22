@@ -10,9 +10,9 @@ data class BattleEntityActionEventPacket(
 )
 
 object BattleEntityActionEventPacketCodec : PacketCodec<BattleEntityActionEventPacket>() {
-    override fun CodecScope<BattleEntityActionEventPacket>.body(): BattleEntityActionEventPacket {
-        val sourceId = field(S64LE) { it.sourceId }
-        val targetId = field(S64LE) { it.targetId }
-        return BattleEntityActionEventPacket(sourceId, targetId)
-    }
+  override fun CodecScope<BattleEntityActionEventPacket>.body(): BattleEntityActionEventPacket {
+    val sourceId = field(S64LE) { it.sourceId }
+    val targetId = field(S64LE) { it.targetId }
+    return BattleEntityActionEventPacket(sourceId, targetId)
+  }
 }

@@ -11,9 +11,9 @@ data class BattleRewardSelectPacket(
 )
 
 object BattleRewardSelectPacketCodec : PacketCodec<BattleRewardSelectPacket>() {
-    override fun CodecScope<BattleRewardSelectPacket>.body(): BattleRewardSelectPacket {
-        val targetEntityId = field(S64LE) { it.targetEntityId }
-        val rewardIndex = field(S32LE) { it.rewardIndex }
-        return BattleRewardSelectPacket(targetEntityId, rewardIndex)
-    }
+  override fun CodecScope<BattleRewardSelectPacket>.body(): BattleRewardSelectPacket {
+    val targetEntityId = field(S64LE) { it.targetEntityId }
+    val rewardIndex = field(S32LE) { it.rewardIndex }
+    return BattleRewardSelectPacket(targetEntityId, rewardIndex)
+  }
 }

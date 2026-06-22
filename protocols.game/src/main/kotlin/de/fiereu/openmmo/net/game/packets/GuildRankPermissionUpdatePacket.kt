@@ -13,18 +13,18 @@ data class GuildRankPermissionUpdatePacket(
 )
 
 object GuildRankPermissionUpdatePacketCodec : PacketCodec<GuildRankPermissionUpdatePacket>() {
-    override fun CodecScope<GuildRankPermissionUpdatePacket>.body(): GuildRankPermissionUpdatePacket {
-        val permCategory1 = field(S16LE) { it.permCategory1 }
-        val permCategory2 = field(S16LE) { it.permCategory2 }
-        val permCategory3 = field(S16LE) { it.permCategory3 }
-        val permCategory4 = field(S16LE) { it.permCategory4 }
-        val permCategory5 = field(S16LE) { it.permCategory5 }
-        return GuildRankPermissionUpdatePacket(
-            permCategory1,
-            permCategory2,
-            permCategory3,
-            permCategory4,
-            permCategory5,
-        )
-    }
+  override fun CodecScope<GuildRankPermissionUpdatePacket>.body(): GuildRankPermissionUpdatePacket {
+    val permCategory1 = field(S16LE) { it.permCategory1 }
+    val permCategory2 = field(S16LE) { it.permCategory2 }
+    val permCategory3 = field(S16LE) { it.permCategory3 }
+    val permCategory4 = field(S16LE) { it.permCategory4 }
+    val permCategory5 = field(S16LE) { it.permCategory5 }
+    return GuildRankPermissionUpdatePacket(
+        permCategory1,
+        permCategory2,
+        permCategory3,
+        permCategory4,
+        permCategory5,
+    )
+  }
 }

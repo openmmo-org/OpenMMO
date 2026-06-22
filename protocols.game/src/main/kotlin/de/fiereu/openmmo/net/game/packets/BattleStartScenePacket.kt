@@ -12,10 +12,10 @@ data class BattleStartScenePacket(
 )
 
 object BattleStartScenePacketCodec : PacketCodec<BattleStartScenePacket>() {
-    override fun CodecScope<BattleStartScenePacket>.body(): BattleStartScenePacket {
-        val battleType = field(S8) { it.battleType }
-        val doubleBattle = field(U8) { if (it.doubleBattle) 1 else 0 } == 1
-        val perspective = field(S8) { it.perspective }
-        return BattleStartScenePacket(battleType, doubleBattle, perspective)
-    }
+  override fun CodecScope<BattleStartScenePacket>.body(): BattleStartScenePacket {
+    val battleType = field(S8) { it.battleType }
+    val doubleBattle = field(U8) { if (it.doubleBattle) 1 else 0 } == 1
+    val perspective = field(S8) { it.perspective }
+    return BattleStartScenePacket(battleType, doubleBattle, perspective)
+  }
 }

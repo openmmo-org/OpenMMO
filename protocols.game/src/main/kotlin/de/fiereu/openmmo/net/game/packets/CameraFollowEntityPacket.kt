@@ -9,8 +9,8 @@ data class CameraFollowEntityPacket(
 )
 
 object CameraFollowEntityPacketCodec : PacketCodec<CameraFollowEntityPacket>() {
-    override fun CodecScope<CameraFollowEntityPacket>.body(): CameraFollowEntityPacket {
-        val entityId = field(S64LE) { it.entityId }
-        return CameraFollowEntityPacket(entityId)
-    }
+  override fun CodecScope<CameraFollowEntityPacket>.body(): CameraFollowEntityPacket {
+    val entityId = field(S64LE) { it.entityId }
+    return CameraFollowEntityPacket(entityId)
+  }
 }

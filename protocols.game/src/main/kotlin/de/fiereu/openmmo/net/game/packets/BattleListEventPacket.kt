@@ -18,16 +18,16 @@ data class BattleListEventPacket(
 )
 
 object BattleListEventPacketCodec : PacketCodec<BattleListEventPacket>() {
-    override fun CodecScope<BattleListEventPacket>.body(): BattleListEventPacket {
-        val kind = field(S8) { it.kind }
-        val value = field(S16LE) { it.value }
-        val subKind = field(S8) { it.subKind }
-        val detail =
-            if (subKind.toInt() == 4) {
-                val listType = field(S8) { it.detail!!.listType }
-                val detailValue = field(S16LE) { it.detail!!.value }
-                BattleListEventDetail(listType, detailValue)
-            } else null
-        return BattleListEventPacket(kind, value, subKind, detail)
-    }
+  override fun CodecScope<BattleListEventPacket>.body(): BattleListEventPacket {
+    val kind = field(S8) { it.kind }
+    val value = field(S16LE) { it.value }
+    val subKind = field(S8) { it.subKind }
+    val detail =
+        if (subKind.toInt() == 4) {
+          val listType = field(S8) { it.detail!!.listType }
+          val detailValue = field(S16LE) { it.detail!!.value }
+          BattleListEventDetail(listType, detailValue)
+        } else null
+    return BattleListEventPacket(kind, value, subKind, detail)
+  }
 }

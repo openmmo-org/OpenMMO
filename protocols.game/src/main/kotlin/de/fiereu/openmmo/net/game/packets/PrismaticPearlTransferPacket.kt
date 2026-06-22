@@ -10,9 +10,9 @@ data class PrismaticPearlTransferPacket(
 )
 
 object PrismaticPearlTransferPacketCodec : PacketCodec<PrismaticPearlTransferPacket>() {
-    override fun CodecScope<PrismaticPearlTransferPacket>.body(): PrismaticPearlTransferPacket {
-        val sourceEntityId = field(S64LE) { it.sourceEntityId }
-        val targetEntityId = field(S64LE) { it.targetEntityId }
-        return PrismaticPearlTransferPacket(sourceEntityId, targetEntityId)
-    }
+  override fun CodecScope<PrismaticPearlTransferPacket>.body(): PrismaticPearlTransferPacket {
+    val sourceEntityId = field(S64LE) { it.sourceEntityId }
+    val targetEntityId = field(S64LE) { it.targetEntityId }
+    return PrismaticPearlTransferPacket(sourceEntityId, targetEntityId)
+  }
 }

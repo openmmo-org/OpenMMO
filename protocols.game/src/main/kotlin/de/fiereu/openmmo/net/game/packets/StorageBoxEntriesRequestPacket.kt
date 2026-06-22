@@ -9,10 +9,10 @@ data class StorageBoxEntriesRequestPacket(
 )
 
 object StorageBoxEntriesRequestPacketCodec : PacketCodec<StorageBoxEntriesRequestPacket>() {
-    override fun CodecScope<StorageBoxEntriesRequestPacket>.body(): StorageBoxEntriesRequestPacket {
-        val listType = field(S8) { it.listType }
-        val itemIds = field(S32LE.listPrefixed(U8)) { it.itemIds }
-        val flags = field(S16LE) { it.flags }
-        return StorageBoxEntriesRequestPacket(listType, itemIds, flags)
-    }
+  override fun CodecScope<StorageBoxEntriesRequestPacket>.body(): StorageBoxEntriesRequestPacket {
+    val listType = field(S8) { it.listType }
+    val itemIds = field(S32LE.listPrefixed(U8)) { it.itemIds }
+    val flags = field(S16LE) { it.flags }
+    return StorageBoxEntriesRequestPacket(listType, itemIds, flags)
+  }
 }

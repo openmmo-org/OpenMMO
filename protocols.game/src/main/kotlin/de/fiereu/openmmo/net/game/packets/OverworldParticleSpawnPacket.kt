@@ -14,12 +14,12 @@ data class OverworldParticleSpawnPacket(
 )
 
 object OverworldParticleSpawnPacketCodec : PacketCodec<OverworldParticleSpawnPacket>() {
-    override fun CodecScope<OverworldParticleSpawnPacket>.body(): OverworldParticleSpawnPacket {
-        val effectType = field(S8) { it.effectType }
-        val x = field(S16LE) { it.x }
-        val y = field(S16LE) { it.y }
-        val z = field(S16LE) { it.z }
-        val variant = field(S16LE) { it.variant }
-        return OverworldParticleSpawnPacket(effectType, x, y, z, variant)
-    }
+  override fun CodecScope<OverworldParticleSpawnPacket>.body(): OverworldParticleSpawnPacket {
+    val effectType = field(S8) { it.effectType }
+    val x = field(S16LE) { it.x }
+    val y = field(S16LE) { it.y }
+    val z = field(S16LE) { it.z }
+    val variant = field(S16LE) { it.variant }
+    return OverworldParticleSpawnPacket(effectType, x, y, z, variant)
+  }
 }

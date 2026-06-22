@@ -9,8 +9,8 @@ data class RosterCooldownPacket(
 )
 
 object RosterCooldownPacketCodec : PacketCodec<RosterCooldownPacket>() {
-    override fun CodecScope<RosterCooldownPacket>.body(): RosterCooldownPacket {
-        val cooldownOffsetSeconds = field(S32LE) { it.cooldownOffsetSeconds }
-        return RosterCooldownPacket(cooldownOffsetSeconds)
-    }
+  override fun CodecScope<RosterCooldownPacket>.body(): RosterCooldownPacket {
+    val cooldownOffsetSeconds = field(S32LE) { it.cooldownOffsetSeconds }
+    return RosterCooldownPacket(cooldownOffsetSeconds)
+  }
 }

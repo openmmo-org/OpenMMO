@@ -11,9 +11,9 @@ data class BattleSideRemovePokemonPacket(
 )
 
 object BattleSideRemovePokemonPacketCodec : PacketCodec<BattleSideRemovePokemonPacket>() {
-    override fun CodecScope<BattleSideRemovePokemonPacket>.body(): BattleSideRemovePokemonPacket {
-        val side = field(S8) { it.side }
-        val entityId = field(S64LE) { it.entityId }
-        return BattleSideRemovePokemonPacket(side, entityId)
-    }
+  override fun CodecScope<BattleSideRemovePokemonPacket>.body(): BattleSideRemovePokemonPacket {
+    val side = field(S8) { it.side }
+    val entityId = field(S64LE) { it.entityId }
+    return BattleSideRemovePokemonPacket(side, entityId)
+  }
 }

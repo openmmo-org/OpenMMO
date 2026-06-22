@@ -9,9 +9,9 @@ data class GuildActivityLogPageRequestPacket(
 )
 
 object GuildActivityLogPageRequestPacketCodec : PacketCodec<GuildActivityLogPageRequestPacket>() {
-    override fun CodecScope<GuildActivityLogPageRequestPacket>.body():
-            GuildActivityLogPageRequestPacket {
-        val pageIndex = field(S16LE) { it.pageIndex }
-        return GuildActivityLogPageRequestPacket(pageIndex)
-    }
+  override fun CodecScope<GuildActivityLogPageRequestPacket>.body():
+      GuildActivityLogPageRequestPacket {
+    val pageIndex = field(S16LE) { it.pageIndex }
+    return GuildActivityLogPageRequestPacket(pageIndex)
+  }
 }

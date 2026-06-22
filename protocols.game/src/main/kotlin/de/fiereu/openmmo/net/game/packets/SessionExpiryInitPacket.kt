@@ -11,9 +11,9 @@ data class SessionExpiryInitPacket(
 )
 
 object SessionExpiryInitPacketCodec : PacketCodec<SessionExpiryInitPacket>() {
-    override fun CodecScope<SessionExpiryInitPacket>.body(): SessionExpiryInitPacket {
-        val tileSessionByte = field(S8) { it.tileSessionByte }
-        val expirySeconds = field(S16LE) { it.expirySeconds }
-        return SessionExpiryInitPacket(tileSessionByte, expirySeconds)
-    }
+  override fun CodecScope<SessionExpiryInitPacket>.body(): SessionExpiryInitPacket {
+    val tileSessionByte = field(S8) { it.tileSessionByte }
+    val expirySeconds = field(S16LE) { it.expirySeconds }
+    return SessionExpiryInitPacket(tileSessionByte, expirySeconds)
+  }
 }

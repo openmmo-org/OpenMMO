@@ -11,9 +11,9 @@ data class AppearanceRequestResultPacket(
 )
 
 object AppearanceRequestResultPacketCodec : PacketCodec<AppearanceRequestResultPacket>() {
-    override fun CodecScope<AppearanceRequestResultPacket>.body(): AppearanceRequestResultPacket {
-        val entityId = field(S64LE) { it.entityId }
-        val accepted = field(Bool) { it.accepted }
-        return AppearanceRequestResultPacket(entityId, accepted)
-    }
+  override fun CodecScope<AppearanceRequestResultPacket>.body(): AppearanceRequestResultPacket {
+    val entityId = field(S64LE) { it.entityId }
+    val accepted = field(Bool) { it.accepted }
+    return AppearanceRequestResultPacket(entityId, accepted)
+  }
 }

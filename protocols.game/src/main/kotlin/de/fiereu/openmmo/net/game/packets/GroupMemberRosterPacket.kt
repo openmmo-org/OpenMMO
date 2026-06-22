@@ -13,15 +13,15 @@ data class GroupMemberAppearance(
 
 private val GroupMemberAppearanceCodec: Codec<GroupMemberAppearance> =
     object : PacketCodec<GroupMemberAppearance>() {
-        override fun CodecScope<GroupMemberAppearance>.body(): GroupMemberAppearance {
-            val name = field(Utf16LeNullTerminated) { it.name }
-            val gender = field(S8) { it.gender }
-            val formId = field(S32LE) { it.formId }
-            val kind = field(S8) { it.kind }
-            val palettePack = field(S8) { it.palettePack }
-            val slots = field(S16LE.repeat(4)) { it.slots }
-            return GroupMemberAppearance(name, gender, formId, kind, palettePack, slots)
-        }
+      override fun CodecScope<GroupMemberAppearance>.body(): GroupMemberAppearance {
+        val name = field(Utf16LeNullTerminated) { it.name }
+        val gender = field(S8) { it.gender }
+        val formId = field(S32LE) { it.formId }
+        val kind = field(S8) { it.kind }
+        val palettePack = field(S8) { it.palettePack }
+        val slots = field(S16LE.repeat(4)) { it.slots }
+        return GroupMemberAppearance(name, gender, formId, kind, palettePack, slots)
+      }
     }
 
 data class GroupMemberTrackedEntity(
@@ -31,11 +31,11 @@ data class GroupMemberTrackedEntity(
 
 private val GroupMemberTrackedEntityCodec: Codec<GroupMemberTrackedEntity> =
     object : PacketCodec<GroupMemberTrackedEntity>() {
-        override fun CodecScope<GroupMemberTrackedEntity>.body(): GroupMemberTrackedEntity {
-            val entityId = field(S64LE) { it.entityId }
-            val appearance = field(GroupMemberAppearanceCodec) { it.appearance }
-            return GroupMemberTrackedEntity(entityId, appearance)
-        }
+      override fun CodecScope<GroupMemberTrackedEntity>.body(): GroupMemberTrackedEntity {
+        val entityId = field(S64LE) { it.entityId }
+        val appearance = field(GroupMemberAppearanceCodec) { it.appearance }
+        return GroupMemberTrackedEntity(entityId, appearance)
+      }
     }
 
 data class GroupRosterMember(
@@ -47,14 +47,14 @@ data class GroupRosterMember(
 
 private val GroupRosterMemberCodec: Codec<GroupRosterMember> =
     object : PacketCodec<GroupRosterMember>() {
-        override fun CodecScope<GroupRosterMember>.body(): GroupRosterMember {
-            val entityId = field(S64LE) { it.entityId }
-            val name = field(Utf16LeNullTerminated) { it.name }
-            val guildName = field(Utf16LeNullTerminated) { it.guildName }
-            val trackedEntities =
-                field(GroupMemberTrackedEntityCodec.listPrefixed(U8)) { it.trackedEntities }
-            return GroupRosterMember(entityId, name, guildName, trackedEntities)
-        }
+      override fun CodecScope<GroupRosterMember>.body(): GroupRosterMember {
+        val entityId = field(S64LE) { it.entityId }
+        val name = field(Utf16LeNullTerminated) { it.name }
+        val guildName = field(Utf16LeNullTerminated) { it.guildName }
+        val trackedEntities =
+            field(GroupMemberTrackedEntityCodec.listPrefixed(U8)) { it.trackedEntities }
+        return GroupRosterMember(entityId, name, guildName, trackedEntities)
+      }
     }
 
 data class GroupMemberRosterPacket(
@@ -65,11 +65,11 @@ data class GroupMemberRosterPacket(
 )
 
 object GroupMemberRosterPacketCodec : PacketCodec<GroupMemberRosterPacket>() {
-    override fun CodecScope<GroupMemberRosterPacket>.body(): GroupMemberRosterPacket {
-        val reset = field(U8) { if (it.reset) 1 else 0 } == 1
-        val updateState = field(U8) { if (it.updateState) 1 else 0 } == 1
-        val state = field(S8) { it.state }
-        val members = field(GroupRosterMemberCodec.listPrefixed(U8)) { it.members }
-        return GroupMemberRosterPacket(reset, updateState, state, members)
-    }
+  override fun CodecScope<GroupMemberRosterPacket>.body(): GroupMemberRosterPacket {
+    val reset = field(U8) { if (it.reset) 1 else 0 } == 1
+    val updateState = field(U8) { if (it.updateState) 1 else 0 } == 1
+    val state = field(S8) { it.state }
+    val members = field(GroupRosterMemberCodec.listPrefixed(U8)) { it.members }
+    return GroupMemberRosterPacket(reset, updateState, state, members)
+  }
 }

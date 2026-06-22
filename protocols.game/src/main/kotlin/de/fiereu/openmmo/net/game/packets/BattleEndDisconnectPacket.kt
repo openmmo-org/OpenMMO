@@ -9,8 +9,8 @@ data class BattleEndDisconnectPacket(
 )
 
 object BattleEndDisconnectPacketCodec : PacketCodec<BattleEndDisconnectPacket>() {
-    override fun CodecScope<BattleEndDisconnectPacket>.body(): BattleEndDisconnectPacket {
-        val reason = field(S8) { it.reason }
-        return BattleEndDisconnectPacket(reason)
-    }
+  override fun CodecScope<BattleEndDisconnectPacket>.body(): BattleEndDisconnectPacket {
+    val reason = field(S8) { it.reason }
+    return BattleEndDisconnectPacket(reason)
+  }
 }

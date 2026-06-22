@@ -11,10 +11,10 @@ data class BattleEnumPairEventPacket(
 )
 
 object BattleEnumPairEventPacketCodec : PacketCodec<BattleEnumPairEventPacket>() {
-    override fun CodecScope<BattleEnumPairEventPacket>.body(): BattleEnumPairEventPacket {
-        val eventType = field(S8) { it.eventType }
-        val first = field(S8) { it.first }
-        val second = field(S8) { it.second }
-        return BattleEnumPairEventPacket(eventType, first, second)
-    }
+  override fun CodecScope<BattleEnumPairEventPacket>.body(): BattleEnumPairEventPacket {
+    val eventType = field(S8) { it.eventType }
+    val first = field(S8) { it.first }
+    val second = field(S8) { it.second }
+    return BattleEnumPairEventPacket(eventType, first, second)
+  }
 }

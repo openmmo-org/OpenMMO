@@ -7,8 +7,8 @@ import de.fiereu.bytecodec.S64BE
 data class EntityLeavePacket(val entityId: Long)
 
 object EntityLeavePacketCodec : PacketCodec<EntityLeavePacket>() {
-    override fun CodecScope<EntityLeavePacket>.body(): EntityLeavePacket {
-        val entityId = field(S64BE) { it.entityId }
-        return EntityLeavePacket(entityId)
-    }
+  override fun CodecScope<EntityLeavePacket>.body(): EntityLeavePacket {
+    val entityId = field(S64BE) { it.entityId }
+    return EntityLeavePacket(entityId)
+  }
 }

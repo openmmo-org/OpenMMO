@@ -9,8 +9,8 @@ data class BattleMoveSelectionCancelPacket(
 )
 
 object BattleMoveSelectionCancelPacketCodec : PacketCodec<BattleMoveSelectionCancelPacket>() {
-    override fun CodecScope<BattleMoveSelectionCancelPacket>.body(): BattleMoveSelectionCancelPacket {
-        reserved(byte = 0)
-        return BattleMoveSelectionCancelPacket()
-    }
+  override fun CodecScope<BattleMoveSelectionCancelPacket>.body(): BattleMoveSelectionCancelPacket {
+    reserved(byte = 0)
+    return BattleMoveSelectionCancelPacket()
+  }
 }

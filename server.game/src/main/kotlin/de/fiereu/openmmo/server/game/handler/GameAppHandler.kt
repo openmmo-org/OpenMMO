@@ -6,24 +6,32 @@ import de.fiereu.network.coroutines.CoroutineProtocolHandler
 import de.fiereu.openmmo.common.enums.ChatType
 import de.fiereu.openmmo.common.enums.Language
 import de.fiereu.openmmo.net.game.GameProtocol
+import de.fiereu.openmmo.net.game.packets.AddFriendPacket
+import de.fiereu.openmmo.net.game.packets.BlockPlayerPacket
+import de.fiereu.openmmo.net.game.packets.CancelSocialInteractionPacket
 import de.fiereu.openmmo.net.game.packets.ChatMessagePacket
 import de.fiereu.openmmo.net.game.packets.CreateCharacterPacket
 import de.fiereu.openmmo.net.game.packets.DialogChoicePacket
 import de.fiereu.openmmo.net.game.packets.EntityInteractPacket
 import de.fiereu.openmmo.net.game.packets.EntityLeavePacket
 import de.fiereu.openmmo.net.game.packets.FaceDirectionPacket
+import de.fiereu.openmmo.net.game.packets.FriendProfileRequestPacket
 import de.fiereu.openmmo.net.game.packets.InteractiveResponsePacket
 import de.fiereu.openmmo.net.game.packets.JoinPacket
 import de.fiereu.openmmo.net.game.packets.KeepAlivePacket
 import de.fiereu.openmmo.net.game.packets.MovementPacket
+import de.fiereu.openmmo.net.game.packets.RemoveFriendPacket
 import de.fiereu.openmmo.net.game.packets.RequestCharactersPacket
 import de.fiereu.openmmo.net.game.packets.RequestPlayerPacket
+import de.fiereu.openmmo.net.game.packets.RequestSocialProfilePacket
 import de.fiereu.openmmo.net.game.packets.SelectCharacterPacket
+import de.fiereu.openmmo.net.game.packets.UnblockPlayerPacket
 import de.fiereu.openmmo.server.game.services.DialogService
 import de.fiereu.openmmo.server.game.services.InteractionService
 import de.fiereu.openmmo.server.game.services.LoginService
 import de.fiereu.openmmo.server.game.services.MovementService
 import de.fiereu.openmmo.server.game.services.MultiplayerService
+import de.fiereu.openmmo.server.game.services.SocialService
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.session.SessionRegistry
 import de.fiereu.openmmo.server.game.storage.CharacterStore
@@ -41,6 +49,7 @@ constructor(
     private val dialogService: DialogService,
     private val interactionService: InteractionService,
     private val multiplayerService: MultiplayerService,
+    private val socialService: SocialService,
     private val sessionRegistry: SessionRegistry,
     private val characterStore: CharacterStore,
     scope: CoroutineScope,
@@ -59,6 +68,14 @@ constructor(
     onSuspend<EntityInteractPacket> { event -> interactionService.onEntityInteract(event) }
     onSuspend<InteractiveResponsePacket> { event -> dialogService.onInteractive(event) }
     onSuspend<DialogChoicePacket> { event -> dialogService.onDialogChoice(event) }
+
+    on<AddFriendPacket> { event -> socialService.onAddFriend(event) }
+    on<RemoveFriendPacket> { event -> socialService.onRemoveFriend(event) }
+    on<BlockPlayerPacket> { event -> socialService.onBlockPlayer(event) }
+    on<UnblockPlayerPacket> { event -> socialService.onUnblockPlayer(event) }
+    on<FriendProfileRequestPacket> { event -> socialService.onFriendProfileRequest(event) }
+    on<RequestSocialProfilePacket> { event -> socialService.onRequestSocialProfile(event) }
+    on<CancelSocialInteractionPacket> { event -> socialService.onCancelSocialInteraction(event) }
 
     on<KeepAlivePacket> { event -> event.session.send(event.packet) }
     on<ChatMessagePacket> { event -> onChatMessage(event) }

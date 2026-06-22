@@ -7,8 +7,8 @@ data class SelectPartyPokemonPacket(
 )
 
 object SelectPartyPokemonPacketCodec : PacketCodec<SelectPartyPokemonPacket>() {
-    override fun CodecScope<SelectPartyPokemonPacket>.body(): SelectPartyPokemonPacket {
-        val entityIds = field(S64LE.listPrefixed(U8)) { it.entityIds }
-        return SelectPartyPokemonPacket(entityIds)
-    }
+  override fun CodecScope<SelectPartyPokemonPacket>.body(): SelectPartyPokemonPacket {
+    val entityIds = field(S64LE.listPrefixed(U8)) { it.entityIds }
+    return SelectPartyPokemonPacket(entityIds)
+  }
 }

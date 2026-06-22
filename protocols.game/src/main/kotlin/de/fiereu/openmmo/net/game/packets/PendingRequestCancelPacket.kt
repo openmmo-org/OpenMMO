@@ -9,8 +9,8 @@ data class PendingRequestCancelPacket(
 )
 
 object PendingRequestCancelPacketCodec : PacketCodec<PendingRequestCancelPacket>() {
-    override fun CodecScope<PendingRequestCancelPacket>.body(): PendingRequestCancelPacket {
-        val requestEntityId = field(S64LE) { it.requestEntityId }
-        return PendingRequestCancelPacket(requestEntityId)
-    }
+  override fun CodecScope<PendingRequestCancelPacket>.body(): PendingRequestCancelPacket {
+    val requestEntityId = field(S64LE) { it.requestEntityId }
+    return PendingRequestCancelPacket(requestEntityId)
+  }
 }

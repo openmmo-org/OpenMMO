@@ -9,8 +9,8 @@ data class PokedexSpeciesUnlockPacket(
 )
 
 object PokedexSpeciesUnlockPacketCodec : PacketCodec<PokedexSpeciesUnlockPacket>() {
-    override fun CodecScope<PokedexSpeciesUnlockPacket>.body(): PokedexSpeciesUnlockPacket {
-        val speciesId = field(S16LE) { it.speciesId }
-        return PokedexSpeciesUnlockPacket(speciesId)
-    }
+  override fun CodecScope<PokedexSpeciesUnlockPacket>.body(): PokedexSpeciesUnlockPacket {
+    val speciesId = field(S16LE) { it.speciesId }
+    return PokedexSpeciesUnlockPacket(speciesId)
+  }
 }

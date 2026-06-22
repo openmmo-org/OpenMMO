@@ -9,8 +9,8 @@ data class BattlePromptSwitchPacket(
 )
 
 object BattlePromptSwitchPacketCodec : PacketCodec<BattlePromptSwitchPacket>() {
-    override fun CodecScope<BattlePromptSwitchPacket>.body(): BattlePromptSwitchPacket {
-        val enabled = field(Bool) { it.enabled }
-        return BattlePromptSwitchPacket(enabled)
-    }
+  override fun CodecScope<BattlePromptSwitchPacket>.body(): BattlePromptSwitchPacket {
+    val enabled = field(Bool) { it.enabled }
+    return BattlePromptSwitchPacket(enabled)
+  }
 }

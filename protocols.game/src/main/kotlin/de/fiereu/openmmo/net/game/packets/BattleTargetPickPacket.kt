@@ -9,8 +9,8 @@ data class BattleTargetPickPacket(
 )
 
 object BattleTargetPickPacketCodec : PacketCodec<BattleTargetPickPacket>() {
-    override fun CodecScope<BattleTargetPickPacket>.body(): BattleTargetPickPacket {
-        val targetEntityId = field(S64LE) { it.targetEntityId }
-        return BattleTargetPickPacket(targetEntityId)
-    }
+  override fun CodecScope<BattleTargetPickPacket>.body(): BattleTargetPickPacket {
+    val targetEntityId = field(S64LE) { it.targetEntityId }
+    return BattleTargetPickPacket(targetEntityId)
+  }
 }

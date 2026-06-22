@@ -9,8 +9,8 @@ data class ContactDeletePacket(
 )
 
 object ContactDeletePacketCodec : PacketCodec<ContactDeletePacket>() {
-    override fun CodecScope<ContactDeletePacket>.body(): ContactDeletePacket {
-        val entityId = field(S64LE) { it.entityId }
-        return ContactDeletePacket(entityId)
-    }
+  override fun CodecScope<ContactDeletePacket>.body(): ContactDeletePacket {
+    val entityId = field(S64LE) { it.entityId }
+    return ContactDeletePacket(entityId)
+  }
 }

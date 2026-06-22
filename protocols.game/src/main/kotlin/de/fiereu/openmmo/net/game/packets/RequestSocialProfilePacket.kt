@@ -9,8 +9,8 @@ data class RequestSocialProfilePacket(
 )
 
 object RequestSocialProfilePacketCodec : PacketCodec<RequestSocialProfilePacket>() {
-    override fun CodecScope<RequestSocialProfilePacket>.body(): RequestSocialProfilePacket {
-        val targetId = field(S64LE) { it.targetId }
-        return RequestSocialProfilePacket(targetId)
-    }
+  override fun CodecScope<RequestSocialProfilePacket>.body(): RequestSocialProfilePacket {
+    val targetId = field(S64LE) { it.targetId }
+    return RequestSocialProfilePacket(targetId)
+  }
 }

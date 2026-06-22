@@ -11,12 +11,12 @@ data class WorldEntityInteractPacket(
 )
 
 object WorldEntityInteractPacketCodec : PacketCodec<WorldEntityInteractPacket>() {
-    override fun CodecScope<WorldEntityInteractPacket>.body(): WorldEntityInteractPacket {
-        val itemTypeId = field(S16LE) { it.itemTypeId }
-        val targetEntityId = field(S64LE) { it.targetEntityId }
-        val quantity = field(S16LE) { it.quantity }
-        val actionFlag = field(S8) { it.actionFlag }
-        val reserved = field(S8) { it.reserved }
-        return WorldEntityInteractPacket(itemTypeId, targetEntityId, quantity, actionFlag, reserved)
-    }
+  override fun CodecScope<WorldEntityInteractPacket>.body(): WorldEntityInteractPacket {
+    val itemTypeId = field(S16LE) { it.itemTypeId }
+    val targetEntityId = field(S64LE) { it.targetEntityId }
+    val quantity = field(S16LE) { it.quantity }
+    val actionFlag = field(S8) { it.actionFlag }
+    val reserved = field(S8) { it.reserved }
+    return WorldEntityInteractPacket(itemTypeId, targetEntityId, quantity, actionFlag, reserved)
+  }
 }

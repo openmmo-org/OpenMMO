@@ -9,8 +9,8 @@ data class LinkKickMemberPacket(
 )
 
 object LinkKickMemberPacketCodec : PacketCodec<LinkKickMemberPacket>() {
-    override fun CodecScope<LinkKickMemberPacket>.body(): LinkKickMemberPacket {
-        val targetEntityId = field(S64LE) { it.targetEntityId }
-        return LinkKickMemberPacket(targetEntityId)
-    }
+  override fun CodecScope<LinkKickMemberPacket>.body(): LinkKickMemberPacket {
+    val targetEntityId = field(S64LE) { it.targetEntityId }
+    return LinkKickMemberPacket(targetEntityId)
+  }
 }

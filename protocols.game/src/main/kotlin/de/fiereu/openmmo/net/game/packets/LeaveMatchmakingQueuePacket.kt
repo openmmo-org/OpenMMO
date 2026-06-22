@@ -6,7 +6,7 @@ import de.fiereu.bytecodec.PacketCodec
 class LeaveMatchmakingQueuePacket
 
 object LeaveMatchmakingQueuePacketCodec : PacketCodec<LeaveMatchmakingQueuePacket>() {
-    override fun CodecScope<LeaveMatchmakingQueuePacket>.body(): LeaveMatchmakingQueuePacket {
-        return LeaveMatchmakingQueuePacket()
-    }
+  override fun CodecScope<LeaveMatchmakingQueuePacket>.body(): LeaveMatchmakingQueuePacket {
+    return LeaveMatchmakingQueuePacket()
+  }
 }

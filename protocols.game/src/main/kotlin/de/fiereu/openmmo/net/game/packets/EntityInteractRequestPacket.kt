@@ -13,24 +13,24 @@ data class EntityInteractRequestPacket(
 )
 
 object EntityInteractRequestPacketCodec : PacketCodec<EntityInteractRequestPacket>() {
-    override fun CodecScope<EntityInteractRequestPacket>.body(): EntityInteractRequestPacket {
-        val interactionType = field(S8) { it.interactionType }
-        val hasSecondEntity = field(Bool) { it.secondaryEntityId != null }
-        val primaryEntityId = field(S64LE) { it.primaryEntityId }
-        val primaryX = field(S16LE) { it.primaryX }
-        val primaryY = field(S16LE) { it.primaryY }
-        val secondaryEntityId: Long? =
-            if (hasSecondEntity) field(S64LE) { it.secondaryEntityId!! } else null
-        val secondaryX: Short? = if (hasSecondEntity) field(S16LE) { it.secondaryX!! } else null
-        val secondaryY: Short? = if (hasSecondEntity) field(S16LE) { it.secondaryY!! } else null
-        return EntityInteractRequestPacket(
-            interactionType,
-            primaryEntityId,
-            primaryX,
-            primaryY,
-            secondaryEntityId,
-            secondaryX,
-            secondaryY,
-        )
-    }
+  override fun CodecScope<EntityInteractRequestPacket>.body(): EntityInteractRequestPacket {
+    val interactionType = field(S8) { it.interactionType }
+    val hasSecondEntity = field(Bool) { it.secondaryEntityId != null }
+    val primaryEntityId = field(S64LE) { it.primaryEntityId }
+    val primaryX = field(S16LE) { it.primaryX }
+    val primaryY = field(S16LE) { it.primaryY }
+    val secondaryEntityId: Long? =
+        if (hasSecondEntity) field(S64LE) { it.secondaryEntityId!! } else null
+    val secondaryX: Short? = if (hasSecondEntity) field(S16LE) { it.secondaryX!! } else null
+    val secondaryY: Short? = if (hasSecondEntity) field(S16LE) { it.secondaryY!! } else null
+    return EntityInteractRequestPacket(
+        interactionType,
+        primaryEntityId,
+        primaryX,
+        primaryY,
+        secondaryEntityId,
+        secondaryX,
+        secondaryY,
+    )
+  }
 }

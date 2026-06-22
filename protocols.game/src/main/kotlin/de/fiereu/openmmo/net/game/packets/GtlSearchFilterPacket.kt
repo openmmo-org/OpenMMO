@@ -9,8 +9,8 @@ data class GtlSearchFilterPacket(
 )
 
 object GtlSearchFilterPacketCodec : PacketCodec<GtlSearchFilterPacket>() {
-    override fun CodecScope<GtlSearchFilterPacket>.body(): GtlSearchFilterPacket {
-        val filterState = field(S8) { it.filterState }
-        return GtlSearchFilterPacket(filterState)
-    }
+  override fun CodecScope<GtlSearchFilterPacket>.body(): GtlSearchFilterPacket {
+    val filterState = field(S8) { it.filterState }
+    return GtlSearchFilterPacket(filterState)
+  }
 }

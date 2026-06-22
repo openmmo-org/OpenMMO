@@ -9,8 +9,8 @@ data class FriendRosterDeltaPacket(
 )
 
 object FriendRosterDeltaPacketCodec : PacketCodec<FriendRosterDeltaPacket>() {
-    override fun CodecScope<FriendRosterDeltaPacket>.body(): FriendRosterDeltaPacket {
-        val action = field(S8) { it.action }
-        return FriendRosterDeltaPacket(action)
-    }
+  override fun CodecScope<FriendRosterDeltaPacket>.body(): FriendRosterDeltaPacket {
+    val action = field(S8) { it.action }
+    return FriendRosterDeltaPacket(action)
+  }
 }

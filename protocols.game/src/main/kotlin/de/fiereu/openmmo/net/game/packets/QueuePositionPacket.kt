@@ -10,9 +10,9 @@ data class QueuePositionPacket(
 )
 
 object QueuePositionPacketCodec : PacketCodec<QueuePositionPacket>() {
-    override fun CodecScope<QueuePositionPacket>.body(): QueuePositionPacket {
-        val position = field(S16LE) { it.position }
-        val total = field(S16LE) { it.total }
-        return QueuePositionPacket(position, total)
-    }
+  override fun CodecScope<QueuePositionPacket>.body(): QueuePositionPacket {
+    val position = field(S16LE) { it.position }
+    val total = field(S16LE) { it.total }
+    return QueuePositionPacket(position, total)
+  }
 }

@@ -7,8 +7,8 @@ import de.fiereu.bytecodec.PacketCodec
 data class BattleReadyPacket(val ready: Boolean)
 
 object BattleReadyPacketCodec : PacketCodec<BattleReadyPacket>() {
-    override fun CodecScope<BattleReadyPacket>.body(): BattleReadyPacket {
-        val ready = field(Bool) { it.ready }
-        return BattleReadyPacket(ready)
-    }
+  override fun CodecScope<BattleReadyPacket>.body(): BattleReadyPacket {
+    val ready = field(Bool) { it.ready }
+    return BattleReadyPacket(ready)
+  }
 }

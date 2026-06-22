@@ -12,11 +12,10 @@ data class ChatMessageSendPacket(
 )
 
 object ChatMessageSendPacketCodec : PacketCodec<ChatMessageSendPacket>() {
-    override fun CodecScope<ChatMessageSendPacket>.body(): ChatMessageSendPacket {
-        val mode = field(S8) { it.mode }
-        val target = field(Utf16LeNullTerminated) { it.target }
-        val message =
-            if (mode.toInt() == 4) field(Utf16LeNullTerminated) { it.message ?: "" } else null
-        return ChatMessageSendPacket(mode, target, message)
-    }
+  override fun CodecScope<ChatMessageSendPacket>.body(): ChatMessageSendPacket {
+    val mode = field(S8) { it.mode }
+    val target = field(Utf16LeNullTerminated) { it.target }
+    val message = if (mode.toInt() == 4) field(Utf16LeNullTerminated) { it.message ?: "" } else null
+    return ChatMessageSendPacket(mode, target, message)
+  }
 }
