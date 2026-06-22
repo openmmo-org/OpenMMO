@@ -24,8 +24,8 @@ class LoginServer
 @Inject
 constructor(
     private val config: LoginServerConfig,
-    @Named("boss") private val bossGroup: EventLoopGroup,
-    @Named("worker") private val workerGroup: EventLoopGroup,
+    @param:Named("boss") private val bossGroup: EventLoopGroup,
+    @param:Named("worker") private val workerGroup: EventLoopGroup,
     private val rootKey: ECPrivateKey,
     private val handlerProvider: Provider<LoginAppHandler>,
 ) {
