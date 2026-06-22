@@ -12,10 +12,10 @@ data class PcBoxStorePacket(
 )
 
 object PcBoxStorePacketCodec : PacketCodec<PcBoxStorePacket>() {
-    override fun CodecScope<PcBoxStorePacket>.body(): PcBoxStorePacket {
-        val boxId = field(S8) { it.boxId }
-        val slotIndex = field(S8) { it.slotIndex }
-        val pokemonId = field(S64LE) { it.pokemonId }
-        return PcBoxStorePacket(boxId, slotIndex, pokemonId)
-    }
+  override fun CodecScope<PcBoxStorePacket>.body(): PcBoxStorePacket {
+    val boxId = field(S8) { it.boxId }
+    val slotIndex = field(S8) { it.slotIndex }
+    val pokemonId = field(S64LE) { it.pokemonId }
+    return PcBoxStorePacket(boxId, slotIndex, pokemonId)
+  }
 }

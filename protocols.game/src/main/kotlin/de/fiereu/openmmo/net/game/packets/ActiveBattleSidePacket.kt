@@ -9,8 +9,8 @@ data class ActiveBattleSidePacket(
 )
 
 object ActiveBattleSidePacketCodec : PacketCodec<ActiveBattleSidePacket>() {
-    override fun CodecScope<ActiveBattleSidePacket>.body(): ActiveBattleSidePacket {
-        val side = field(S8) { it.side }
-        return ActiveBattleSidePacket(side)
-    }
+  override fun CodecScope<ActiveBattleSidePacket>.body(): ActiveBattleSidePacket {
+    val side = field(S8) { it.side }
+    return ActiveBattleSidePacket(side)
+  }
 }

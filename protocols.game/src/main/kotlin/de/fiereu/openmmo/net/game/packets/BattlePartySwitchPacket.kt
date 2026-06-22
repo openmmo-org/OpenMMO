@@ -7,8 +7,8 @@ import de.fiereu.bytecodec.S64LE
 data class BattlePartySwitchPacket(val monsterEntityId: Long)
 
 object BattlePartySwitchPacketCodec : PacketCodec<BattlePartySwitchPacket>() {
-    override fun CodecScope<BattlePartySwitchPacket>.body(): BattlePartySwitchPacket {
-        val monsterEntityId = field(S64LE) { it.monsterEntityId }
-        return BattlePartySwitchPacket(monsterEntityId)
-    }
+  override fun CodecScope<BattlePartySwitchPacket>.body(): BattlePartySwitchPacket {
+    val monsterEntityId = field(S64LE) { it.monsterEntityId }
+    return BattlePartySwitchPacket(monsterEntityId)
+  }
 }

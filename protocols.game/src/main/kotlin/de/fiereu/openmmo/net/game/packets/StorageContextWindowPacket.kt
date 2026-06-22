@@ -22,23 +22,21 @@ data class StorageContextWindowPacket(
 )
 
 object StorageContextWindowPacketCodec : PacketCodec<StorageContextWindowPacket>() {
-    override fun CodecScope<StorageContextWindowPacket>.body(): StorageContextWindowPacket {
-        val kind = field(S8) { it.kind }
-        val count = field(S8) { it.items.size.toByte() }.toInt()
-        val items = ArrayList<StorageBoxItem>(if (count > 0) count else 0)
-        repeat(if (count > 0) count else 0) { i ->
-            val slot = field(S8) { it.items[i].slot }
-            val valueA = field(S16LE) { it.items[i].valueA }
-            val valueB = field(S16LE) { it.items[i].valueB }
-            val valueC = field(S16LE) { it.items[i].valueC }
-            val valueD = field(S16LE) { it.items[i].valueD }
-            val quantity = field(S8) { it.items[i].quantity }
-            val ball = field(S8) { it.items[i].ball }
-            val location = field(S8) { it.items[i].location }
-            items.add(
-                StorageBoxItem(slot, valueA, valueB, valueC, valueD, quantity, ball, location)
-            )
-        }
-        return StorageContextWindowPacket(kind, items)
+  override fun CodecScope<StorageContextWindowPacket>.body(): StorageContextWindowPacket {
+    val kind = field(S8) { it.kind }
+    val count = field(S8) { it.items.size.toByte() }.toInt()
+    val items = ArrayList<StorageBoxItem>(if (count > 0) count else 0)
+    repeat(if (count > 0) count else 0) { i ->
+      val slot = field(S8) { it.items[i].slot }
+      val valueA = field(S16LE) { it.items[i].valueA }
+      val valueB = field(S16LE) { it.items[i].valueB }
+      val valueC = field(S16LE) { it.items[i].valueC }
+      val valueD = field(S16LE) { it.items[i].valueD }
+      val quantity = field(S8) { it.items[i].quantity }
+      val ball = field(S8) { it.items[i].ball }
+      val location = field(S8) { it.items[i].location }
+      items.add(StorageBoxItem(slot, valueA, valueB, valueC, valueD, quantity, ball, location))
     }
+    return StorageContextWindowPacket(kind, items)
+  }
 }

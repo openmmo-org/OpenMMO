@@ -12,11 +12,11 @@ data class EntitySpriteChangePacket(
 )
 
 object EntitySpriteChangePacketCodec : PacketCodec<EntitySpriteChangePacket>() {
-    override fun CodecScope<EntitySpriteChangePacket>.body(): EntitySpriteChangePacket {
-        val entityId = field(S64LE) { it.entityId }
-        val facingFront = field(Bool) { it.facingFront }
-        val appearance = field(DefaultSkinSetCodec) { it.appearance }
-        val direction = field(S8) { it.direction }
-        return EntitySpriteChangePacket(entityId, facingFront, appearance, direction)
-    }
+  override fun CodecScope<EntitySpriteChangePacket>.body(): EntitySpriteChangePacket {
+    val entityId = field(S64LE) { it.entityId }
+    val facingFront = field(Bool) { it.facingFront }
+    val appearance = field(DefaultSkinSetCodec) { it.appearance }
+    val direction = field(S8) { it.direction }
+    return EntitySpriteChangePacket(entityId, facingFront, appearance, direction)
+  }
 }

@@ -13,11 +13,11 @@ data class MapTileEntityStateSetPacket(
 )
 
 object MapTileEntityStateSetPacketCodec : PacketCodec<MapTileEntityStateSetPacket>() {
-    override fun CodecScope<MapTileEntityStateSetPacket>.body(): MapTileEntityStateSetPacket {
-        val mode = field(S8) { it.mode }
-        val entityId = field(S16LE) { it.entityId }
-        val value = field(S16LE) { it.value }
-        val key = if (mode.toInt() == 0) field(S16LE) { it.key!! } else null
-        return MapTileEntityStateSetPacket(mode, entityId, value, key)
-    }
+  override fun CodecScope<MapTileEntityStateSetPacket>.body(): MapTileEntityStateSetPacket {
+    val mode = field(S8) { it.mode }
+    val entityId = field(S16LE) { it.entityId }
+    val value = field(S16LE) { it.value }
+    val key = if (mode.toInt() == 0) field(S16LE) { it.key!! } else null
+    return MapTileEntityStateSetPacket(mode, entityId, value, key)
+  }
 }

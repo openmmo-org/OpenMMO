@@ -9,8 +9,8 @@ data class ViewScalePacket(
 )
 
 object ViewScalePacketCodec : PacketCodec<ViewScalePacket>() {
-    override fun CodecScope<ViewScalePacket>.body(): ViewScalePacket {
-        val viewScale = field(S8) { it.viewScale }
-        return ViewScalePacket(viewScale)
-    }
+  override fun CodecScope<ViewScalePacket>.body(): ViewScalePacket {
+    val viewScale = field(S8) { it.viewScale }
+    return ViewScalePacket(viewScale)
+  }
 }

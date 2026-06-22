@@ -11,12 +11,12 @@ data class GtlPurchasePacket(
 )
 
 object GtlPurchasePacketCodec : PacketCodec<GtlPurchasePacket>() {
-    override fun CodecScope<GtlPurchasePacket>.body(): GtlPurchasePacket {
-        val entryKindId = field(S8) { it.entryKindId }
-        val itemTypeId = field(S16LE) { it.itemTypeId }
-        val quantity = field(S16LE) { it.quantity }
-        val totalPrice = field(S32LE) { it.totalPrice }
-        val listingFlag = field(S8) { it.listingFlag }
-        return GtlPurchasePacket(entryKindId, itemTypeId, quantity, totalPrice, listingFlag)
-    }
+  override fun CodecScope<GtlPurchasePacket>.body(): GtlPurchasePacket {
+    val entryKindId = field(S8) { it.entryKindId }
+    val itemTypeId = field(S16LE) { it.itemTypeId }
+    val quantity = field(S16LE) { it.quantity }
+    val totalPrice = field(S32LE) { it.totalPrice }
+    val listingFlag = field(S8) { it.listingFlag }
+    return GtlPurchasePacket(entryKindId, itemTypeId, quantity, totalPrice, listingFlag)
+  }
 }

@@ -9,10 +9,10 @@ data class SocialEntryRenamePacket(
 )
 
 object SocialEntryRenamePacketCodec : PacketCodec<SocialEntryRenamePacket>() {
-    override fun CodecScope<SocialEntryRenamePacket>.body(): SocialEntryRenamePacket {
-        val playerId = field(S64LE) { it.playerId }
-        val errorCode = field(S8) { it.errorCode }
-        val name = if (errorCode.toInt() == 0) field(Utf16LeNullTerminated) { it.name!! } else null
-        return SocialEntryRenamePacket(playerId, errorCode, name)
-    }
+  override fun CodecScope<SocialEntryRenamePacket>.body(): SocialEntryRenamePacket {
+    val playerId = field(S64LE) { it.playerId }
+    val errorCode = field(S8) { it.errorCode }
+    val name = if (errorCode.toInt() == 0) field(Utf16LeNullTerminated) { it.name!! } else null
+    return SocialEntryRenamePacket(playerId, errorCode, name)
+  }
 }

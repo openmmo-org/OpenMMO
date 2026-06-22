@@ -10,9 +10,9 @@ data class OverworldStepMovePacket(
 )
 
 object OverworldStepMovePacketCodec : PacketCodec<OverworldStepMovePacket>() {
-    override fun CodecScope<OverworldStepMovePacket>.body(): OverworldStepMovePacket {
-        val targetX = field(S8) { it.targetX }
-        val targetY = field(S8) { it.targetY }
-        return OverworldStepMovePacket(targetX, targetY)
-    }
+  override fun CodecScope<OverworldStepMovePacket>.body(): OverworldStepMovePacket {
+    val targetX = field(S8) { it.targetX }
+    val targetY = field(S8) { it.targetY }
+    return OverworldStepMovePacket(targetX, targetY)
+  }
 }

@@ -10,9 +10,9 @@ data class ServerChatTemplate5002Packet(
 )
 
 object ServerChatTemplate5002PacketCodec : PacketCodec<ServerChatTemplate5002Packet>() {
-    override fun CodecScope<ServerChatTemplate5002Packet>.body(): ServerChatTemplate5002Packet {
-        field(S64LE) { 0L }
-        val argument = field(Utf16LeNullTerminated) { it.argument }
-        return ServerChatTemplate5002Packet(argument)
-    }
+  override fun CodecScope<ServerChatTemplate5002Packet>.body(): ServerChatTemplate5002Packet {
+    field(S64LE) { 0L }
+    val argument = field(Utf16LeNullTerminated) { it.argument }
+    return ServerChatTemplate5002Packet(argument)
+  }
 }

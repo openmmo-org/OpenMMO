@@ -6,7 +6,7 @@ import de.fiereu.bytecodec.PacketCodec
 class BattleCancelRequestPacket
 
 object BattleCancelRequestPacketCodec : PacketCodec<BattleCancelRequestPacket>() {
-    override fun CodecScope<BattleCancelRequestPacket>.body(): BattleCancelRequestPacket {
-        return BattleCancelRequestPacket()
-    }
+  override fun CodecScope<BattleCancelRequestPacket>.body(): BattleCancelRequestPacket {
+    return BattleCancelRequestPacket()
+  }
 }

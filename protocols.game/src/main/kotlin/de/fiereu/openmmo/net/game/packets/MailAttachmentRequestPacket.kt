@@ -9,8 +9,8 @@ data class MailAttachmentRequestPacket(
 )
 
 object MailAttachmentRequestPacketCodec : PacketCodec<MailAttachmentRequestPacket>() {
-    override fun CodecScope<MailAttachmentRequestPacket>.body(): MailAttachmentRequestPacket {
-        val targetId = field(S64LE) { it.targetId }
-        return MailAttachmentRequestPacket(targetId)
-    }
+  override fun CodecScope<MailAttachmentRequestPacket>.body(): MailAttachmentRequestPacket {
+    val targetId = field(S64LE) { it.targetId }
+    return MailAttachmentRequestPacket(targetId)
+  }
 }

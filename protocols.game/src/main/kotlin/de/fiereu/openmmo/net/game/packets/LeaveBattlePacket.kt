@@ -6,7 +6,7 @@ import de.fiereu.bytecodec.PacketCodec
 class LeaveBattlePacket
 
 object LeaveBattlePacketCodec : PacketCodec<LeaveBattlePacket>() {
-    override fun CodecScope<LeaveBattlePacket>.body(): LeaveBattlePacket {
-        return LeaveBattlePacket()
-    }
+  override fun CodecScope<LeaveBattlePacket>.body(): LeaveBattlePacket {
+    return LeaveBattlePacket()
+  }
 }

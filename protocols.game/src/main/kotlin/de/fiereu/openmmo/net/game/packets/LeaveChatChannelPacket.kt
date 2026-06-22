@@ -6,7 +6,7 @@ import de.fiereu.bytecodec.PacketCodec
 class LeaveChatChannelPacket
 
 object LeaveChatChannelPacketCodec : PacketCodec<LeaveChatChannelPacket>() {
-    override fun CodecScope<LeaveChatChannelPacket>.body(): LeaveChatChannelPacket {
-        return LeaveChatChannelPacket()
-    }
+  override fun CodecScope<LeaveChatChannelPacket>.body(): LeaveChatChannelPacket {
+    return LeaveChatChannelPacket()
+  }
 }

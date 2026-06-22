@@ -12,10 +12,10 @@ data class DuelInvitePacket(
 )
 
 object DuelInvitePacketCodec : PacketCodec<DuelInvitePacket>() {
-    override fun CodecScope<DuelInvitePacket>.body(): DuelInvitePacket {
-        val flags = field(S8) { it.flags }
-        val requestType = field(S8) { it.requestType }
-        val name = field(Utf16LeNullTerminated) { it.name }
-        return DuelInvitePacket(flags, requestType, name)
-    }
+  override fun CodecScope<DuelInvitePacket>.body(): DuelInvitePacket {
+    val flags = field(S8) { it.flags }
+    val requestType = field(S8) { it.requestType }
+    val name = field(Utf16LeNullTerminated) { it.name }
+    return DuelInvitePacket(flags, requestType, name)
+  }
 }

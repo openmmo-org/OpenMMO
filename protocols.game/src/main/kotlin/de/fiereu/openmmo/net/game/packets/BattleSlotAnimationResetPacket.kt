@@ -11,9 +11,9 @@ data class BattleSlotAnimationResetPacket(
 )
 
 object BattleSlotAnimationResetPacketCodec : PacketCodec<BattleSlotAnimationResetPacket>() {
-    override fun CodecScope<BattleSlotAnimationResetPacket>.body(): BattleSlotAnimationResetPacket {
-        val entityId = field(S64LE) { it.entityId }
-        val slot = field(S8) { it.slot }
-        return BattleSlotAnimationResetPacket(entityId, slot)
-    }
+  override fun CodecScope<BattleSlotAnimationResetPacket>.body(): BattleSlotAnimationResetPacket {
+    val entityId = field(S64LE) { it.entityId }
+    val slot = field(S8) { it.slot }
+    return BattleSlotAnimationResetPacket(entityId, slot)
+  }
 }

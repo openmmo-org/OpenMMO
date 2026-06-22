@@ -9,8 +9,8 @@ data class PartyMemberLeavePacket(
 )
 
 object PartyMemberLeavePacketCodec : PacketCodec<PartyMemberLeavePacket>() {
-    override fun CodecScope<PartyMemberLeavePacket>.body(): PartyMemberLeavePacket {
-        val memberId = field(S64LE) { it.memberId }
-        return PartyMemberLeavePacket(memberId)
-    }
+  override fun CodecScope<PartyMemberLeavePacket>.body(): PartyMemberLeavePacket {
+    val memberId = field(S64LE) { it.memberId }
+    return PartyMemberLeavePacket(memberId)
+  }
 }

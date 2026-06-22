@@ -12,10 +12,10 @@ data class FieldMapBattleSlotMarkerPacket(
 )
 
 object FieldMapBattleSlotMarkerPacketCodec : PacketCodec<FieldMapBattleSlotMarkerPacket>() {
-    override fun CodecScope<FieldMapBattleSlotMarkerPacket>.body(): FieldMapBattleSlotMarkerPacket {
-        val slot = field(S8) { it.slot }
-        val markerType = field(S8) { it.markerType }
-        val value = field(S16LE) { it.value }
-        return FieldMapBattleSlotMarkerPacket(slot, markerType, value)
-    }
+  override fun CodecScope<FieldMapBattleSlotMarkerPacket>.body(): FieldMapBattleSlotMarkerPacket {
+    val slot = field(S8) { it.slot }
+    val markerType = field(S8) { it.markerType }
+    val value = field(S16LE) { it.value }
+    return FieldMapBattleSlotMarkerPacket(slot, markerType, value)
+  }
 }

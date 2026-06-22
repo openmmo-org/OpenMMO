@@ -11,9 +11,9 @@ data class BattleUseItemPacket(
 )
 
 object BattleUseItemPacketCodec : PacketCodec<BattleUseItemPacket>() {
-    override fun CodecScope<BattleUseItemPacket>.body(): BattleUseItemPacket {
-        val pokemonEntityId = field(S64LE) { it.pokemonEntityId }
-        val quantity = field(S16LE) { it.quantity }
-        return BattleUseItemPacket(pokemonEntityId, quantity)
-    }
+  override fun CodecScope<BattleUseItemPacket>.body(): BattleUseItemPacket {
+    val pokemonEntityId = field(S64LE) { it.pokemonEntityId }
+    val quantity = field(S16LE) { it.quantity }
+    return BattleUseItemPacket(pokemonEntityId, quantity)
+  }
 }

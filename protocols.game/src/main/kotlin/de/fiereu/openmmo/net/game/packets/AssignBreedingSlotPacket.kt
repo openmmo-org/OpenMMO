@@ -12,10 +12,10 @@ data class AssignBreedingSlotPacket(
 )
 
 object AssignBreedingSlotPacketCodec : PacketCodec<AssignBreedingSlotPacket>() {
-    override fun CodecScope<AssignBreedingSlotPacket>.body(): AssignBreedingSlotPacket {
-        val ownPokemonEntityId = field(S64LE) { it.ownPokemonEntityId }
-        val partnerPokemonEntityId = field(S64LE) { it.partnerPokemonEntityId }
-        val slotIndex = field(S8) { it.slotIndex }
-        return AssignBreedingSlotPacket(ownPokemonEntityId, partnerPokemonEntityId, slotIndex)
-    }
+  override fun CodecScope<AssignBreedingSlotPacket>.body(): AssignBreedingSlotPacket {
+    val ownPokemonEntityId = field(S64LE) { it.ownPokemonEntityId }
+    val partnerPokemonEntityId = field(S64LE) { it.partnerPokemonEntityId }
+    val slotIndex = field(S8) { it.slotIndex }
+    return AssignBreedingSlotPacket(ownPokemonEntityId, partnerPokemonEntityId, slotIndex)
+  }
 }

@@ -12,10 +12,10 @@ data class BattleStatusFlagPacket(
 )
 
 object BattleStatusFlagPacketCodec : PacketCodec<BattleStatusFlagPacket>() {
-    override fun CodecScope<BattleStatusFlagPacket>.body(): BattleStatusFlagPacket {
-        val scope = field(S8) { it.scope }
-        val flagId = field(S16LE) { it.flagId }
-        val flagValue = field(S16LE) { it.flagValue }
-        return BattleStatusFlagPacket(scope, flagId, flagValue)
-    }
+  override fun CodecScope<BattleStatusFlagPacket>.body(): BattleStatusFlagPacket {
+    val scope = field(S8) { it.scope }
+    val flagId = field(S16LE) { it.flagId }
+    val flagValue = field(S16LE) { it.flagValue }
+    return BattleStatusFlagPacket(scope, flagId, flagValue)
+  }
 }

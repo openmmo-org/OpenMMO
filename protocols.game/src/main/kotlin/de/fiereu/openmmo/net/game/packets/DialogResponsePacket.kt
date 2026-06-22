@@ -11,9 +11,9 @@ data class DialogResponsePacket(
 )
 
 object DialogResponsePacketCodec : PacketCodec<DialogResponsePacket>() {
-    override fun CodecScope<DialogResponsePacket>.body(): DialogResponsePacket {
-        val accepted = field(Bool) { it.accepted }
-        val dialogActionId = field(S16LE) { it.dialogActionId }
-        return DialogResponsePacket(accepted, dialogActionId)
-    }
+  override fun CodecScope<DialogResponsePacket>.body(): DialogResponsePacket {
+    val accepted = field(Bool) { it.accepted }
+    val dialogActionId = field(S16LE) { it.dialogActionId }
+    return DialogResponsePacket(accepted, dialogActionId)
+  }
 }

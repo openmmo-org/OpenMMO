@@ -11,9 +11,9 @@ data class ContactOnlineStatePacket(
 )
 
 object ContactOnlineStatePacketCodec : PacketCodec<ContactOnlineStatePacket>() {
-    override fun CodecScope<ContactOnlineStatePacket>.body(): ContactOnlineStatePacket {
-        val contactId = field(S64LE) { it.contactId }
-        val online = field(U8) { if (it.online) 1 else 0 } == 1
-        return ContactOnlineStatePacket(contactId, online)
-    }
+  override fun CodecScope<ContactOnlineStatePacket>.body(): ContactOnlineStatePacket {
+    val contactId = field(S64LE) { it.contactId }
+    val online = field(U8) { if (it.online) 1 else 0 } == 1
+    return ContactOnlineStatePacket(contactId, online)
+  }
 }

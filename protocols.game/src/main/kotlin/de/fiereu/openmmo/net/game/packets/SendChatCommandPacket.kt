@@ -9,8 +9,8 @@ data class SendChatCommandPacket(
 )
 
 object SendChatCommandPacketCodec : PacketCodec<SendChatCommandPacket>() {
-    override fun CodecScope<SendChatCommandPacket>.body(): SendChatCommandPacket {
-        val message = field(Utf16LeNullTerminated) { it.message }
-        return SendChatCommandPacket(message)
-    }
+  override fun CodecScope<SendChatCommandPacket>.body(): SendChatCommandPacket {
+    val message = field(Utf16LeNullTerminated) { it.message }
+    return SendChatCommandPacket(message)
+  }
 }

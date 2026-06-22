@@ -9,8 +9,8 @@ data class ChatMessageWithdrawPacket(
 )
 
 object ChatMessageWithdrawPacketCodec : PacketCodec<ChatMessageWithdrawPacket>() {
-    override fun CodecScope<ChatMessageWithdrawPacket>.body(): ChatMessageWithdrawPacket {
-        val authorId = field(S64LE) { it.authorId }
-        return ChatMessageWithdrawPacket(authorId)
-    }
+  override fun CodecScope<ChatMessageWithdrawPacket>.body(): ChatMessageWithdrawPacket {
+    val authorId = field(S64LE) { it.authorId }
+    return ChatMessageWithdrawPacket(authorId)
+  }
 }

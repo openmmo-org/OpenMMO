@@ -9,8 +9,8 @@ data class PlayerChatInputPacket(
 )
 
 object PlayerChatInputPacketCodec : PacketCodec<PlayerChatInputPacket>() {
-    override fun CodecScope<PlayerChatInputPacket>.body(): PlayerChatInputPacket {
-        val message = field(Utf16LeNullTerminated) { it.message }
-        return PlayerChatInputPacket(message)
-    }
+  override fun CodecScope<PlayerChatInputPacket>.body(): PlayerChatInputPacket {
+    val message = field(Utf16LeNullTerminated) { it.message }
+    return PlayerChatInputPacket(message)
+  }
 }

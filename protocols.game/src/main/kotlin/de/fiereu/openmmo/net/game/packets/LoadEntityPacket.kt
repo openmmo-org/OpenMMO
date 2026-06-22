@@ -25,49 +25,49 @@ data class LoadEntityPacket(
 )
 
 object LoadEntityPacketCodec : PacketCodec<LoadEntityPacket>() {
-    override fun CodecScope<LoadEntityPacket>.body(): LoadEntityPacket {
-        val entityId = field(S64LE, LoadEntityPacket::entityId)
-        reserved(byte = 0)
-        val skin = field(DefaultSkinSetCodec, LoadEntityPacket::skin)
-        val name = field(Utf16LeNullTerminated, LoadEntityPacket::name)
-        val regionId = field(U8, LoadEntityPacket::regionId)
-        val bankId = field(U8, LoadEntityPacket::bankId)
-        val mapId = field(U8, LoadEntityPacket::mapId)
-        val x = field(S16LE) { it.x.toShort() }.toInt()
-        val y = field(S16LE) { it.y.toShort() }.toInt()
-        val z = field(U8, LoadEntityPacket::z)
-        val facing = Direction.entries[field(U8) { it.facing.ordinal }]
-        val transportation = field(U8, LoadEntityPacket::transportation)
-        val entityNameplateType = field(U8, LoadEntityPacket::entityNameplateType)
-        val flags = field(U16LE) { if (it.hasFollower) 0x04 else 0 }
-        if (flags and 0x01 != 0) field(S8) { 0 }
-        if (flags and 0x02 != 0) {
-            field(S8) { 0 }
-            field(U16LE) { 0 }
-        }
-        val hasFollower = (flags and 0x04) != 0
-        val followerDexId: Short = if (hasFollower) field(S16LE, LoadEntityPacket::followerDexId) else 0
-        if (flags and 0x08 != 0) field(S8) { 0 }
-        if (flags and 0x10 != 0) {
-            field(S32LE) { 0 }
-            field(Utf16LeNullTerminated) { "" }
-        }
-        return LoadEntityPacket(
-            entityId = entityId,
-            skin = skin,
-            name = name,
-            regionId = regionId,
-            bankId = bankId,
-            mapId = mapId,
-            x = x,
-            y = y,
-            z = z,
-            facing = facing,
-            transportation = transportation,
-            entityNameplateType = entityNameplateType,
-            status = EntityStatus.NONE,
-            hasFollower = hasFollower,
-            followerDexId = followerDexId,
-        )
+  override fun CodecScope<LoadEntityPacket>.body(): LoadEntityPacket {
+    val entityId = field(S64LE, LoadEntityPacket::entityId)
+    reserved(byte = 0)
+    val skin = field(DefaultSkinSetCodec, LoadEntityPacket::skin)
+    val name = field(Utf16LeNullTerminated, LoadEntityPacket::name)
+    val regionId = field(U8, LoadEntityPacket::regionId)
+    val bankId = field(U8, LoadEntityPacket::bankId)
+    val mapId = field(U8, LoadEntityPacket::mapId)
+    val x = field(S16LE) { it.x.toShort() }.toInt()
+    val y = field(S16LE) { it.y.toShort() }.toInt()
+    val z = field(U8, LoadEntityPacket::z)
+    val facing = Direction.entries[field(U8) { it.facing.ordinal }]
+    val transportation = field(U8, LoadEntityPacket::transportation)
+    val entityNameplateType = field(U8, LoadEntityPacket::entityNameplateType)
+    val flags = field(U16LE) { if (it.hasFollower) 0x04 else 0 }
+    if (flags and 0x01 != 0) field(S8) { 0 }
+    if (flags and 0x02 != 0) {
+      field(S8) { 0 }
+      field(U16LE) { 0 }
     }
+    val hasFollower = (flags and 0x04) != 0
+    val followerDexId: Short = if (hasFollower) field(S16LE, LoadEntityPacket::followerDexId) else 0
+    if (flags and 0x08 != 0) field(S8) { 0 }
+    if (flags and 0x10 != 0) {
+      field(S32LE) { 0 }
+      field(Utf16LeNullTerminated) { "" }
+    }
+    return LoadEntityPacket(
+        entityId = entityId,
+        skin = skin,
+        name = name,
+        regionId = regionId,
+        bankId = bankId,
+        mapId = mapId,
+        x = x,
+        y = y,
+        z = z,
+        facing = facing,
+        transportation = transportation,
+        entityNameplateType = entityNameplateType,
+        status = EntityStatus.NONE,
+        hasFollower = hasFollower,
+        followerDexId = followerDexId,
+    )
+  }
 }

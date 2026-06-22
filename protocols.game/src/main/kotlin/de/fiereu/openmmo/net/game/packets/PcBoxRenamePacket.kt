@@ -11,9 +11,9 @@ data class PcBoxRenamePacket(
 )
 
 object PcBoxRenamePacketCodec : PacketCodec<PcBoxRenamePacket>() {
-    override fun CodecScope<PcBoxRenamePacket>.body(): PcBoxRenamePacket {
-        val boxIndex = field(S8) { it.boxIndex }
-        val newName = field(Utf16LeNullTerminated) { it.newName }
-        return PcBoxRenamePacket(boxIndex, newName)
-    }
+  override fun CodecScope<PcBoxRenamePacket>.body(): PcBoxRenamePacket {
+    val boxIndex = field(S8) { it.boxIndex }
+    val newName = field(Utf16LeNullTerminated) { it.newName }
+    return PcBoxRenamePacket(boxIndex, newName)
+  }
 }

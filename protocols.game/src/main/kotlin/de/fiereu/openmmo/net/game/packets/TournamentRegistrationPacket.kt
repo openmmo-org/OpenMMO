@@ -9,8 +9,8 @@ data class TournamentRegistrationPacket(
 )
 
 object TournamentRegistrationPacketCodec : PacketCodec<TournamentRegistrationPacket>() {
-    override fun CodecScope<TournamentRegistrationPacket>.body(): TournamentRegistrationPacket {
-        val register = field(Bool) { it.register }
-        return TournamentRegistrationPacket(register)
-    }
+  override fun CodecScope<TournamentRegistrationPacket>.body(): TournamentRegistrationPacket {
+    val register = field(Bool) { it.register }
+    return TournamentRegistrationPacket(register)
+  }
 }

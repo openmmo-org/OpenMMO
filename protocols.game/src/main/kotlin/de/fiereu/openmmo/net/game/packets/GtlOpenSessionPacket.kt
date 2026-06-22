@@ -11,9 +11,9 @@ data class GtlOpenSessionPacket(
 )
 
 object GtlOpenSessionPacketCodec : PacketCodec<GtlOpenSessionPacket>() {
-    override fun CodecScope<GtlOpenSessionPacket>.body(): GtlOpenSessionPacket {
-        val entryKindId = field(S8) { it.entryKindId }
-        val sessionTimestamp = field(S64LE) { it.sessionTimestamp }
-        return GtlOpenSessionPacket(entryKindId, sessionTimestamp)
-    }
+  override fun CodecScope<GtlOpenSessionPacket>.body(): GtlOpenSessionPacket {
+    val entryKindId = field(S8) { it.entryKindId }
+    val sessionTimestamp = field(S64LE) { it.sessionTimestamp }
+    return GtlOpenSessionPacket(entryKindId, sessionTimestamp)
+  }
 }

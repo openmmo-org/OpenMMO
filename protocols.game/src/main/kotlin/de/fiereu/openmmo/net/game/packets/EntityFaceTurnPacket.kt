@@ -11,9 +11,9 @@ data class EntityFaceTurnPacket(
 )
 
 object EntityFaceTurnPacketCodec : PacketCodec<EntityFaceTurnPacket>() {
-    override fun CodecScope<EntityFaceTurnPacket>.body(): EntityFaceTurnPacket {
-        val entityId = field(S64LE) { it.entityId }
-        val facing = field(S8) { it.facing }
-        return EntityFaceTurnPacket(entityId, facing)
-    }
+  override fun CodecScope<EntityFaceTurnPacket>.body(): EntityFaceTurnPacket {
+    val entityId = field(S64LE) { it.entityId }
+    val facing = field(S8) { it.facing }
+    return EntityFaceTurnPacket(entityId, facing)
+  }
 }

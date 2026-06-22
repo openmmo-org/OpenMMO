@@ -11,9 +11,9 @@ data class MapWeatherModeSetPacket(
 )
 
 object MapWeatherModeSetPacketCodec : PacketCodec<MapWeatherModeSetPacket>() {
-    override fun CodecScope<MapWeatherModeSetPacket>.body(): MapWeatherModeSetPacket {
-        val mode = field(S8) { it.mode }
-        val enabled = field(U8) { if (it.enabled) 1 else 0 } == 1
-        return MapWeatherModeSetPacket(mode, enabled)
-    }
+  override fun CodecScope<MapWeatherModeSetPacket>.body(): MapWeatherModeSetPacket {
+    val mode = field(S8) { it.mode }
+    val enabled = field(U8) { if (it.enabled) 1 else 0 } == 1
+    return MapWeatherModeSetPacket(mode, enabled)
+  }
 }
