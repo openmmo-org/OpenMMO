@@ -13,7 +13,8 @@ class GuildRankPermissionUpdatePacketTest :
     FunSpec({
       test("editable ranks are ordered high-to-low: Executive is the first short") {
         val pkt =
-            GuildRankPermissionUpdatePacket(mapOf(GuildRank.EXECUTIVE to setOf(GuildPermission.INVITE)))
+            GuildRankPermissionUpdatePacket(
+                mapOf(GuildRank.EXECUTIVE to setOf(GuildPermission.INVITE)))
         GuildRankPermissionUpdatePacketCodec.encodeToBytes(pkt) shouldBe
             byteArrayOf(1, 0, 0, 0, 0, 0, 0, 0, 0, 0)
       }

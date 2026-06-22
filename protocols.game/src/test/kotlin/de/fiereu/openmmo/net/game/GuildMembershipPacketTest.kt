@@ -40,7 +40,7 @@ class GuildMembershipPacketTest :
                         flag = 0,
                     ),
             )
-        GuildMembershipPacketCodec.decodeBytes(GuildMembershipPacketCodec.encodeToBytes(pkt)) shouldBe
-            pkt
+        GuildMembershipPacketCodec.decodeBytes(
+            GuildMembershipPacketCodec.encodeToBytes(pkt)) shouldBe pkt
       }
     })

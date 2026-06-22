@@ -9,8 +9,8 @@ data class GuildInvitePacket(
 )
 
 object GuildInvitePacketCodec : PacketCodec<GuildInvitePacket>() {
-    override fun CodecScope<GuildInvitePacket>.body(): GuildInvitePacket {
-        val targetName = field(Utf16LeNullTerminated) { it.targetName }
-        return GuildInvitePacket(targetName)
-    }
+  override fun CodecScope<GuildInvitePacket>.body(): GuildInvitePacket {
+    val targetName = field(Utf16LeNullTerminated) { it.targetName }
+    return GuildInvitePacket(targetName)
+  }
 }

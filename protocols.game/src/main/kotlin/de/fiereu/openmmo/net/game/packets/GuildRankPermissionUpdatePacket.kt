@@ -20,12 +20,12 @@ private fun permissionsToMask(perms: Set<GuildPermission>): Short =
     perms.fold(0) { acc, p -> acc or (1 shl p.ordinal) }.toShort()
 
 object GuildRankPermissionUpdatePacketCodec : PacketCodec<GuildRankPermissionUpdatePacket>() {
-    override fun CodecScope<GuildRankPermissionUpdatePacket>.body(): GuildRankPermissionUpdatePacket {
-        val permissions = LinkedHashMap<GuildRank, Set<GuildPermission>>()
-        for (rank in EDITABLE_RANKS) {
-            val mask = field(S16LE) { permissionsToMask(it.permissions[rank].orEmpty()) }
-            permissions[rank] = maskToPermissions(mask)
-        }
-        return GuildRankPermissionUpdatePacket(permissions)
+  override fun CodecScope<GuildRankPermissionUpdatePacket>.body(): GuildRankPermissionUpdatePacket {
+    val permissions = LinkedHashMap<GuildRank, Set<GuildPermission>>()
+    for (rank in EDITABLE_RANKS) {
+      val mask = field(S16LE) { permissionsToMask(it.permissions[rank].orEmpty()) }
+      permissions[rank] = maskToPermissions(mask)
     }
+    return GuildRankPermissionUpdatePacket(permissions)
+  }
 }

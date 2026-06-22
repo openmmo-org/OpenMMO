@@ -6,12 +6,12 @@ import de.fiereu.openmmo.common.enums.GuildRank
 import de.fiereu.openmmo.net.game.packets.GuildDepartPacket
 import de.fiereu.openmmo.net.game.packets.GuildDisbandTogglePacket
 import de.fiereu.openmmo.net.game.packets.GuildInvitePacket
+import de.fiereu.openmmo.net.game.packets.GuildMemberEntry
 import de.fiereu.openmmo.net.game.packets.GuildMemberExpelPacket
 import de.fiereu.openmmo.net.game.packets.GuildMemberRankAssignPacket
 import de.fiereu.openmmo.net.game.packets.GuildMembershipPacket
 import de.fiereu.openmmo.net.game.packets.GuildProfileData
 import de.fiereu.openmmo.net.game.packets.GuildRankPermissionUpdatePacket
-import de.fiereu.openmmo.net.game.packets.GuildMemberEntry
 import de.fiereu.openmmo.net.game.packets.SyncGuildMembersPacket
 import de.fiereu.openmmo.net.game.packets.TeamFoundPacket
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
