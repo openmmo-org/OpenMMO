@@ -6,7 +6,7 @@ import de.fiereu.bytecodec.PacketCodec
 class RequestNextBattleSequencePacket
 
 object RequestNextBattleSequencePacketCodec : PacketCodec<RequestNextBattleSequencePacket>() {
-    override fun CodecScope<RequestNextBattleSequencePacket>.body(): RequestNextBattleSequencePacket {
-        return RequestNextBattleSequencePacket()
-    }
+  override fun CodecScope<RequestNextBattleSequencePacket>.body(): RequestNextBattleSequencePacket {
+    return RequestNextBattleSequencePacket()
+  }
 }

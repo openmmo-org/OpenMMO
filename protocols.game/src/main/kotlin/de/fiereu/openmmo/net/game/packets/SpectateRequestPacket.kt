@@ -9,8 +9,8 @@ data class SpectateRequestPacket(
 )
 
 object SpectateRequestPacketCodec : PacketCodec<SpectateRequestPacket>() {
-    override fun CodecScope<SpectateRequestPacket>.body(): SpectateRequestPacket {
-        val targetEntityId = field(S64LE) { it.targetEntityId }
-        return SpectateRequestPacket(targetEntityId)
-    }
+  override fun CodecScope<SpectateRequestPacket>.body(): SpectateRequestPacket {
+    val targetEntityId = field(S64LE) { it.targetEntityId }
+    return SpectateRequestPacket(targetEntityId)
+  }
 }

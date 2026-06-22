@@ -13,16 +13,16 @@ data class TrackedEntitySlotsPacket(
 
 private val TrackedEntitySlotCodec: Codec<TrackedEntitySlot> =
     object : PacketCodec<TrackedEntitySlot>() {
-        override fun CodecScope<TrackedEntitySlot>.body(): TrackedEntitySlot {
-            val count = field(S16LE) { it.count }
-            val entityId = field(S64LE) { it.entityId }
-            return TrackedEntitySlot(count, entityId)
-        }
+      override fun CodecScope<TrackedEntitySlot>.body(): TrackedEntitySlot {
+        val count = field(S16LE) { it.count }
+        val entityId = field(S64LE) { it.entityId }
+        return TrackedEntitySlot(count, entityId)
+      }
     }
 
 object TrackedEntitySlotsPacketCodec : PacketCodec<TrackedEntitySlotsPacket>() {
-    override fun CodecScope<TrackedEntitySlotsPacket>.body(): TrackedEntitySlotsPacket {
-        val slots = field(TrackedEntitySlotCodec.listPrefixed(U8)) { it.slots }
-        return TrackedEntitySlotsPacket(slots)
-    }
+  override fun CodecScope<TrackedEntitySlotsPacket>.body(): TrackedEntitySlotsPacket {
+    val slots = field(TrackedEntitySlotCodec.listPrefixed(U8)) { it.slots }
+    return TrackedEntitySlotsPacket(slots)
+  }
 }

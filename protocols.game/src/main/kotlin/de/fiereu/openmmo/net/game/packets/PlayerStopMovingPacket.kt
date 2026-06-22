@@ -6,7 +6,7 @@ import de.fiereu.bytecodec.PacketCodec
 class PlayerStopMovingPacket
 
 object PlayerStopMovingPacketCodec : PacketCodec<PlayerStopMovingPacket>() {
-    override fun CodecScope<PlayerStopMovingPacket>.body(): PlayerStopMovingPacket {
-        return PlayerStopMovingPacket()
-    }
+  override fun CodecScope<PlayerStopMovingPacket>.body(): PlayerStopMovingPacket {
+    return PlayerStopMovingPacket()
+  }
 }

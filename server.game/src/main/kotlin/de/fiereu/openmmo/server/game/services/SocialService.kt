@@ -60,7 +60,9 @@ constructor(
     val state = ctx.attributes[PLAYER_STATE] ?: return
     val packet = event.packet
     socialStore.block(state.userId, packet.username)
-    log.info { "BlockPlayer user=${state.userId} name='${packet.username}' reason='${packet.reason}'" }
+    log.info {
+      "BlockPlayer user=${state.userId} name='${packet.username}' reason='${packet.reason}'"
+    }
     ctx.send(
         PartyMemberJoinPacket(
             player = syntheticId(packet.username),

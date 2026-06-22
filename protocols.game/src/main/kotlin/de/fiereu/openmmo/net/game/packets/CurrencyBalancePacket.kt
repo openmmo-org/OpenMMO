@@ -10,9 +10,9 @@ data class CurrencyBalancePacket(
 )
 
 object CurrencyBalancePacketCodec : PacketCodec<CurrencyBalancePacket>() {
-    override fun CodecScope<CurrencyBalancePacket>.body(): CurrencyBalancePacket {
-        val primaryBalance = field(S32LE) { it.primaryBalance }
-        val secondaryBalance = field(S32LE) { it.secondaryBalance }
-        return CurrencyBalancePacket(primaryBalance, secondaryBalance)
-    }
+  override fun CodecScope<CurrencyBalancePacket>.body(): CurrencyBalancePacket {
+    val primaryBalance = field(S32LE) { it.primaryBalance }
+    val secondaryBalance = field(S32LE) { it.secondaryBalance }
+    return CurrencyBalancePacket(primaryBalance, secondaryBalance)
+  }
 }

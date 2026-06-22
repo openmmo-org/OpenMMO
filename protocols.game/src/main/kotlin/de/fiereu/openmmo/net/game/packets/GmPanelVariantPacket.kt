@@ -9,8 +9,8 @@ data class GmPanelVariantPacket(
 )
 
 object GmPanelVariantPacketCodec : PacketCodec<GmPanelVariantPacket>() {
-    override fun CodecScope<GmPanelVariantPacket>.body(): GmPanelVariantPacket {
-        val variant = field(S8) { it.variant }
-        return GmPanelVariantPacket(variant)
-    }
+  override fun CodecScope<GmPanelVariantPacket>.body(): GmPanelVariantPacket {
+    val variant = field(S8) { it.variant }
+    return GmPanelVariantPacket(variant)
+  }
 }

@@ -10,9 +10,9 @@ data class EntityDespawnPacket(
 )
 
 object EntityDespawnPacketCodec : PacketCodec<EntityDespawnPacket>() {
-    override fun CodecScope<EntityDespawnPacket>.body(): EntityDespawnPacket {
-        reserved(byte = 0)
-        val entityId = field(S16LE) { it.entityId }
-        return EntityDespawnPacket(entityId)
-    }
+  override fun CodecScope<EntityDespawnPacket>.body(): EntityDespawnPacket {
+    reserved(byte = 0)
+    val entityId = field(S16LE) { it.entityId }
+    return EntityDespawnPacket(entityId)
+  }
 }

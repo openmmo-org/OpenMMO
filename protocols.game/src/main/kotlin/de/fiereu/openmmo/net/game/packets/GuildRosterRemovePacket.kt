@@ -9,9 +9,9 @@ data class GuildRosterRemovePacket(
 )
 
 object GuildRosterRemovePacketCodec : PacketCodec<GuildRosterRemovePacket>() {
-    override fun CodecScope<GuildRosterRemovePacket>.body(): GuildRosterRemovePacket {
-        field(S64LE) { 0L }
-        val memberId = field(S64LE, GuildRosterRemovePacket::memberId)
-        return GuildRosterRemovePacket(memberId)
-    }
+  override fun CodecScope<GuildRosterRemovePacket>.body(): GuildRosterRemovePacket {
+    field(S64LE) { 0L }
+    val memberId = field(S64LE, GuildRosterRemovePacket::memberId)
+    return GuildRosterRemovePacket(memberId)
+  }
 }

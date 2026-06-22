@@ -12,10 +12,10 @@ data class OverworldPathToTilePacket(
 )
 
 object OverworldPathToTilePacketCodec : PacketCodec<OverworldPathToTilePacket>() {
-    override fun CodecScope<OverworldPathToTilePacket>.body(): OverworldPathToTilePacket {
-        val zoneId = field(S16LE) { it.zoneId }
-        val targetX = field(S8) { it.targetX }
-        val targetY = field(S8) { it.targetY }
-        return OverworldPathToTilePacket(zoneId, targetX, targetY)
-    }
+  override fun CodecScope<OverworldPathToTilePacket>.body(): OverworldPathToTilePacket {
+    val zoneId = field(S16LE) { it.zoneId }
+    val targetX = field(S8) { it.targetX }
+    val targetY = field(S8) { it.targetY }
+    return OverworldPathToTilePacket(zoneId, targetX, targetY)
+  }
 }

@@ -11,9 +11,9 @@ data class BattleStateSlotIntPacket(
 )
 
 object BattleStateSlotIntPacketCodec : PacketCodec<BattleStateSlotIntPacket>() {
-    override fun CodecScope<BattleStateSlotIntPacket>.body(): BattleStateSlotIntPacket {
-        val index = field(S8) { it.index }
-        val value = field(S32LE) { it.value }
-        return BattleStateSlotIntPacket(index, value)
-    }
+  override fun CodecScope<BattleStateSlotIntPacket>.body(): BattleStateSlotIntPacket {
+    val index = field(S8) { it.index }
+    val value = field(S32LE) { it.value }
+    return BattleStateSlotIntPacket(index, value)
+  }
 }

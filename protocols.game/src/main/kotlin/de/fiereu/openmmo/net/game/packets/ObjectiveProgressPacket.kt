@@ -9,10 +9,10 @@ data class ObjectiveProgressPacket(
 )
 
 object ObjectiveProgressPacketCodec : PacketCodec<ObjectiveProgressPacket>() {
-    override fun CodecScope<ObjectiveProgressPacket>.body(): ObjectiveProgressPacket {
-        val id = field(S8) { it.id }
-        val value = field(S32LE) { it.value }
-        val count = field(S16LE) { it.count }
-        return ObjectiveProgressPacket(id, value, count)
-    }
+  override fun CodecScope<ObjectiveProgressPacket>.body(): ObjectiveProgressPacket {
+    val id = field(S8) { it.id }
+    val value = field(S32LE) { it.value }
+    val count = field(S16LE) { it.count }
+    return ObjectiveProgressPacket(id, value, count)
+  }
 }

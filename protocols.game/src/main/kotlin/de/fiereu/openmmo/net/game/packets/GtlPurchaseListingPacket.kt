@@ -12,10 +12,10 @@ data class GtlPurchaseListingPacket(
 )
 
 object GtlPurchaseListingPacketCodec : PacketCodec<GtlPurchaseListingPacket>() {
-    override fun CodecScope<GtlPurchaseListingPacket>.body(): GtlPurchaseListingPacket {
-        val listingId = field(S32LE) { it.listingId }
-        val price = field(S32LE) { it.price }
-        val action = field(S8) { it.action }
-        return GtlPurchaseListingPacket(listingId, price, action)
-    }
+  override fun CodecScope<GtlPurchaseListingPacket>.body(): GtlPurchaseListingPacket {
+    val listingId = field(S32LE) { it.listingId }
+    val price = field(S32LE) { it.price }
+    val action = field(S8) { it.action }
+    return GtlPurchaseListingPacket(listingId, price, action)
+  }
 }

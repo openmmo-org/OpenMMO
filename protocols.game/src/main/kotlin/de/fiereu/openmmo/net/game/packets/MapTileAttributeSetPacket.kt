@@ -12,11 +12,11 @@ data class MapTileAttributeSetPacket(
 )
 
 object MapTileAttributeSetPacketCodec : PacketCodec<MapTileAttributeSetPacket>() {
-    override fun CodecScope<MapTileAttributeSetPacket>.body(): MapTileAttributeSetPacket {
-        val blockX = field(S8) { it.blockX }
-        val blockY = field(S8) { it.blockY }
-        val blockZ = field(S8) { it.blockZ }
-        val attribute = field(S8) { it.attribute }
-        return MapTileAttributeSetPacket(blockX, blockY, blockZ, attribute)
-    }
+  override fun CodecScope<MapTileAttributeSetPacket>.body(): MapTileAttributeSetPacket {
+    val blockX = field(S8) { it.blockX }
+    val blockY = field(S8) { it.blockY }
+    val blockZ = field(S8) { it.blockZ }
+    val attribute = field(S8) { it.attribute }
+    return MapTileAttributeSetPacket(blockX, blockY, blockZ, attribute)
+  }
 }

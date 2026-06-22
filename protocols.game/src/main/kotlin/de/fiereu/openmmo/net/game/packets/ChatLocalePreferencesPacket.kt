@@ -12,10 +12,10 @@ data class ChatLocalePreferencesPacket(
 )
 
 object ChatLocalePreferencesPacketCodec : PacketCodec<ChatLocalePreferencesPacket>() {
-    override fun CodecScope<ChatLocalePreferencesPacket>.body(): ChatLocalePreferencesPacket {
-        val languageId = field(S8) { it.languageId }
-        val chatChannelMask = field(S16LE) { it.chatChannelMask }
-        val languageFilterMask = field(S16LE) { it.languageFilterMask }
-        return ChatLocalePreferencesPacket(languageId, chatChannelMask, languageFilterMask)
-    }
+  override fun CodecScope<ChatLocalePreferencesPacket>.body(): ChatLocalePreferencesPacket {
+    val languageId = field(S8) { it.languageId }
+    val chatChannelMask = field(S16LE) { it.chatChannelMask }
+    val languageFilterMask = field(S16LE) { it.languageFilterMask }
+    return ChatLocalePreferencesPacket(languageId, chatChannelMask, languageFilterMask)
+  }
 }

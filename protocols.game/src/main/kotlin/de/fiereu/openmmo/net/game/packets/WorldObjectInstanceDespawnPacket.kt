@@ -9,8 +9,9 @@ data class WorldObjectInstanceDespawnPacket(
 )
 
 object WorldObjectInstanceDespawnPacketCodec : PacketCodec<WorldObjectInstanceDespawnPacket>() {
-    override fun CodecScope<WorldObjectInstanceDespawnPacket>.body(): WorldObjectInstanceDespawnPacket {
-        val entityId = field(S64LE) { it.entityId }
-        return WorldObjectInstanceDespawnPacket(entityId)
-    }
+  override fun CodecScope<WorldObjectInstanceDespawnPacket>.body():
+      WorldObjectInstanceDespawnPacket {
+    val entityId = field(S64LE) { it.entityId }
+    return WorldObjectInstanceDespawnPacket(entityId)
+  }
 }

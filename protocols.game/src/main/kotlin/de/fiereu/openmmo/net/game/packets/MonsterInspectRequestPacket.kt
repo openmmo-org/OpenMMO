@@ -12,10 +12,10 @@ data class MonsterInspectRequestPacket(
 )
 
 object MonsterInspectRequestPacketCodec : PacketCodec<MonsterInspectRequestPacket>() {
-    override fun CodecScope<MonsterInspectRequestPacket>.body(): MonsterInspectRequestPacket {
-        val entityId = field(S64LE) { it.entityId }
-        val contextType = field(S8) { it.contextType }
-        val viewMode = field(S8) { it.viewMode }
-        return MonsterInspectRequestPacket(entityId, contextType, viewMode)
-    }
+  override fun CodecScope<MonsterInspectRequestPacket>.body(): MonsterInspectRequestPacket {
+    val entityId = field(S64LE) { it.entityId }
+    val contextType = field(S8) { it.contextType }
+    val viewMode = field(S8) { it.viewMode }
+    return MonsterInspectRequestPacket(entityId, contextType, viewMode)
+  }
 }

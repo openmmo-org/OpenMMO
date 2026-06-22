@@ -9,8 +9,8 @@ data class GtlListingCancelPacket(
 )
 
 object GtlListingCancelPacketCodec : PacketCodec<GtlListingCancelPacket>() {
-    override fun CodecScope<GtlListingCancelPacket>.body(): GtlListingCancelPacket {
-        val listingId = field(Utf16LeNullTerminated) { it.listingId }
-        return GtlListingCancelPacket(listingId)
-    }
+  override fun CodecScope<GtlListingCancelPacket>.body(): GtlListingCancelPacket {
+    val listingId = field(Utf16LeNullTerminated) { it.listingId }
+    return GtlListingCancelPacket(listingId)
+  }
 }

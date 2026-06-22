@@ -9,8 +9,8 @@ data class BattleActionPromptTogglePacket(
 )
 
 object BattleActionPromptTogglePacketCodec : PacketCodec<BattleActionPromptTogglePacket>() {
-    override fun CodecScope<BattleActionPromptTogglePacket>.body(): BattleActionPromptTogglePacket {
-        val shown = field(Bool) { it.shown }
-        return BattleActionPromptTogglePacket(shown)
-    }
+  override fun CodecScope<BattleActionPromptTogglePacket>.body(): BattleActionPromptTogglePacket {
+    val shown = field(Bool) { it.shown }
+    return BattleActionPromptTogglePacket(shown)
+  }
 }

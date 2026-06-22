@@ -18,29 +18,29 @@ data class BattleMoveDisableUpdatePacket(
 
 private val BattleMoveDisableEntryCodec: Codec<BattleMoveDisableEntry> =
     object : PacketCodec<BattleMoveDisableEntry>() {
-        override fun CodecScope<BattleMoveDisableEntry>.body(): BattleMoveDisableEntry {
-            val present = field(Bool) { it.present }
-            return if (present) {
-                val disabled = field(Bool) { it.disabled }
-                val disableTurns = field(S16LE) { it.disableTurns }
-                BattleMoveDisableEntry(true, disabled, disableTurns)
-            } else {
-                BattleMoveDisableEntry(false, false, 0)
-            }
+      override fun CodecScope<BattleMoveDisableEntry>.body(): BattleMoveDisableEntry {
+        val present = field(Bool) { it.present }
+        return if (present) {
+          val disabled = field(Bool) { it.disabled }
+          val disableTurns = field(S16LE) { it.disableTurns }
+          BattleMoveDisableEntry(true, disabled, disableTurns)
+        } else {
+          BattleMoveDisableEntry(false, false, 0)
         }
+      }
     }
 
 private val BattleMoveDisableSideCodec: Codec<BattleMoveDisableSide> =
     object : PacketCodec<BattleMoveDisableSide>() {
-        override fun CodecScope<BattleMoveDisableSide>.body(): BattleMoveDisableSide {
-            val entries = field(BattleMoveDisableEntryCodec.listPrefixed(U8)) { it.entries }
-            return BattleMoveDisableSide(entries)
-        }
+      override fun CodecScope<BattleMoveDisableSide>.body(): BattleMoveDisableSide {
+        val entries = field(BattleMoveDisableEntryCodec.listPrefixed(U8)) { it.entries }
+        return BattleMoveDisableSide(entries)
+      }
     }
 
 object BattleMoveDisableUpdatePacketCodec : PacketCodec<BattleMoveDisableUpdatePacket>() {
-    override fun CodecScope<BattleMoveDisableUpdatePacket>.body(): BattleMoveDisableUpdatePacket {
-        val sides = field(BattleMoveDisableSideCodec.repeat(2)) { it.sides }
-        return BattleMoveDisableUpdatePacket(sides)
-    }
+  override fun CodecScope<BattleMoveDisableUpdatePacket>.body(): BattleMoveDisableUpdatePacket {
+    val sides = field(BattleMoveDisableSideCodec.repeat(2)) { it.sides }
+    return BattleMoveDisableUpdatePacket(sides)
+  }
 }

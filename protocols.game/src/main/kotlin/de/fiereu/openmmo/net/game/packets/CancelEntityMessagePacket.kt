@@ -9,8 +9,8 @@ data class CancelEntityMessagePacket(
 )
 
 object CancelEntityMessagePacketCodec : PacketCodec<CancelEntityMessagePacket>() {
-    override fun CodecScope<CancelEntityMessagePacket>.body(): CancelEntityMessagePacket {
-        val entityId = field(S64LE) { it.entityId }
-        return CancelEntityMessagePacket(entityId)
-    }
+  override fun CodecScope<CancelEntityMessagePacket>.body(): CancelEntityMessagePacket {
+    val entityId = field(S64LE) { it.entityId }
+    return CancelEntityMessagePacket(entityId)
+  }
 }

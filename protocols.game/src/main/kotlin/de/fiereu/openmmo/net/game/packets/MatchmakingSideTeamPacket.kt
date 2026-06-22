@@ -26,58 +26,58 @@ data class MatchmakingSideTeamPacket(
 )
 
 private object MatchmakingRankingEntryCodec : PacketCodec<MatchmakingRankingEntry>() {
-    override fun CodecScope<MatchmakingRankingEntry>.body(): MatchmakingRankingEntry {
-        val entityId = field(S64LE, MatchmakingRankingEntry::entityId)
-        val rank = field(S8, MatchmakingRankingEntry::rank)
-        val flags = field(S8, MatchmakingRankingEntry::flags)
-        val name = field(Utf16LeNullTerminated, MatchmakingRankingEntry::name)
-        val value1 = field(S16LE, MatchmakingRankingEntry::value1)
-        val species = field(S16LE, MatchmakingRankingEntry::species)
-        reserved(byte = 0)
-        val ribbons = field(S64LE, MatchmakingRankingEntry::ribbons)
-        val value2 = field(S8, MatchmakingRankingEntry::value2)
-        val value3 = field(S32LE, MatchmakingRankingEntry::value3)
-        val value4 = field(S8, MatchmakingRankingEntry::value4)
-        val flag1 = field(Bool, MatchmakingRankingEntry::flag1)
-        val flag2 = field(Bool, MatchmakingRankingEntry::flag2)
-        reserved(byte = 0)
-        return MatchmakingRankingEntry(
-            entityId,
-            rank,
-            flags,
-            name,
-            value1,
-            species,
-            ribbons,
-            value2,
-            value3,
-            value4,
-            flag1,
-            flag2,
-        )
-    }
+  override fun CodecScope<MatchmakingRankingEntry>.body(): MatchmakingRankingEntry {
+    val entityId = field(S64LE, MatchmakingRankingEntry::entityId)
+    val rank = field(S8, MatchmakingRankingEntry::rank)
+    val flags = field(S8, MatchmakingRankingEntry::flags)
+    val name = field(Utf16LeNullTerminated, MatchmakingRankingEntry::name)
+    val value1 = field(S16LE, MatchmakingRankingEntry::value1)
+    val species = field(S16LE, MatchmakingRankingEntry::species)
+    reserved(byte = 0)
+    val ribbons = field(S64LE, MatchmakingRankingEntry::ribbons)
+    val value2 = field(S8, MatchmakingRankingEntry::value2)
+    val value3 = field(S32LE, MatchmakingRankingEntry::value3)
+    val value4 = field(S8, MatchmakingRankingEntry::value4)
+    val flag1 = field(Bool, MatchmakingRankingEntry::flag1)
+    val flag2 = field(Bool, MatchmakingRankingEntry::flag2)
+    reserved(byte = 0)
+    return MatchmakingRankingEntry(
+        entityId,
+        rank,
+        flags,
+        name,
+        value1,
+        species,
+        ribbons,
+        value2,
+        value3,
+        value4,
+        flag1,
+        flag2,
+    )
+  }
 }
 
 private val MatchmakingRankingEntryListPrefixedU8: Codec<List<MatchmakingRankingEntry>> =
     object : Codec<List<MatchmakingRankingEntry>> {
-        override fun read(buf: ReadBuffer): List<MatchmakingRankingEntry> {
-            val n = U8.read(buf)
-            return List(n) { MatchmakingRankingEntryCodec.read(buf) }
-        }
+      override fun read(buf: ReadBuffer): List<MatchmakingRankingEntry> {
+        val n = U8.read(buf)
+        return List(n) { MatchmakingRankingEntryCodec.read(buf) }
+      }
 
-        override fun write(buf: WriteBuffer, value: List<MatchmakingRankingEntry>) {
-            U8.write(buf, value.size)
-            value.forEach { MatchmakingRankingEntryCodec.write(buf, it) }
-        }
+      override fun write(buf: WriteBuffer, value: List<MatchmakingRankingEntry>) {
+        U8.write(buf, value.size)
+        value.forEach { MatchmakingRankingEntryCodec.write(buf, it) }
+      }
     }
 
 object MatchmakingSideTeamPacketCodec : PacketCodec<MatchmakingSideTeamPacket>() {
-    override fun CodecScope<MatchmakingSideTeamPacket>.body(): MatchmakingSideTeamPacket {
-        val sessionId = field(S8, MatchmakingSideTeamPacket::sessionId)
-        val opponentSide = field(Bool, MatchmakingSideTeamPacket::opponentSide)
-        val page = field(S16LE, MatchmakingSideTeamPacket::page)
-        val slot = field(S32LE, MatchmakingSideTeamPacket::slot)
-        val team = field(MatchmakingRankingEntryListPrefixedU8, MatchmakingSideTeamPacket::team)
-        return MatchmakingSideTeamPacket(sessionId, opponentSide, page, slot, team)
-    }
+  override fun CodecScope<MatchmakingSideTeamPacket>.body(): MatchmakingSideTeamPacket {
+    val sessionId = field(S8, MatchmakingSideTeamPacket::sessionId)
+    val opponentSide = field(Bool, MatchmakingSideTeamPacket::opponentSide)
+    val page = field(S16LE, MatchmakingSideTeamPacket::page)
+    val slot = field(S32LE, MatchmakingSideTeamPacket::slot)
+    val team = field(MatchmakingRankingEntryListPrefixedU8, MatchmakingSideTeamPacket::team)
+    return MatchmakingSideTeamPacket(sessionId, opponentSide, page, slot, team)
+  }
 }

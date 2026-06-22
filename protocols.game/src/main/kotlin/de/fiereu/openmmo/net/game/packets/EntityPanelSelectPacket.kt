@@ -9,8 +9,8 @@ data class EntityPanelSelectPacket(
 )
 
 object EntityPanelSelectPacketCodec : PacketCodec<EntityPanelSelectPacket>() {
-    override fun CodecScope<EntityPanelSelectPacket>.body(): EntityPanelSelectPacket {
-        val entityId = field(S64LE) { it.entityId }
-        return EntityPanelSelectPacket(entityId)
-    }
+  override fun CodecScope<EntityPanelSelectPacket>.body(): EntityPanelSelectPacket {
+    val entityId = field(S64LE) { it.entityId }
+    return EntityPanelSelectPacket(entityId)
+  }
 }

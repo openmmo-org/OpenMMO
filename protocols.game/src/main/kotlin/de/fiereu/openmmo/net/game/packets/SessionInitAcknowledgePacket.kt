@@ -6,7 +6,7 @@ import de.fiereu.bytecodec.PacketCodec
 data class SessionInitAcknowledgePacket(val placeholder: Unit = Unit)
 
 object SessionInitAcknowledgePacketCodec : PacketCodec<SessionInitAcknowledgePacket>() {
-    override fun CodecScope<SessionInitAcknowledgePacket>.body(): SessionInitAcknowledgePacket {
-        return SessionInitAcknowledgePacket()
-    }
+  override fun CodecScope<SessionInitAcknowledgePacket>.body(): SessionInitAcknowledgePacket {
+    return SessionInitAcknowledgePacket()
+  }
 }

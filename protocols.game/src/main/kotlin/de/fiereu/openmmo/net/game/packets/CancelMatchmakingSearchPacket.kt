@@ -6,7 +6,7 @@ import de.fiereu.bytecodec.PacketCodec
 class CancelMatchmakingSearchPacket
 
 object CancelMatchmakingSearchPacketCodec : PacketCodec<CancelMatchmakingSearchPacket>() {
-    override fun CodecScope<CancelMatchmakingSearchPacket>.body(): CancelMatchmakingSearchPacket {
-        return CancelMatchmakingSearchPacket()
-    }
+  override fun CodecScope<CancelMatchmakingSearchPacket>.body(): CancelMatchmakingSearchPacket {
+    return CancelMatchmakingSearchPacket()
+  }
 }

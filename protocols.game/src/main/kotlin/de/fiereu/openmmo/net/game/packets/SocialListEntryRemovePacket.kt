@@ -11,9 +11,9 @@ data class SocialListEntryRemovePacket(
 )
 
 object SocialListEntryRemovePacketCodec : PacketCodec<SocialListEntryRemovePacket>() {
-    override fun CodecScope<SocialListEntryRemovePacket>.body(): SocialListEntryRemovePacket {
-        val listType = field(S8) { it.listType }
-        val entityId = field(S64LE) { it.entityId }
-        return SocialListEntryRemovePacket(listType, entityId)
-    }
+  override fun CodecScope<SocialListEntryRemovePacket>.body(): SocialListEntryRemovePacket {
+    val listType = field(S8) { it.listType }
+    val entityId = field(S64LE) { it.entityId }
+    return SocialListEntryRemovePacket(listType, entityId)
+  }
 }

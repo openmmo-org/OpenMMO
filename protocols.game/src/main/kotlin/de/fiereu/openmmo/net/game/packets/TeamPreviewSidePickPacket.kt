@@ -11,9 +11,9 @@ data class TeamPreviewSidePickPacket(
 )
 
 object TeamPreviewSidePickPacketCodec : PacketCodec<TeamPreviewSidePickPacket>() {
-    override fun CodecScope<TeamPreviewSidePickPacket>.body(): TeamPreviewSidePickPacket {
-        val pokemonEntityId = field(S64LE) { it.pokemonEntityId }
-        val side = field(S16LE) { it.side }
-        return TeamPreviewSidePickPacket(pokemonEntityId, side)
-    }
+  override fun CodecScope<TeamPreviewSidePickPacket>.body(): TeamPreviewSidePickPacket {
+    val pokemonEntityId = field(S64LE) { it.pokemonEntityId }
+    val side = field(S16LE) { it.side }
+    return TeamPreviewSidePickPacket(pokemonEntityId, side)
+  }
 }

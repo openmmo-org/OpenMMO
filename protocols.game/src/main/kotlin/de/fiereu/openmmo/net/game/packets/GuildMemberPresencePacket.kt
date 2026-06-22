@@ -11,9 +11,9 @@ data class GuildMemberPresencePacket(
 )
 
 object GuildMemberPresencePacketCodec : PacketCodec<GuildMemberPresencePacket>() {
-    override fun CodecScope<GuildMemberPresencePacket>.body(): GuildMemberPresencePacket {
-        val memberId = field(S64LE, GuildMemberPresencePacket::memberId)
-        val online = field(Bool, GuildMemberPresencePacket::online)
-        return GuildMemberPresencePacket(memberId, online)
-    }
+  override fun CodecScope<GuildMemberPresencePacket>.body(): GuildMemberPresencePacket {
+    val memberId = field(S64LE, GuildMemberPresencePacket::memberId)
+    val online = field(Bool, GuildMemberPresencePacket::online)
+    return GuildMemberPresencePacket(memberId, online)
+  }
 }

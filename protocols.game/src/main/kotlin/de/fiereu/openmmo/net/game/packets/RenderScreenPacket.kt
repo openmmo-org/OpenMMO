@@ -7,8 +7,8 @@ import de.fiereu.bytecodec.PacketCodec
 data class RenderScreenPacket(val renderScreen: Boolean)
 
 object RenderScreenPacketCodec : PacketCodec<RenderScreenPacket>() {
-    override fun CodecScope<RenderScreenPacket>.body(): RenderScreenPacket {
-        val renderScreen = field(Bool) { it.renderScreen }
-        return RenderScreenPacket(renderScreen)
-    }
+  override fun CodecScope<RenderScreenPacket>.body(): RenderScreenPacket {
+    val renderScreen = field(Bool) { it.renderScreen }
+    return RenderScreenPacket(renderScreen)
+  }
 }

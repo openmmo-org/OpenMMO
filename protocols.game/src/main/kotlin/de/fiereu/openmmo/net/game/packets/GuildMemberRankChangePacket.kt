@@ -11,10 +11,10 @@ data class GuildMemberRankChangePacket(
 )
 
 object GuildMemberRankChangePacketCodec : PacketCodec<GuildMemberRankChangePacket>() {
-    override fun CodecScope<GuildMemberRankChangePacket>.body(): GuildMemberRankChangePacket {
-        field(S64LE) { 0L }
-        val memberId = field(S64LE, GuildMemberRankChangePacket::memberId)
-        val rank = field(S8, GuildMemberRankChangePacket::rank)
-        return GuildMemberRankChangePacket(memberId, rank)
-    }
+  override fun CodecScope<GuildMemberRankChangePacket>.body(): GuildMemberRankChangePacket {
+    field(S64LE) { 0L }
+    val memberId = field(S64LE, GuildMemberRankChangePacket::memberId)
+    val rank = field(S8, GuildMemberRankChangePacket::rank)
+    return GuildMemberRankChangePacket(memberId, rank)
+  }
 }

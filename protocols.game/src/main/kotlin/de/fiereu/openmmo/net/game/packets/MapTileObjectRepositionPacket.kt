@@ -16,14 +16,14 @@ data class MapTileObjectRepositionPacket(
 )
 
 object MapTileObjectRepositionPacketCodec : PacketCodec<MapTileObjectRepositionPacket>() {
-    override fun CodecScope<MapTileObjectRepositionPacket>.body(): MapTileObjectRepositionPacket {
-        val chunkX = field(S8) { it.chunkX }
-        val chunkY = field(S8) { it.chunkY }
-        val chunkZ = field(S8) { it.chunkZ }
-        val tileX = field(S16LE) { it.tileX }
-        val tileY = field(S16LE) { it.tileY }
-        val tileZ = field(S8) { it.tileZ }
-        val objectIndex = field(S8) { it.objectIndex }
-        return MapTileObjectRepositionPacket(chunkX, chunkY, chunkZ, tileX, tileY, tileZ, objectIndex)
-    }
+  override fun CodecScope<MapTileObjectRepositionPacket>.body(): MapTileObjectRepositionPacket {
+    val chunkX = field(S8) { it.chunkX }
+    val chunkY = field(S8) { it.chunkY }
+    val chunkZ = field(S8) { it.chunkZ }
+    val tileX = field(S16LE) { it.tileX }
+    val tileY = field(S16LE) { it.tileY }
+    val tileZ = field(S8) { it.tileZ }
+    val objectIndex = field(S8) { it.objectIndex }
+    return MapTileObjectRepositionPacket(chunkX, chunkY, chunkZ, tileX, tileY, tileZ, objectIndex)
+  }
 }

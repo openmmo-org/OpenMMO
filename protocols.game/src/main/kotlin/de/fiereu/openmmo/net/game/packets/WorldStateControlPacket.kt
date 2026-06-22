@@ -11,9 +11,9 @@ data class WorldStateControlPacket(
 )
 
 object WorldStateControlPacketCodec : PacketCodec<WorldStateControlPacket>() {
-    override fun CodecScope<WorldStateControlPacket>.body(): WorldStateControlPacket {
-        val actionType = field(S8) { it.actionType }
-        val value = field(S32LE) { it.value }
-        return WorldStateControlPacket(actionType, value)
-    }
+  override fun CodecScope<WorldStateControlPacket>.body(): WorldStateControlPacket {
+    val actionType = field(S8) { it.actionType }
+    val value = field(S32LE) { it.value }
+    return WorldStateControlPacket(actionType, value)
+  }
 }

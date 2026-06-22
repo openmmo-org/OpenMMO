@@ -3,7 +3,7 @@ package de.fiereu.openmmo.net.game.packets
 import de.fiereu.bytecodec.*
 
 sealed class MailAttachment {
-    abstract val typeByte: Byte
+  abstract val typeByte: Byte
 }
 
 data class ItemMailAttachment(
@@ -24,22 +24,22 @@ data class PokemonMailAttachment(
 
 private val MailAttachmentCodec: Codec<MailAttachment> =
     object : Codec<MailAttachment> {
-        override fun read(buf: ReadBuffer): MailAttachment {
-            throw MalformedPacketException("MailComposeSendPacket is a client-encoded packet")
-        }
+      override fun read(buf: ReadBuffer): MailAttachment {
+        throw MalformedPacketException("MailComposeSendPacket is a client-encoded packet")
+      }
 
-        override fun write(buf: WriteBuffer, value: MailAttachment) {
-            S8.write(buf, value.typeByte)
-            when (value) {
-                is ItemMailAttachment -> S32LE.write(buf, value.itemId)
-                is PokemonQuantityMailAttachment -> {
-                    S64LE.write(buf, value.pokemonEntityId)
-                    S16LE.write(buf, value.quantity)
-                }
+      override fun write(buf: WriteBuffer, value: MailAttachment) {
+        S8.write(buf, value.typeByte)
+        when (value) {
+          is ItemMailAttachment -> S32LE.write(buf, value.itemId)
+          is PokemonQuantityMailAttachment -> {
+            S64LE.write(buf, value.pokemonEntityId)
+            S16LE.write(buf, value.quantity)
+          }
 
-                is PokemonMailAttachment -> S64LE.write(buf, value.pokemonEntityId)
-            }
+          is PokemonMailAttachment -> S64LE.write(buf, value.pokemonEntityId)
         }
+      }
     }
 
 data class MailComposeSendPacket(
@@ -50,11 +50,11 @@ data class MailComposeSendPacket(
 )
 
 object MailComposeSendPacketCodec : PacketCodec<MailComposeSendPacket>() {
-    override fun CodecScope<MailComposeSendPacket>.body(): MailComposeSendPacket {
-        val recipientName = field(Utf16LeNullTerminated) { it.recipientName }
-        val subject = field(Utf16LeNullTerminated) { it.subject }
-        val body = field(Utf16LeNullTerminated) { it.body }
-        val attachments = field(MailAttachmentCodec.listPrefixed(U8)) { it.attachments }
-        return MailComposeSendPacket(recipientName, subject, body, attachments)
-    }
+  override fun CodecScope<MailComposeSendPacket>.body(): MailComposeSendPacket {
+    val recipientName = field(Utf16LeNullTerminated) { it.recipientName }
+    val subject = field(Utf16LeNullTerminated) { it.subject }
+    val body = field(Utf16LeNullTerminated) { it.body }
+    val attachments = field(MailAttachmentCodec.listPrefixed(U8)) { it.attachments }
+    return MailComposeSendPacket(recipientName, subject, body, attachments)
+  }
 }

@@ -11,9 +11,9 @@ data class GuildMemberRankAssignPacket(
 )
 
 object GuildMemberRankAssignPacketCodec : PacketCodec<GuildMemberRankAssignPacket>() {
-    override fun CodecScope<GuildMemberRankAssignPacket>.body(): GuildMemberRankAssignPacket {
-        val memberEntityId = field(S64LE) { it.memberEntityId }
-        val rankOrdinal = field(U8) { it.rankOrdinal }
-        return GuildMemberRankAssignPacket(memberEntityId, rankOrdinal)
-    }
+  override fun CodecScope<GuildMemberRankAssignPacket>.body(): GuildMemberRankAssignPacket {
+    val memberEntityId = field(S64LE) { it.memberEntityId }
+    val rankOrdinal = field(U8) { it.rankOrdinal }
+    return GuildMemberRankAssignPacket(memberEntityId, rankOrdinal)
+  }
 }

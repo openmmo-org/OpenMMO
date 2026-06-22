@@ -10,9 +10,9 @@ data class WarpTileInteractPacket(
 )
 
 object WarpTileInteractPacketCodec : PacketCodec<WarpTileInteractPacket>() {
-    override fun CodecScope<WarpTileInteractPacket>.body(): WarpTileInteractPacket {
-        val floorId = field(S8) { it.floorId }
-        val warpMode = field(S8) { it.warpMode }
-        return WarpTileInteractPacket(floorId, warpMode)
-    }
+  override fun CodecScope<WarpTileInteractPacket>.body(): WarpTileInteractPacket {
+    val floorId = field(S8) { it.floorId }
+    val warpMode = field(S8) { it.warpMode }
+    return WarpTileInteractPacket(floorId, warpMode)
+  }
 }

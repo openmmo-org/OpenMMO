@@ -12,9 +12,9 @@ data class SocialProfileDialogOpenPacket(
 )
 
 object SocialProfileDialogOpenPacketCodec : PacketCodec<SocialProfileDialogOpenPacket>() {
-    override fun CodecScope<SocialProfileDialogOpenPacket>.body(): SocialProfileDialogOpenPacket {
-        val status = field(S8) { it.status }
-        val content = if (status.toInt() == 0) field(PokemonCodec) { it.content!! } else null
-        return SocialProfileDialogOpenPacket(status, content)
-    }
+  override fun CodecScope<SocialProfileDialogOpenPacket>.body(): SocialProfileDialogOpenPacket {
+    val status = field(S8) { it.status }
+    val content = if (status.toInt() == 0) field(PokemonCodec) { it.content!! } else null
+    return SocialProfileDialogOpenPacket(status, content)
+  }
 }

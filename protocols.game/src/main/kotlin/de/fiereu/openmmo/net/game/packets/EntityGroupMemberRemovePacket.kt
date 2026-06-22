@@ -10,9 +10,9 @@ data class EntityGroupMemberRemovePacket(
 )
 
 object EntityGroupMemberRemovePacketCodec : PacketCodec<EntityGroupMemberRemovePacket>() {
-    override fun CodecScope<EntityGroupMemberRemovePacket>.body(): EntityGroupMemberRemovePacket {
-        val removedId = field(S64LE) { it.removedId }
-        val leaderId = field(S64LE) { it.leaderId }
-        return EntityGroupMemberRemovePacket(removedId, leaderId)
-    }
+  override fun CodecScope<EntityGroupMemberRemovePacket>.body(): EntityGroupMemberRemovePacket {
+    val removedId = field(S64LE) { it.removedId }
+    val leaderId = field(S64LE) { it.leaderId }
+    return EntityGroupMemberRemovePacket(removedId, leaderId)
+  }
 }

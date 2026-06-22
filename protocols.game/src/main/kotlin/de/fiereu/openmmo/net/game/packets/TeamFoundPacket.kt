@@ -10,9 +10,9 @@ data class TeamFoundPacket(
 )
 
 object TeamFoundPacketCodec : PacketCodec<TeamFoundPacket>() {
-    override fun CodecScope<TeamFoundPacket>.body(): TeamFoundPacket {
-        val teamName = field(Utf16LeNullTerminated) { it.teamName }
-        val teamTag = field(Utf16LeNullTerminated) { it.teamTag }
-        return TeamFoundPacket(teamName, teamTag)
-    }
+  override fun CodecScope<TeamFoundPacket>.body(): TeamFoundPacket {
+    val teamName = field(Utf16LeNullTerminated) { it.teamName }
+    val teamTag = field(Utf16LeNullTerminated) { it.teamTag }
+    return TeamFoundPacket(teamName, teamTag)
+  }
 }

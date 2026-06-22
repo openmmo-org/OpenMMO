@@ -9,10 +9,10 @@ data class PokemonListAddPacket(
 )
 
 object PokemonListAddPacketCodec : PacketCodec<PokemonListAddPacket>() {
-    override fun CodecScope<PokemonListAddPacket>.body(): PokemonListAddPacket {
-        val entityId = field(S64LE) { it.entityId }
-        val slot = field(S16LE) { it.slot }
-        val listType = field(S8) { it.listType }
-        return PokemonListAddPacket(entityId, slot, listType)
-    }
+  override fun CodecScope<PokemonListAddPacket>.body(): PokemonListAddPacket {
+    val entityId = field(S64LE) { it.entityId }
+    val slot = field(S16LE) { it.slot }
+    val listType = field(S8) { it.listType }
+    return PokemonListAddPacket(entityId, slot, listType)
+  }
 }

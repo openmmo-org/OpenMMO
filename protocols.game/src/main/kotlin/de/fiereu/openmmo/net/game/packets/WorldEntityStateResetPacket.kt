@@ -9,8 +9,8 @@ data class WorldEntityStateResetPacket(
 )
 
 object WorldEntityStateResetPacketCodec : PacketCodec<WorldEntityStateResetPacket>() {
-    override fun CodecScope<WorldEntityStateResetPacket>.body(): WorldEntityStateResetPacket {
-        val entityType = field(S16LE) { it.entityType }
-        return WorldEntityStateResetPacket(entityType)
-    }
+  override fun CodecScope<WorldEntityStateResetPacket>.body(): WorldEntityStateResetPacket {
+    val entityType = field(S16LE) { it.entityType }
+    return WorldEntityStateResetPacket(entityType)
+  }
 }

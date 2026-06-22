@@ -11,9 +11,9 @@ data class BattleTeamPreviewConfirmPacket(
 )
 
 object BattleTeamPreviewConfirmPacketCodec : PacketCodec<BattleTeamPreviewConfirmPacket>() {
-    override fun CodecScope<BattleTeamPreviewConfirmPacket>.body(): BattleTeamPreviewConfirmPacket {
-        val side = field(S16LE) { it.side }
-        val isOwnTeam = field(Bool) { it.isOwnTeam }
-        return BattleTeamPreviewConfirmPacket(side, isOwnTeam)
-    }
+  override fun CodecScope<BattleTeamPreviewConfirmPacket>.body(): BattleTeamPreviewConfirmPacket {
+    val side = field(S16LE) { it.side }
+    val isOwnTeam = field(Bool) { it.isOwnTeam }
+    return BattleTeamPreviewConfirmPacket(side, isOwnTeam)
+  }
 }

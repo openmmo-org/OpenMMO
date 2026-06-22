@@ -11,9 +11,9 @@ data class EntityTitleTagPacket(
 )
 
 object EntityTitleTagPacketCodec : PacketCodec<EntityTitleTagPacket>() {
-    override fun CodecScope<EntityTitleTagPacket>.body(): EntityTitleTagPacket {
-        val entityId = field(S64LE) { it.entityId }
-        val nameTag = field(Utf16LeNullTerminated) { it.nameTag }
-        return EntityTitleTagPacket(entityId, nameTag)
-    }
+  override fun CodecScope<EntityTitleTagPacket>.body(): EntityTitleTagPacket {
+    val entityId = field(S64LE) { it.entityId }
+    val nameTag = field(Utf16LeNullTerminated) { it.nameTag }
+    return EntityTitleTagPacket(entityId, nameTag)
+  }
 }
