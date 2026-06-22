@@ -16,6 +16,12 @@ import de.fiereu.openmmo.net.game.packets.EntityInteractPacket
 import de.fiereu.openmmo.net.game.packets.EntityLeavePacket
 import de.fiereu.openmmo.net.game.packets.FaceDirectionPacket
 import de.fiereu.openmmo.net.game.packets.FriendProfileRequestPacket
+import de.fiereu.openmmo.net.game.packets.GuildDepartPacket
+import de.fiereu.openmmo.net.game.packets.GuildDisbandTogglePacket
+import de.fiereu.openmmo.net.game.packets.GuildInvitePacket
+import de.fiereu.openmmo.net.game.packets.GuildMemberExpelPacket
+import de.fiereu.openmmo.net.game.packets.GuildMemberRankAssignPacket
+import de.fiereu.openmmo.net.game.packets.GuildRankPermissionUpdatePacket
 import de.fiereu.openmmo.net.game.packets.InteractiveResponsePacket
 import de.fiereu.openmmo.net.game.packets.JoinPacket
 import de.fiereu.openmmo.net.game.packets.KeepAlivePacket
@@ -25,8 +31,10 @@ import de.fiereu.openmmo.net.game.packets.RequestCharactersPacket
 import de.fiereu.openmmo.net.game.packets.RequestPlayerPacket
 import de.fiereu.openmmo.net.game.packets.RequestSocialProfilePacket
 import de.fiereu.openmmo.net.game.packets.SelectCharacterPacket
+import de.fiereu.openmmo.net.game.packets.TeamFoundPacket
 import de.fiereu.openmmo.net.game.packets.UnblockPlayerPacket
 import de.fiereu.openmmo.server.game.services.DialogService
+import de.fiereu.openmmo.server.game.services.GuildService
 import de.fiereu.openmmo.server.game.services.InteractionService
 import de.fiereu.openmmo.server.game.services.LoginService
 import de.fiereu.openmmo.server.game.services.MovementService
@@ -50,6 +58,7 @@ constructor(
     private val interactionService: InteractionService,
     private val multiplayerService: MultiplayerService,
     private val socialService: SocialService,
+    private val guildService: GuildService,
     private val sessionRegistry: SessionRegistry,
     private val characterStore: CharacterStore,
     scope: CoroutineScope,
@@ -76,6 +85,14 @@ constructor(
     on<FriendProfileRequestPacket> { event -> socialService.onFriendProfileRequest(event) }
     on<RequestSocialProfilePacket> { event -> socialService.onRequestSocialProfile(event) }
     on<CancelSocialInteractionPacket> { event -> socialService.onCancelSocialInteraction(event) }
+
+    on<TeamFoundPacket> { event -> guildService.onFoundTeam(event) }
+    on<GuildInvitePacket> { event -> guildService.onGuildInvite(event) }
+    on<GuildRankPermissionUpdatePacket> { event -> guildService.onRankPermissionUpdate(event) }
+    on<GuildMemberRankAssignPacket> { event -> guildService.onRankAssign(event) }
+    on<GuildMemberExpelPacket> { event -> guildService.onExpel(event) }
+    on<GuildDepartPacket> { event -> guildService.onDepart(event) }
+    on<GuildDisbandTogglePacket> { event -> guildService.onDisbandToggle(event) }
 
     on<KeepAlivePacket> { event -> event.session.send(event.packet) }
     on<ChatMessagePacket> { event -> onChatMessage(event) }

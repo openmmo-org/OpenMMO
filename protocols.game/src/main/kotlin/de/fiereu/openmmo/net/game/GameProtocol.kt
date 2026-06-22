@@ -355,23 +355,23 @@ object GameProtocol : Protocol() {
 
     c2s<GuildDepartPacket>(0x82u, GuildDepartPacketCodec)
 
-    c2s<GuildChatSendPacket>(0x83u, GuildChatSendPacketCodec)
-    s2c<GuildRosterAddPacket>(0x83u, GuildRosterAddPacketCodec)
+    c2s<GuildInvitePacket>(0x83u, GuildInvitePacketCodec)
+    s2c<GuildMemberAddPacket>(0x83u, GuildMemberAddPacketCodec)
 
     c2s<GuildMemberRankAssignPacket>(0x84u, GuildMemberRankAssignPacketCodec)
     s2c<GuildMemberRankChangePacket>(0x84u, GuildMemberRankChangePacketCodec)
 
     c2s<GuildMemberExpelPacket>(0x85u, GuildMemberExpelPacketCodec)
-    s2c<GuildRosterRemovePacket>(0x85u, GuildRosterRemovePacketCodec)
+    s2c<GuildMemberRemovePacket>(0x85u, GuildMemberRemovePacketCodec)
 
     c2s<GuildRankPermissionUpdatePacket>(0x86u, GuildRankPermissionUpdatePacketCodec)
     s2c<GuildMemberPresencePacket>(0x86u, GuildMemberPresencePacketCodec)
 
-    c2s<GuildDisbandToggleRequestPacket>(0x87u, GuildDisbandToggleRequestPacketCodec)
+    c2s<GuildDisbandTogglePacket>(0x87u, GuildDisbandTogglePacketCodec)
     s2c<ContactCategoryGroupPacket>(0x87u, ContactCategoryGroupPacketCodec)
 
     c2s<GuildRankLabelUpdatePacket>(0x88u, GuildRankLabelUpdatePacketCodec)
-    s2c<GuildRosterBulkPacket>(0x88u, GuildRosterBulkPacketCodec)
+    s2c<SyncGuildMembersPacket>(0x88u, SyncGuildMembersPacketCodec)
 
     c2s<GuildActivityLogPageRequestPacket>(0x89u, GuildActivityLogPageRequestPacketCodec)
     s2c<GuildActivityLogPacket>(0x89u, GuildActivityLogPacketCodec)
