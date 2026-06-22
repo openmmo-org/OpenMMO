@@ -11,9 +11,9 @@ data class EntityPresencePacket(
 )
 
 object EntityPresencePacketCodec : PacketCodec<EntityPresencePacket>() {
-    override fun CodecScope<EntityPresencePacket>.body(): EntityPresencePacket {
-        val entityId = field(S64LE) { it.entityId }
-        val status = field(S8) { it.status }
-        return EntityPresencePacket(entityId, status)
-    }
+  override fun CodecScope<EntityPresencePacket>.body(): EntityPresencePacket {
+    val entityId = field(S64LE) { it.entityId }
+    val status = field(S8) { it.status }
+    return EntityPresencePacket(entityId, status)
+  }
 }

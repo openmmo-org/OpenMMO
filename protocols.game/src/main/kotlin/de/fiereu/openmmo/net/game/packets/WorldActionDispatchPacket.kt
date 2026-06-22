@@ -9,10 +9,10 @@ data class WorldActionDispatchPacket(
 )
 
 object WorldActionDispatchPacketCodec : PacketCodec<WorldActionDispatchPacket>() {
-    override fun CodecScope<WorldActionDispatchPacket>.body(): WorldActionDispatchPacket {
-        val action = field(S8) { it.action }
-        val subject = field(S8) { it.subject }
-        val args = field(S16LE.listPrefixed(U8)) { it.args }
-        return WorldActionDispatchPacket(action, subject, args)
-    }
+  override fun CodecScope<WorldActionDispatchPacket>.body(): WorldActionDispatchPacket {
+    val action = field(S8) { it.action }
+    val subject = field(S8) { it.subject }
+    val args = field(S16LE.listPrefixed(U8)) { it.args }
+    return WorldActionDispatchPacket(action, subject, args)
+  }
 }

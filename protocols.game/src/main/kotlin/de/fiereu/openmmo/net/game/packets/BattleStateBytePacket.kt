@@ -9,8 +9,8 @@ data class BattleStateBytePacket(
 )
 
 object BattleStateBytePacketCodec : PacketCodec<BattleStateBytePacket>() {
-    override fun CodecScope<BattleStateBytePacket>.body(): BattleStateBytePacket {
-        val state = field(S8) { it.state }
-        return BattleStateBytePacket(state)
-    }
+  override fun CodecScope<BattleStateBytePacket>.body(): BattleStateBytePacket {
+    val state = field(S8) { it.state }
+    return BattleStateBytePacket(state)
+  }
 }

@@ -13,11 +13,11 @@ data class MapCellTilesetPacket(
 )
 
 object MapCellTilesetPacketCodec : PacketCodec<MapCellTilesetPacket>() {
-    override fun CodecScope<MapCellTilesetPacket>.body(): MapCellTilesetPacket {
-        val chunkX = field(S8) { it.chunkX }
-        val chunkY = field(S8) { it.chunkY }
-        val chunkLevel = field(S8) { it.chunkLevel }
-        val tilesetIndex = field(S16LE) { it.tilesetIndex }
-        return MapCellTilesetPacket(chunkX, chunkY, chunkLevel, tilesetIndex)
-    }
+  override fun CodecScope<MapCellTilesetPacket>.body(): MapCellTilesetPacket {
+    val chunkX = field(S8) { it.chunkX }
+    val chunkY = field(S8) { it.chunkY }
+    val chunkLevel = field(S8) { it.chunkLevel }
+    val tilesetIndex = field(S16LE) { it.tilesetIndex }
+    return MapCellTilesetPacket(chunkX, chunkY, chunkLevel, tilesetIndex)
+  }
 }

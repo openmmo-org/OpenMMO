@@ -10,8 +10,8 @@ data class SocialListEntryAddPacket(
 )
 
 object SocialListEntryAddPacketCodec : PacketCodec<SocialListEntryAddPacket>() {
-    override fun CodecScope<SocialListEntryAddPacket>.body(): SocialListEntryAddPacket {
-        val pokemon = field(PokemonCodec) { it.pokemon }
-        return SocialListEntryAddPacket(pokemon)
-    }
+  override fun CodecScope<SocialListEntryAddPacket>.body(): SocialListEntryAddPacket {
+    val pokemon = field(PokemonCodec) { it.pokemon }
+    return SocialListEntryAddPacket(pokemon)
+  }
 }

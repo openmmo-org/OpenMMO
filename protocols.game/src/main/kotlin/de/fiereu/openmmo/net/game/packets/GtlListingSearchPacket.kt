@@ -9,8 +9,8 @@ data class GtlListingSearchPacket(
 )
 
 object GtlListingSearchPacketCodec : PacketCodec<GtlListingSearchPacket>() {
-    override fun CodecScope<GtlListingSearchPacket>.body(): GtlListingSearchPacket {
-        val searchId = field(S32LE) { it.searchId }
-        return GtlListingSearchPacket(searchId)
-    }
+  override fun CodecScope<GtlListingSearchPacket>.body(): GtlListingSearchPacket {
+    val searchId = field(S32LE) { it.searchId }
+    return GtlListingSearchPacket(searchId)
+  }
 }

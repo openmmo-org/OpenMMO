@@ -7,8 +7,8 @@ import de.fiereu.bytecodec.PacketCodec
 data class InstanceReadyCheckPacket(val isReady: Boolean)
 
 object InstanceReadyCheckPacketCodec : PacketCodec<InstanceReadyCheckPacket>() {
-    override fun CodecScope<InstanceReadyCheckPacket>.body(): InstanceReadyCheckPacket {
-        val isReady = field(Bool) { it.isReady }
-        return InstanceReadyCheckPacket(isReady)
-    }
+  override fun CodecScope<InstanceReadyCheckPacket>.body(): InstanceReadyCheckPacket {
+    val isReady = field(Bool) { it.isReady }
+    return InstanceReadyCheckPacket(isReady)
+  }
 }

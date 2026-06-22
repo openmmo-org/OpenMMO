@@ -10,11 +10,11 @@ data class TeamNameChangePacket(
 )
 
 object TeamNameChangePacketCodec : PacketCodec<TeamNameChangePacket>() {
-    override fun CodecScope<TeamNameChangePacket>.body(): TeamNameChangePacket {
-        val checkOnly = field(Bool) { it.checkOnly }
-        val teamId = field(S16LE) { it.teamId }
-        val teamName = field(Utf16LeNullTerminated) { it.teamName }
-        val teamTag = field(Utf16LeNullTerminated) { it.teamTag }
-        return TeamNameChangePacket(checkOnly, teamId, teamName, teamTag)
-    }
+  override fun CodecScope<TeamNameChangePacket>.body(): TeamNameChangePacket {
+    val checkOnly = field(Bool) { it.checkOnly }
+    val teamId = field(S16LE) { it.teamId }
+    val teamName = field(Utf16LeNullTerminated) { it.teamName }
+    val teamTag = field(Utf16LeNullTerminated) { it.teamTag }
+    return TeamNameChangePacket(checkOnly, teamId, teamName, teamTag)
+  }
 }

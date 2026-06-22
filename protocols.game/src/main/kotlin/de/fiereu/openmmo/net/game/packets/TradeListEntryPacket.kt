@@ -10,8 +10,8 @@ data class TradeListEntryPacket(
 )
 
 object TradeListEntryPacketCodec : PacketCodec<TradeListEntryPacket>() {
-    override fun CodecScope<TradeListEntryPacket>.body(): TradeListEntryPacket {
-        val pokemon = field(PokemonCodec) { it.pokemon }
-        return TradeListEntryPacket(pokemon)
-    }
+  override fun CodecScope<TradeListEntryPacket>.body(): TradeListEntryPacket {
+    val pokemon = field(PokemonCodec) { it.pokemon }
+    return TradeListEntryPacket(pokemon)
+  }
 }

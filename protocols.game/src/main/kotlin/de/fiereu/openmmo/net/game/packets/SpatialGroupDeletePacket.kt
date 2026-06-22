@@ -11,9 +11,9 @@ data class SpatialGroupDeletePacket(
 )
 
 object SpatialGroupDeletePacketCodec : PacketCodec<SpatialGroupDeletePacket>() {
-    override fun CodecScope<SpatialGroupDeletePacket>.body(): SpatialGroupDeletePacket {
-        val group = field(U8) { it.group }
-        val entityId = field(S64LE) { it.entityId }
-        return SpatialGroupDeletePacket(group, entityId)
-    }
+  override fun CodecScope<SpatialGroupDeletePacket>.body(): SpatialGroupDeletePacket {
+    val group = field(U8) { it.group }
+    val entityId = field(S64LE) { it.entityId }
+    return SpatialGroupDeletePacket(group, entityId)
+  }
 }

@@ -9,8 +9,8 @@ data class GuildChatSendPacket(
 )
 
 object GuildChatSendPacketCodec : PacketCodec<GuildChatSendPacket>() {
-    override fun CodecScope<GuildChatSendPacket>.body(): GuildChatSendPacket {
-        val message = field(Utf16LeNullTerminated) { it.message }
-        return GuildChatSendPacket(message)
-    }
+  override fun CodecScope<GuildChatSendPacket>.body(): GuildChatSendPacket {
+    val message = field(Utf16LeNullTerminated) { it.message }
+    return GuildChatSendPacket(message)
+  }
 }

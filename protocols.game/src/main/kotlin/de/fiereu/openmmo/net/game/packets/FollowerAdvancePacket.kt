@@ -10,11 +10,11 @@ data class FollowerAdvancePacket(
 )
 
 object FollowerAdvancePacketCodec : PacketCodec<FollowerAdvancePacket>() {
-    override fun CodecScope<FollowerAdvancePacket>.body(): FollowerAdvancePacket {
-        val entityId = field(S64LE) { it.entityId }
-        val step = field(S16LE) { it.step }
-        val direction = field(S8) { it.direction }
-        val flag = field(Bool) { it.flag }
-        return FollowerAdvancePacket(entityId, step, direction, flag)
-    }
+  override fun CodecScope<FollowerAdvancePacket>.body(): FollowerAdvancePacket {
+    val entityId = field(S64LE) { it.entityId }
+    val step = field(S16LE) { it.step }
+    val direction = field(S8) { it.direction }
+    val flag = field(Bool) { it.flag }
+    return FollowerAdvancePacket(entityId, step, direction, flag)
+  }
 }

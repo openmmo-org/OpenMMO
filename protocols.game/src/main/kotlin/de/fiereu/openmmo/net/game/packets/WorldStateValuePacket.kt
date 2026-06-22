@@ -9,8 +9,8 @@ data class WorldStateValuePacket(
 )
 
 object WorldStateValuePacketCodec : PacketCodec<WorldStateValuePacket>() {
-    override fun CodecScope<WorldStateValuePacket>.body(): WorldStateValuePacket {
-        val value = field(S16LE, WorldStateValuePacket::value)
-        return WorldStateValuePacket(value)
-    }
+  override fun CodecScope<WorldStateValuePacket>.body(): WorldStateValuePacket {
+    val value = field(S16LE, WorldStateValuePacket::value)
+    return WorldStateValuePacket(value)
+  }
 }

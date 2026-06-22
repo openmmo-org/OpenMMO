@@ -8,7 +8,7 @@ data class BattleEmptyEventPacket(
 )
 
 object BattleEmptyEventPacketCodec : PacketCodec<BattleEmptyEventPacket>() {
-    override fun CodecScope<BattleEmptyEventPacket>.body(): BattleEmptyEventPacket {
-        return BattleEmptyEventPacket()
-    }
+  override fun CodecScope<BattleEmptyEventPacket>.body(): BattleEmptyEventPacket {
+    return BattleEmptyEventPacket()
+  }
 }

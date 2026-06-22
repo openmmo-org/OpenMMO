@@ -12,18 +12,18 @@ data class EntityNameChoicesPacket(
 
 private val NamedEntityChoiceCodec: Codec<NamedEntityChoice> =
     object : PacketCodec<NamedEntityChoice>() {
-        override fun CodecScope<NamedEntityChoice>.body(): NamedEntityChoice {
-            val entityId = field(S64LE) { it.entityId }
-            val name = field(Utf16LeNullTerminated) { it.name }
-            return NamedEntityChoice(entityId, name)
-        }
+      override fun CodecScope<NamedEntityChoice>.body(): NamedEntityChoice {
+        val entityId = field(S64LE) { it.entityId }
+        val name = field(Utf16LeNullTerminated) { it.name }
+        return NamedEntityChoice(entityId, name)
+      }
     }
 
 object EntityNameChoicesPacketCodec : PacketCodec<EntityNameChoicesPacket>() {
-    override fun CodecScope<EntityNameChoicesPacket>.body(): EntityNameChoicesPacket {
-        val kind = field(S8) { it.kind }
-        val flag = field(U8) { if (it.flag) 1 else 0 } == 1
-        val choices = field(NamedEntityChoiceCodec.listPrefixed(U8)) { it.choices }
-        return EntityNameChoicesPacket(kind, flag, choices)
-    }
+  override fun CodecScope<EntityNameChoicesPacket>.body(): EntityNameChoicesPacket {
+    val kind = field(S8) { it.kind }
+    val flag = field(U8) { if (it.flag) 1 else 0 } == 1
+    val choices = field(NamedEntityChoiceCodec.listPrefixed(U8)) { it.choices }
+    return EntityNameChoicesPacket(kind, flag, choices)
+  }
 }

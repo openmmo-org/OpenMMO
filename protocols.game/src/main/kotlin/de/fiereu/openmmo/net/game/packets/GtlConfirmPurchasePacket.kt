@@ -11,9 +11,9 @@ data class GtlConfirmPurchasePacket(
 )
 
 object GtlConfirmPurchasePacketCodec : PacketCodec<GtlConfirmPurchasePacket>() {
-    override fun CodecScope<GtlConfirmPurchasePacket>.body(): GtlConfirmPurchasePacket {
-        val listingEntityId = field(S64LE) { it.listingEntityId }
-        val quantity = field(S16LE) { it.quantity }
-        return GtlConfirmPurchasePacket(listingEntityId, quantity)
-    }
+  override fun CodecScope<GtlConfirmPurchasePacket>.body(): GtlConfirmPurchasePacket {
+    val listingEntityId = field(S64LE) { it.listingEntityId }
+    val quantity = field(S16LE) { it.quantity }
+    return GtlConfirmPurchasePacket(listingEntityId, quantity)
+  }
 }

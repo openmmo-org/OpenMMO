@@ -9,8 +9,8 @@ data class SelectSinglePokemonPacket(
 )
 
 object SelectSinglePokemonPacketCodec : PacketCodec<SelectSinglePokemonPacket>() {
-    override fun CodecScope<SelectSinglePokemonPacket>.body(): SelectSinglePokemonPacket {
-        val entityId = field(S64LE) { it.entityId }
-        return SelectSinglePokemonPacket(entityId)
-    }
+  override fun CodecScope<SelectSinglePokemonPacket>.body(): SelectSinglePokemonPacket {
+    val entityId = field(S64LE) { it.entityId }
+    return SelectSinglePokemonPacket(entityId)
+  }
 }

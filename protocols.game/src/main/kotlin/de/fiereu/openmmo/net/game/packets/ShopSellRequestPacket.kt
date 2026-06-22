@@ -11,9 +11,9 @@ data class ShopSellRequestPacket(
 )
 
 object ShopSellRequestPacketCodec : PacketCodec<ShopSellRequestPacket>() {
-    override fun CodecScope<ShopSellRequestPacket>.body(): ShopSellRequestPacket {
-        val itemEntityId = field(S64LE) { it.itemEntityId }
-        val quantity = field(S16LE) { it.quantity }
-        return ShopSellRequestPacket(itemEntityId, quantity)
-    }
+  override fun CodecScope<ShopSellRequestPacket>.body(): ShopSellRequestPacket {
+    val itemEntityId = field(S64LE) { it.itemEntityId }
+    val quantity = field(S16LE) { it.quantity }
+    return ShopSellRequestPacket(itemEntityId, quantity)
+  }
 }

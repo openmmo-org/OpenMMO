@@ -12,15 +12,15 @@ data class NpcDialogueChoicePacket(
 )
 
 object NpcDialogueChoicePacketCodec : PacketCodec<NpcDialogueChoicePacket>() {
-    override fun CodecScope<NpcDialogueChoicePacket>.body(): NpcDialogueChoicePacket {
-        val dialogueType = field(S8) { it.dialogueType }
-        val choiceIndex = field(S8) { it.choiceIndex }
-        val subOption =
-            if (choiceIndex != 0.toByte() && dialogueType == BRANCHING_DIALOGUE_TYPE)
-                field(S16LE) { it.subOption ?: 0 }
-            else null
-        return NpcDialogueChoicePacket(dialogueType, choiceIndex, subOption)
-    }
+  override fun CodecScope<NpcDialogueChoicePacket>.body(): NpcDialogueChoicePacket {
+    val dialogueType = field(S8) { it.dialogueType }
+    val choiceIndex = field(S8) { it.choiceIndex }
+    val subOption =
+        if (choiceIndex != 0.toByte() && dialogueType == BRANCHING_DIALOGUE_TYPE)
+            field(S16LE) { it.subOption ?: 0 }
+        else null
+    return NpcDialogueChoicePacket(dialogueType, choiceIndex, subOption)
+  }
 
-    private const val BRANCHING_DIALOGUE_TYPE: Byte = 1
+  private const val BRANCHING_DIALOGUE_TYPE: Byte = 1
 }

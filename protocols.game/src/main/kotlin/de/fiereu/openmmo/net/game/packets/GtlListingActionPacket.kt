@@ -11,9 +11,9 @@ data class GtlListingActionPacket(
 )
 
 object GtlListingActionPacketCodec : PacketCodec<GtlListingActionPacket>() {
-    override fun CodecScope<GtlListingActionPacket>.body(): GtlListingActionPacket {
-        val entryKindId = field(S8) { it.entryKindId }
-        val itemId = field(S16LE) { it.itemId }
-        return GtlListingActionPacket(entryKindId, itemId)
-    }
+  override fun CodecScope<GtlListingActionPacket>.body(): GtlListingActionPacket {
+    val entryKindId = field(S8) { it.entryKindId }
+    val itemId = field(S16LE) { it.itemId }
+    return GtlListingActionPacket(entryKindId, itemId)
+  }
 }

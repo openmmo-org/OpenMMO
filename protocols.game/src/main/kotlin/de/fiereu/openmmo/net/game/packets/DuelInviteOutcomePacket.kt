@@ -9,8 +9,8 @@ data class DuelInviteOutcomePacket(
 )
 
 object DuelInviteOutcomePacketCodec : PacketCodec<DuelInviteOutcomePacket>() {
-    override fun CodecScope<DuelInviteOutcomePacket>.body(): DuelInviteOutcomePacket {
-        val packed = field(S8) { it.packed }
-        return DuelInviteOutcomePacket(packed)
-    }
+  override fun CodecScope<DuelInviteOutcomePacket>.body(): DuelInviteOutcomePacket {
+    val packed = field(S8) { it.packed }
+    return DuelInviteOutcomePacket(packed)
+  }
 }

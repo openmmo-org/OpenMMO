@@ -9,10 +9,10 @@ data class SocialEntryPresencePacket(
 )
 
 object SocialEntryPresencePacketCodec : PacketCodec<SocialEntryPresencePacket>() {
-    override fun CodecScope<SocialEntryPresencePacket>.body(): SocialEntryPresencePacket {
-        val playerId = field(S64LE) { it.playerId }
-        val status = field(S16LE) { it.status }
-        val online = field(Bool) { it.online }
-        return SocialEntryPresencePacket(playerId, status, online)
-    }
+  override fun CodecScope<SocialEntryPresencePacket>.body(): SocialEntryPresencePacket {
+    val playerId = field(S64LE) { it.playerId }
+    val status = field(S16LE) { it.status }
+    val online = field(Bool) { it.online }
+    return SocialEntryPresencePacket(playerId, status, online)
+  }
 }

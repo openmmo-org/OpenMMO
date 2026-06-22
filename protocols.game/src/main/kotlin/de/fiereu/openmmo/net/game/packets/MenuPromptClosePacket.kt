@@ -9,8 +9,8 @@ data class MenuPromptClosePacket(
 )
 
 object MenuPromptClosePacketCodec : PacketCodec<MenuPromptClosePacket>() {
-    override fun CodecScope<MenuPromptClosePacket>.body(): MenuPromptClosePacket {
-        val promptType = field(S8) { it.promptType }
-        return MenuPromptClosePacket(promptType)
-    }
+  override fun CodecScope<MenuPromptClosePacket>.body(): MenuPromptClosePacket {
+    val promptType = field(S8) { it.promptType }
+    return MenuPromptClosePacket(promptType)
+  }
 }

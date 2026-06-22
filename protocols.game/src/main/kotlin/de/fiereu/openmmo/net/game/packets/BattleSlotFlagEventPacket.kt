@@ -12,10 +12,10 @@ data class BattleSlotFlagEventPacket(
 )
 
 object BattleSlotFlagEventPacketCodec : PacketCodec<BattleSlotFlagEventPacket>() {
-    override fun CodecScope<BattleSlotFlagEventPacket>.body(): BattleSlotFlagEventPacket {
-        val slot = field(S8) { it.slot }
-        val flag = field(Bool) { it.flag }
-        val immediate = field(Bool) { it.immediate }
-        return BattleSlotFlagEventPacket(slot, flag, immediate)
-    }
+  override fun CodecScope<BattleSlotFlagEventPacket>.body(): BattleSlotFlagEventPacket {
+    val slot = field(S8) { it.slot }
+    val flag = field(Bool) { it.flag }
+    val immediate = field(Bool) { it.immediate }
+    return BattleSlotFlagEventPacket(slot, flag, immediate)
+  }
 }

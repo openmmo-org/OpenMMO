@@ -11,9 +11,9 @@ data class NpcDialogResponsePacket(
 )
 
 object NpcDialogResponsePacketCodec : PacketCodec<NpcDialogResponsePacket>() {
-    override fun CodecScope<NpcDialogResponsePacket>.body(): NpcDialogResponsePacket {
-        val dialogType = field(S8) { it.dialogType }
-        val responseText = field(Utf16LeNullTerminated) { it.responseText }
-        return NpcDialogResponsePacket(dialogType, responseText)
-    }
+  override fun CodecScope<NpcDialogResponsePacket>.body(): NpcDialogResponsePacket {
+    val dialogType = field(S8) { it.dialogType }
+    val responseText = field(Utf16LeNullTerminated) { it.responseText }
+    return NpcDialogResponsePacket(dialogType, responseText)
+  }
 }

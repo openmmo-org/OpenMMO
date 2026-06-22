@@ -21,36 +21,35 @@ data class StorageInventoryPacket(
 
 private val StorageQuantityCodec: Codec<StorageQuantity> =
     object : PacketCodec<StorageQuantity>() {
-        override fun CodecScope<StorageQuantity>.body(): StorageQuantity {
-            val id = field(S16LE) { it.id }
-            val count = field(S32LE) { it.count }
-            return StorageQuantity(id, count)
-        }
+      override fun CodecScope<StorageQuantity>.body(): StorageQuantity {
+        val id = field(S16LE) { it.id }
+        val count = field(S32LE) { it.count }
+        return StorageQuantity(id, count)
+      }
     }
 
 private val StorageByteQuantityCodec: Codec<StorageByteQuantity> =
     object : PacketCodec<StorageByteQuantity>() {
-        override fun CodecScope<StorageByteQuantity>.body(): StorageByteQuantity {
-            val id = field(S8) { it.id }
-            val count = field(S32LE) { it.count }
-            return StorageByteQuantity(id, count)
-        }
+      override fun CodecScope<StorageByteQuantity>.body(): StorageByteQuantity {
+        val id = field(S8) { it.id }
+        val count = field(S32LE) { it.count }
+        return StorageByteQuantity(id, count)
+      }
     }
 
 object StorageInventoryPacketCodec : PacketCodec<StorageInventoryPacket>() {
-    override fun CodecScope<StorageInventoryPacket>.body(): StorageInventoryPacket {
-        val header = field(S16LE) { it.header }
-        val totalA = field(S32LE) { it.totalA }
-        val totalB = field(S32LE) { it.totalB }
-        val valueC = field(S32LE) { it.valueC }
-        val usedA = field(S32LE) { it.usedA }
-        val usedB = field(S32LE) { it.usedB }
-        val listA = field(StorageQuantityCodec.listPrefixed(U8)) { it.listA }
-        val listB = field(StorageByteQuantityCodec.listPrefixed(U8)) { it.listB }
-        val listC = field(StorageQuantityCodec.listPrefixed(U8)) { it.listC }
-        val listD = field(StorageQuantityCodec.listPrefixed(U8)) { it.listD }
-        return StorageInventoryPacket(
-            header, totalA, totalB, valueC, usedA, usedB, listA, listB, listC, listD
-        )
-    }
+  override fun CodecScope<StorageInventoryPacket>.body(): StorageInventoryPacket {
+    val header = field(S16LE) { it.header }
+    val totalA = field(S32LE) { it.totalA }
+    val totalB = field(S32LE) { it.totalB }
+    val valueC = field(S32LE) { it.valueC }
+    val usedA = field(S32LE) { it.usedA }
+    val usedB = field(S32LE) { it.usedB }
+    val listA = field(StorageQuantityCodec.listPrefixed(U8)) { it.listA }
+    val listB = field(StorageByteQuantityCodec.listPrefixed(U8)) { it.listB }
+    val listC = field(StorageQuantityCodec.listPrefixed(U8)) { it.listC }
+    val listD = field(StorageQuantityCodec.listPrefixed(U8)) { it.listD }
+    return StorageInventoryPacket(
+        header, totalA, totalB, valueC, usedA, usedB, listA, listB, listC, listD)
+  }
 }

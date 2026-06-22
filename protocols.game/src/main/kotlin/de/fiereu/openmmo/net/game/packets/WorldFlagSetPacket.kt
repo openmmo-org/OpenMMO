@@ -12,10 +12,10 @@ data class WorldFlagSetPacket(
 )
 
 object WorldFlagSetPacketCodec : PacketCodec<WorldFlagSetPacket>() {
-    override fun CodecScope<WorldFlagSetPacket>.body(): WorldFlagSetPacket {
-        val group = field(S8) { it.group }
-        val index = field(S16LE) { it.index }
-        val value = field(S8) { it.value }
-        return WorldFlagSetPacket(group, index, value)
-    }
+  override fun CodecScope<WorldFlagSetPacket>.body(): WorldFlagSetPacket {
+    val group = field(S8) { it.group }
+    val index = field(S16LE) { it.index }
+    val value = field(S8) { it.value }
+    return WorldFlagSetPacket(group, index, value)
+  }
 }

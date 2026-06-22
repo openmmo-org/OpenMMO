@@ -9,8 +9,8 @@ data class TeamPreviewRevealPickPacket(
 )
 
 object TeamPreviewRevealPickPacketCodec : PacketCodec<TeamPreviewRevealPickPacket>() {
-    override fun CodecScope<TeamPreviewRevealPickPacket>.body(): TeamPreviewRevealPickPacket {
-        val entityId = field(S64LE) { it.entityId }
-        return TeamPreviewRevealPickPacket(entityId)
-    }
+  override fun CodecScope<TeamPreviewRevealPickPacket>.body(): TeamPreviewRevealPickPacket {
+    val entityId = field(S64LE) { it.entityId }
+    return TeamPreviewRevealPickPacket(entityId)
+  }
 }

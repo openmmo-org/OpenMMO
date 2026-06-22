@@ -8,9 +8,9 @@ import de.fiereu.bytecodec.U8
 data class NpcAnimationPacket(val entityId: Long, val animation: Int)
 
 object NpcAnimationPacketCodec : PacketCodec<NpcAnimationPacket>() {
-    override fun CodecScope<NpcAnimationPacket>.body(): NpcAnimationPacket {
-        val entityId = field(S64LE) { it.entityId }
-        val animation = field(U8) { it.animation }
-        return NpcAnimationPacket(entityId, animation)
-    }
+  override fun CodecScope<NpcAnimationPacket>.body(): NpcAnimationPacket {
+    val entityId = field(S64LE) { it.entityId }
+    val animation = field(U8) { it.animation }
+    return NpcAnimationPacket(entityId, animation)
+  }
 }

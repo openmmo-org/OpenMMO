@@ -11,9 +11,9 @@ data class EntityInteractionFlagPacket(
 )
 
 object EntityInteractionFlagPacketCodec : PacketCodec<EntityInteractionFlagPacket>() {
-    override fun CodecScope<EntityInteractionFlagPacket>.body(): EntityInteractionFlagPacket {
-        val entityId = field(S64LE) { it.entityId }
-        val flag = field(S8) { it.flag }
-        return EntityInteractionFlagPacket(entityId, flag)
-    }
+  override fun CodecScope<EntityInteractionFlagPacket>.body(): EntityInteractionFlagPacket {
+    val entityId = field(S64LE) { it.entityId }
+    val flag = field(S8) { it.flag }
+    return EntityInteractionFlagPacket(entityId, flag)
+  }
 }

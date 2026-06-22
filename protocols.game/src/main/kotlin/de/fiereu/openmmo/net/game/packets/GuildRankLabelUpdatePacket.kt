@@ -11,9 +11,9 @@ data class GuildRankLabelUpdatePacket(
 )
 
 object GuildRankLabelUpdatePacketCodec : PacketCodec<GuildRankLabelUpdatePacket>() {
-    override fun CodecScope<GuildRankLabelUpdatePacket>.body(): GuildRankLabelUpdatePacket {
-        val rankOrdinal = field(U8) { it.rankOrdinal }
-        val rankLabel = field(Utf16LeNullTerminated) { it.rankLabel }
-        return GuildRankLabelUpdatePacket(rankOrdinal, rankLabel)
-    }
+  override fun CodecScope<GuildRankLabelUpdatePacket>.body(): GuildRankLabelUpdatePacket {
+    val rankOrdinal = field(U8) { it.rankOrdinal }
+    val rankLabel = field(Utf16LeNullTerminated) { it.rankLabel }
+    return GuildRankLabelUpdatePacket(rankOrdinal, rankLabel)
+  }
 }

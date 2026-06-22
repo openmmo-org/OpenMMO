@@ -12,10 +12,10 @@ data class EntityMovePpPacket(
 )
 
 object EntityMovePpPacketCodec : PacketCodec<EntityMovePpPacket>() {
-    override fun CodecScope<EntityMovePpPacket>.body(): EntityMovePpPacket {
-        val entityId = field(S64LE) { it.entityId }
-        val moveSlot = field(S8) { it.moveSlot }
-        val ppValue = field(S8) { it.ppValue }
-        return EntityMovePpPacket(entityId, moveSlot, ppValue)
-    }
+  override fun CodecScope<EntityMovePpPacket>.body(): EntityMovePpPacket {
+    val entityId = field(S64LE) { it.entityId }
+    val moveSlot = field(S8) { it.moveSlot }
+    val ppValue = field(S8) { it.ppValue }
+    return EntityMovePpPacket(entityId, moveSlot, ppValue)
+  }
 }

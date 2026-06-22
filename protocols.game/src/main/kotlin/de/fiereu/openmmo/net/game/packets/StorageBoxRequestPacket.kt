@@ -6,7 +6,7 @@ import de.fiereu.bytecodec.PacketCodec
 class StorageBoxRequestPacket
 
 object StorageBoxRequestPacketCodec : PacketCodec<StorageBoxRequestPacket>() {
-    override fun CodecScope<StorageBoxRequestPacket>.body(): StorageBoxRequestPacket {
-        return StorageBoxRequestPacket()
-    }
+  override fun CodecScope<StorageBoxRequestPacket>.body(): StorageBoxRequestPacket {
+    return StorageBoxRequestPacket()
+  }
 }

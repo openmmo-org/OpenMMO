@@ -12,10 +12,10 @@ data class BattlePartySlotSelectPacket(
 )
 
 object BattlePartySlotSelectPacketCodec : PacketCodec<BattlePartySlotSelectPacket>() {
-    override fun CodecScope<BattlePartySlotSelectPacket>.body(): BattlePartySlotSelectPacket {
-        val slotIndex = field(S16LE) { it.slotIndex }
-        val pokemonEntityId = field(S64LE) { it.pokemonEntityId }
-        val contextId = field(S16LE) { it.contextId }
-        return BattlePartySlotSelectPacket(slotIndex, pokemonEntityId, contextId)
-    }
+  override fun CodecScope<BattlePartySlotSelectPacket>.body(): BattlePartySlotSelectPacket {
+    val slotIndex = field(S16LE) { it.slotIndex }
+    val pokemonEntityId = field(S64LE) { it.pokemonEntityId }
+    val contextId = field(S16LE) { it.contextId }
+    return BattlePartySlotSelectPacket(slotIndex, pokemonEntityId, contextId)
+  }
 }

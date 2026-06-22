@@ -6,7 +6,7 @@ import de.fiereu.bytecodec.PacketCodec
 data class HeartbeatRequestPacket(val placeholder: Unit = Unit)
 
 object HeartbeatRequestPacketCodec : PacketCodec<HeartbeatRequestPacket>() {
-    override fun CodecScope<HeartbeatRequestPacket>.body(): HeartbeatRequestPacket {
-        return HeartbeatRequestPacket()
-    }
+  override fun CodecScope<HeartbeatRequestPacket>.body(): HeartbeatRequestPacket {
+    return HeartbeatRequestPacket()
+  }
 }

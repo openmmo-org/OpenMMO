@@ -9,10 +9,10 @@ data class SocialEntryFlagSetPacket(
 )
 
 object SocialEntryFlagSetPacketCodec : PacketCodec<SocialEntryFlagSetPacket>() {
-    override fun CodecScope<SocialEntryFlagSetPacket>.body(): SocialEntryFlagSetPacket {
-        val playerId = field(S64LE) { it.playerId }
-        val flag = field(S8) { it.flag }
-        val value = field(S16LE) { it.value }
-        return SocialEntryFlagSetPacket(playerId, flag, value)
-    }
+  override fun CodecScope<SocialEntryFlagSetPacket>.body(): SocialEntryFlagSetPacket {
+    val playerId = field(S64LE) { it.playerId }
+    val flag = field(S8) { it.flag }
+    val value = field(S16LE) { it.value }
+    return SocialEntryFlagSetPacket(playerId, flag, value)
+  }
 }

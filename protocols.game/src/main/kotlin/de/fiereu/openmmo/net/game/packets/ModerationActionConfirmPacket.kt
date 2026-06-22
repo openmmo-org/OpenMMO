@@ -9,8 +9,8 @@ data class ModerationActionConfirmPacket(
 )
 
 object ModerationActionConfirmPacketCodec : PacketCodec<ModerationActionConfirmPacket>() {
-    override fun CodecScope<ModerationActionConfirmPacket>.body(): ModerationActionConfirmPacket {
-        val targetEntityId = field(S64LE) { it.targetEntityId }
-        return ModerationActionConfirmPacket(targetEntityId)
-    }
+  override fun CodecScope<ModerationActionConfirmPacket>.body(): ModerationActionConfirmPacket {
+    val targetEntityId = field(S64LE) { it.targetEntityId }
+    return ModerationActionConfirmPacket(targetEntityId)
+  }
 }

@@ -12,10 +12,10 @@ data class BattleSlotSwitchEventPacket(
 )
 
 object BattleSlotSwitchEventPacketCodec : PacketCodec<BattleSlotSwitchEventPacket>() {
-    override fun CodecScope<BattleSlotSwitchEventPacket>.body(): BattleSlotSwitchEventPacket {
-        val slot = field(S8) { it.slot }
-        val switchType = field(S8) { it.switchType }
-        val immediate = field(Bool) { it.immediate }
-        return BattleSlotSwitchEventPacket(slot, switchType, immediate)
-    }
+  override fun CodecScope<BattleSlotSwitchEventPacket>.body(): BattleSlotSwitchEventPacket {
+    val slot = field(S8) { it.slot }
+    val switchType = field(S8) { it.switchType }
+    val immediate = field(Bool) { it.immediate }
+    return BattleSlotSwitchEventPacket(slot, switchType, immediate)
+  }
 }

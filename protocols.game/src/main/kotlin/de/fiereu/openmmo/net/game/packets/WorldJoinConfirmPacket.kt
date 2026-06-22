@@ -9,17 +9,17 @@ data class WorldJoinConfirmPacket(
 )
 
 object WorldJoinConfirmPacketCodec : PacketCodec<WorldJoinConfirmPacket>() {
-    override fun CodecScope<WorldJoinConfirmPacket>.body(): WorldJoinConfirmPacket {
-        val success = field(Bool) { it.success }
-        val entityId: Long?
-        val name: String?
-        if (success) {
-            entityId = field(S64LE) { it.entityId!! }
-            name = field(Utf16LeNullTerminated) { it.name!! }
-        } else {
-            entityId = null
-            name = null
-        }
-        return WorldJoinConfirmPacket(success, entityId, name)
+  override fun CodecScope<WorldJoinConfirmPacket>.body(): WorldJoinConfirmPacket {
+    val success = field(Bool) { it.success }
+    val entityId: Long?
+    val name: String?
+    if (success) {
+      entityId = field(S64LE) { it.entityId!! }
+      name = field(Utf16LeNullTerminated) { it.name!! }
+    } else {
+      entityId = null
+      name = null
     }
+    return WorldJoinConfirmPacket(success, entityId, name)
+  }
 }

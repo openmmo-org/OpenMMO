@@ -10,9 +10,9 @@ data class ShopPriceTablePacket(
 private val PriceEntryCodec: Codec<Pair<Short, Short>> = S16LE.then(S16LE)
 
 object ShopPriceTablePacketCodec : PacketCodec<ShopPriceTablePacket>() {
-    override fun CodecScope<ShopPriceTablePacket>.body(): ShopPriceTablePacket {
-        val category = field(S8) { it.category }
-        val prices = field(PriceEntryCodec.listPrefixed(U16LE)) { it.prices }
-        return ShopPriceTablePacket(category, prices)
-    }
+  override fun CodecScope<ShopPriceTablePacket>.body(): ShopPriceTablePacket {
+    val category = field(S8) { it.category }
+    val prices = field(PriceEntryCodec.listPrefixed(U16LE)) { it.prices }
+    return ShopPriceTablePacket(category, prices)
+  }
 }

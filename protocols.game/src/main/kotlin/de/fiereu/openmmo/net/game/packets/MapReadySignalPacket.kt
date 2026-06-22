@@ -6,7 +6,7 @@ import de.fiereu.bytecodec.PacketCodec
 data class MapReadySignalPacket(val placeholder: Unit = Unit)
 
 object MapReadySignalPacketCodec : PacketCodec<MapReadySignalPacket>() {
-    override fun CodecScope<MapReadySignalPacket>.body(): MapReadySignalPacket {
-        return MapReadySignalPacket()
-    }
+  override fun CodecScope<MapReadySignalPacket>.body(): MapReadySignalPacket {
+    return MapReadySignalPacket()
+  }
 }

@@ -9,8 +9,8 @@ data class OpenAppearanceEditorPacket(
 )
 
 object OpenAppearanceEditorPacketCodec : PacketCodec<OpenAppearanceEditorPacket>() {
-    override fun CodecScope<OpenAppearanceEditorPacket>.body(): OpenAppearanceEditorPacket {
-        val entityId = field(S64LE) { it.entityId }
-        return OpenAppearanceEditorPacket(entityId)
-    }
+  override fun CodecScope<OpenAppearanceEditorPacket>.body(): OpenAppearanceEditorPacket {
+    val entityId = field(S64LE) { it.entityId }
+    return OpenAppearanceEditorPacket(entityId)
+  }
 }

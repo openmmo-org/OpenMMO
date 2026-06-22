@@ -10,12 +10,12 @@ data class BattleLabeledMoveEntry(
 
 private val BattleLabeledMoveEntryCodec: Codec<BattleLabeledMoveEntry> =
     object : PacketCodec<BattleLabeledMoveEntry>() {
-        override fun CodecScope<BattleLabeledMoveEntry>.body(): BattleLabeledMoveEntry {
-            val entityId = field(S64LE) { it.entityId }
-            val value = field(S16LE) { it.value }
-            val actionCount = field(U8) { it.actionCount }
-            return BattleLabeledMoveEntry(entityId, value, actionCount)
-        }
+      override fun CodecScope<BattleLabeledMoveEntry>.body(): BattleLabeledMoveEntry {
+        val entityId = field(S64LE) { it.entityId }
+        val value = field(S16LE) { it.value }
+        val actionCount = field(U8) { it.actionCount }
+        return BattleLabeledMoveEntry(entityId, value, actionCount)
+      }
     }
 
 data class BattleLabeledMoveEventPacket(
@@ -29,14 +29,14 @@ data class BattleLabeledMoveEventPacket(
 )
 
 object BattleLabeledMoveEventPacketCodec : PacketCodec<BattleLabeledMoveEventPacket>() {
-    override fun CodecScope<BattleLabeledMoveEventPacket>.body(): BattleLabeledMoveEventPacket {
-        val byte1 = field(S8) { it.byte1 }
-        val byte2 = field(S8) { it.byte2 }
-        val value = field(S16LE) { it.value }
-        val byte3 = field(S8) { it.byte3 }
-        val short2 = field(S16LE) { it.short2 }
-        val label = field(Utf16LeNullTerminated) { it.label }
-        val entries = field(BattleLabeledMoveEntryCodec.listPrefixed(U8)) { it.entries }
-        return BattleLabeledMoveEventPacket(byte1, byte2, value, byte3, short2, label, entries)
-    }
+  override fun CodecScope<BattleLabeledMoveEventPacket>.body(): BattleLabeledMoveEventPacket {
+    val byte1 = field(S8) { it.byte1 }
+    val byte2 = field(S8) { it.byte2 }
+    val value = field(S16LE) { it.value }
+    val byte3 = field(S8) { it.byte3 }
+    val short2 = field(S16LE) { it.short2 }
+    val label = field(Utf16LeNullTerminated) { it.label }
+    val entries = field(BattleLabeledMoveEntryCodec.listPrefixed(U8)) { it.entries }
+    return BattleLabeledMoveEventPacket(byte1, byte2, value, byte3, short2, label, entries)
+  }
 }

@@ -11,9 +11,9 @@ data class GuildDisbandToggleRequestPacket(
 )
 
 object GuildDisbandToggleRequestPacketCodec : PacketCodec<GuildDisbandToggleRequestPacket>() {
-    override fun CodecScope<GuildDisbandToggleRequestPacket>.body(): GuildDisbandToggleRequestPacket {
-        val initiate = field(Bool) { it.initiate }
-        val ownerEntityId = field(S64LE) { it.ownerEntityId }
-        return GuildDisbandToggleRequestPacket(initiate, ownerEntityId)
-    }
+  override fun CodecScope<GuildDisbandToggleRequestPacket>.body(): GuildDisbandToggleRequestPacket {
+    val initiate = field(Bool) { it.initiate }
+    val ownerEntityId = field(S64LE) { it.ownerEntityId }
+    return GuildDisbandToggleRequestPacket(initiate, ownerEntityId)
+  }
 }

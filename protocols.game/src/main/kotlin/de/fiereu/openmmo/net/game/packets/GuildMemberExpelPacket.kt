@@ -9,8 +9,8 @@ data class GuildMemberExpelPacket(
 )
 
 object GuildMemberExpelPacketCodec : PacketCodec<GuildMemberExpelPacket>() {
-    override fun CodecScope<GuildMemberExpelPacket>.body(): GuildMemberExpelPacket {
-        val targetEntityId = field(S64LE) { it.targetEntityId }
-        return GuildMemberExpelPacket(targetEntityId)
-    }
+  override fun CodecScope<GuildMemberExpelPacket>.body(): GuildMemberExpelPacket {
+    val targetEntityId = field(S64LE) { it.targetEntityId }
+    return GuildMemberExpelPacket(targetEntityId)
+  }
 }

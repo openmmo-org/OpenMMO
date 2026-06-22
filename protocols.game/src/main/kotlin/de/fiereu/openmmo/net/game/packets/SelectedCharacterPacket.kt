@@ -11,8 +11,8 @@ data class SelectedCharacterPacket(val character: CharacterInfo?)
 private val OptionalCharacterInfo = CharacterInfoCodecShort.optional()
 
 object SelectedCharacterPacketCodec : PacketCodec<SelectedCharacterPacket>() {
-    override fun CodecScope<SelectedCharacterPacket>.body() =
-        SelectedCharacterPacket(
-            character = field(OptionalCharacterInfo, SelectedCharacterPacket::character),
-        )
+  override fun CodecScope<SelectedCharacterPacket>.body() =
+      SelectedCharacterPacket(
+          character = field(OptionalCharacterInfo, SelectedCharacterPacket::character),
+      )
 }
