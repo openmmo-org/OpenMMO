@@ -62,12 +62,18 @@ constructor(
     if (shouldAutoStepOffWarp && destMap != null) {
       val destWarp = destMap.warps.find { it.x == offsetX && it.y == offsetY }
       if (destWarp != null) {
-        when (warpFacing) {
-          Direction.UP -> offsetY--
-          Direction.DOWN -> offsetY++
-          Direction.LEFT -> offsetX--
-          Direction.RIGHT -> offsetX++
-        }
+        offsetX +=
+            when (warpFacing) {
+              Direction.LEFT -> -1
+              Direction.RIGHT -> 1
+              else -> 0
+            }
+        offsetY +=
+            when (warpFacing) {
+              Direction.UP -> -1
+              Direction.DOWN -> 1
+              else -> 0
+            }
         offsetX = offsetX.coerceIn(0, destMap.width - 1)
         offsetY = offsetY.coerceIn(0, destMap.height - 1)
       }

@@ -88,9 +88,9 @@ constructor(
     for (npc in map.npcs) {
       val key = "$bankId:$mapId:${npc.entityIdx}"
       val entityId = npcEntityIds.getOrPut(key) { npcEntityIdCounter.incrementAndGet() }
-      val unk3 = ((npc.movementType and 0xFF) shl 8) or 0x02
+      val unk3 = ((npc.movementType.id and 0xFF) shl 8) or 0x02
       val unk4 =
-          if (npc.movementType in 1..6 || (npc.movementType in 25..52)) {
+          if (npc.movementType.id in 1..6 || (npc.movementType.id in 25..52)) {
             ((npc.movementRangeX and 0xFF) shl 8) or (npc.movementRangeY and 0xFF)
           } else {
             0
@@ -107,7 +107,7 @@ constructor(
               mapId = mapId,
               x = npc.x,
               y = npc.y,
-              facing = npc.facing,
+              facing = npc.facing.ordinal,
               unk5 = 2,
               unk6 = 8,
           )

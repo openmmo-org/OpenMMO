@@ -2,6 +2,7 @@ package de.fiereu.openmmo.net.game.packets
 
 import de.fiereu.bytecodec.*
 import de.fiereu.openmmo.common.Tile2D
+import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.EncounterType
 import de.fiereu.openmmo.common.enums.Lighting
 import de.fiereu.openmmo.common.enums.MapType
@@ -15,7 +16,7 @@ sealed interface MapData {
       MapData
 
   data class GbaConnection(
-      val direction: Int,
+      val direction: Direction,
       val unknown: Int,
       val targetBank: Int,
       val targetMap: Int,
@@ -62,10 +63,13 @@ data class LoadMapPacket(
   }
 }
 
+private val ConnectionDirectionCodec: Codec<Direction> =
+    enumBy(U8, lookup = { Direction.entries[it - 1] }, keyOf = { it.ordinal + 1 })
+
 private object GbaConnectionCodec : PacketCodec<MapData.GbaConnection>() {
   override fun CodecScope<MapData.GbaConnection>.body() =
       MapData.GbaConnection(
-          direction = field(U8, MapData.GbaConnection::direction),
+          direction = field(ConnectionDirectionCodec) { it.direction },
           unknown = field(S32LE, MapData.GbaConnection::unknown),
           targetBank = field(U8, MapData.GbaConnection::targetBank),
           targetMap = field(U8, MapData.GbaConnection::targetMap),

@@ -1,7 +1,9 @@
 package de.fiereu.openmmo.maps.generator
 
 data class ParsedMap(
+    val regionName: String,
     val sourceName: String,
+    val groupName: String,
     val mapId: String,
     val region: Int,
     val bank: Int,
@@ -13,6 +15,7 @@ data class ParsedMap(
     val musicId: Int,
     val mapsecId: Int,
     val borderTiles: List<Int>,
+    val blockData: String,
     val lighting: String,
     val weather: String,
     val mapType: String,
@@ -24,7 +27,7 @@ data class ParsedMap(
 )
 
 data class ParsedConnection(
-    val direction: Int,
+    val direction: String,
     val offset: Int,
     val targetBank: Int,
     val targetMap: Int,
@@ -47,11 +50,11 @@ data class ParsedNpc(
     val x: Int,
     val y: Int,
     val elevation: Int,
-    val movementType: Int,
+    val movementType: String,
     val movementRangeX: Int,
     val movementRangeY: Int,
     val trainerType: Int,
-    val facing: Int,
+    val facing: String,
     val script: String,
 )
 
