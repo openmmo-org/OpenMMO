@@ -2,6 +2,7 @@ package de.fiereu.openmmo.server.game.storage
 
 import de.fiereu.openmmo.common.enums.GuildPermission
 import de.fiereu.openmmo.common.enums.GuildRank
+import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
@@ -14,12 +15,26 @@ data class GuildMember(
     val leader: Boolean,
 )
 
+// Wire codes are provisional and unverified against the real client.
+enum class GuildActivityType(val code: Int) {
+  FOUNDED(0),
+  JOINED(1),
+}
+
+data class GuildLogEntry(
+    val type: GuildActivityType,
+    val actor: String,
+    val target: String,
+    val timestamp: Int,
+)
+
 data class Guild(
     val id: Long,
     val name: String,
     val tag: String,
     val members: MutableList<GuildMember>,
     val permissions: MutableMap<GuildRank, Set<GuildPermission>> = mutableMapOf(),
+    val activityLog: MutableList<GuildLogEntry> = mutableListOf(),
 )
 
 @Singleton
@@ -31,6 +46,7 @@ class GuildStore @Inject constructor() {
   fun createGuild(name: String, tag: String, leaderId: Long, leaderName: String): Guild {
     val leader = GuildMember(leaderId, leaderName, GuildRank.BOSS, leader = true)
     val guild = Guild(nextId.getAndIncrement(), name, tag, mutableListOf(leader))
+    guild.activityLog.add(GuildLogEntry(GuildActivityType.FOUNDED, leaderName, "", now()))
     guilds[guild.id] = guild
     guildByChar[leaderId] = guild.id
     return guild
@@ -40,6 +56,7 @@ class GuildStore @Inject constructor() {
 
   fun addMember(guild: Guild, member: GuildMember) {
     guild.members.add(member)
+    guild.activityLog.add(GuildLogEntry(GuildActivityType.JOINED, member.name, "", now()))
   }
 
   fun setMemberRank(guild: Guild, entityId: Long, rank: GuildRank) {
@@ -76,4 +93,6 @@ class GuildStore @Inject constructor() {
     guilds.remove(guildId)
     guildByChar.entries.removeIf { it.value == guildId }
   }
+
+  private fun now(): Int = Instant.now().epochSecond.toInt()
 }

@@ -16,11 +16,14 @@ import de.fiereu.openmmo.net.game.packets.EntityInteractPacket
 import de.fiereu.openmmo.net.game.packets.EntityLeavePacket
 import de.fiereu.openmmo.net.game.packets.FaceDirectionPacket
 import de.fiereu.openmmo.net.game.packets.FriendProfileRequestPacket
+import de.fiereu.openmmo.net.game.packets.GuildActivityLogPageRequestPacket
 import de.fiereu.openmmo.net.game.packets.GuildDepartPacket
 import de.fiereu.openmmo.net.game.packets.GuildDisbandTogglePacket
 import de.fiereu.openmmo.net.game.packets.GuildInvitePacket
 import de.fiereu.openmmo.net.game.packets.GuildMemberExpelPacket
 import de.fiereu.openmmo.net.game.packets.GuildMemberRankAssignPacket
+import de.fiereu.openmmo.net.game.packets.GuildMotdUpdatePacket
+import de.fiereu.openmmo.net.game.packets.GuildRankLabelUpdatePacket
 import de.fiereu.openmmo.net.game.packets.GuildRankPermissionUpdatePacket
 import de.fiereu.openmmo.net.game.packets.InteractiveResponsePacket
 import de.fiereu.openmmo.net.game.packets.JoinPacket
@@ -93,6 +96,9 @@ constructor(
     on<GuildMemberExpelPacket> { event -> guildService.onExpel(event) }
     on<GuildDepartPacket> { event -> guildService.onDepart(event) }
     on<GuildDisbandTogglePacket> { event -> guildService.onDisbandToggle(event) }
+    on<GuildMotdUpdatePacket> { event -> guildService.onMotdUpdate(event) }
+    on<GuildRankLabelUpdatePacket> { event -> guildService.onRankLabelUpdate(event) }
+    on<GuildActivityLogPageRequestPacket> { event -> guildService.onActivityLogPageRequest(event) }
 
     on<KeepAlivePacket> { event -> event.session.send(event.packet) }
     on<ChatMessagePacket> { event -> onChatMessage(event) }

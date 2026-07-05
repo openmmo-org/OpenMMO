@@ -3,6 +3,9 @@ package de.fiereu.openmmo.server.game.services
 import de.fiereu.network.PacketEvent
 import de.fiereu.openmmo.common.enums.GuildPermission
 import de.fiereu.openmmo.common.enums.GuildRank
+import de.fiereu.openmmo.net.game.packets.GuildActivityLogEntry
+import de.fiereu.openmmo.net.game.packets.GuildActivityLogPacket
+import de.fiereu.openmmo.net.game.packets.GuildActivityLogPageRequestPacket
 import de.fiereu.openmmo.net.game.packets.GuildDepartPacket
 import de.fiereu.openmmo.net.game.packets.GuildDisbandTogglePacket
 import de.fiereu.openmmo.net.game.packets.GuildInvitePacket
@@ -10,7 +13,9 @@ import de.fiereu.openmmo.net.game.packets.GuildMemberEntry
 import de.fiereu.openmmo.net.game.packets.GuildMemberExpelPacket
 import de.fiereu.openmmo.net.game.packets.GuildMemberRankAssignPacket
 import de.fiereu.openmmo.net.game.packets.GuildMembershipPacket
+import de.fiereu.openmmo.net.game.packets.GuildMotdUpdatePacket
 import de.fiereu.openmmo.net.game.packets.GuildProfileData
+import de.fiereu.openmmo.net.game.packets.GuildRankLabelUpdatePacket
 import de.fiereu.openmmo.net.game.packets.GuildRankPermissionUpdatePacket
 import de.fiereu.openmmo.net.game.packets.SyncGuildMembersPacket
 import de.fiereu.openmmo.net.game.packets.TeamFoundPacket
@@ -26,6 +31,9 @@ import javax.inject.Singleton
 private val log = KotlinLogging.logger {}
 
 private const val GUILD_FOUND_COST = 15000
+
+// The entries list is length-prefixed with a single byte, so a page holds at most 255 entries.
+private const val MAX_ACTIVITY_LOG_ENTRIES = 255
 
 @Singleton
 class GuildService
@@ -52,6 +60,20 @@ constructor(
     val guild = guildStore.createGuild(packet.teamName, packet.teamTag, charId, stored.info.name)
     ctx.send(buildMembership(guild))
     ctx.send(buildMemberSync(guild))
+  }
+
+  fun onActivityLogPageRequest(event: PacketEvent<GuildActivityLogPageRequestPacket>) {
+    val ctx = event.session
+    val state = ctx.attributes[PLAYER_STATE] ?: return
+    val charId = state.characterId ?: return
+    val guild = guildStore.getGuildForChar(charId) ?: return
+    val page = event.packet.pageIndex.toInt()
+    log.info { "Guild activity log page=$page requested." }
+    val packet = buildActivityLog(guild)
+    log.info {
+      "Sending guild activity log guild=${guild.id} sent=${packet.entries.size} total=${packet.totalCount}"
+    }
+    ctx.send(packet)
   }
 
   fun onGuildInvite(event: PacketEvent<GuildInvitePacket>) {
@@ -104,8 +126,41 @@ constructor(
   }
 
   fun onDisbandToggle(event: PacketEvent<GuildDisbandTogglePacket>) {
-    val state = event.session.attributes[PLAYER_STATE] ?: return
-    log.info { "GuildDisbandToggle char=${state.characterId} initiate=${event.packet.initiate}" }
+    val ctx = event.session
+    val state = ctx.attributes[PLAYER_STATE] ?: return
+    val charId = state.characterId ?: return
+    val initiate = event.packet.initiate
+    val guild = guildStore.getGuildForChar(charId)
+    log.info { "GuildDisbandToggle char=$charId guild=${guild?.id} initiate=$initiate" }
+    if (guild == null) return
+    // We disband immediately on initiate, so a follow-up cancel has no pending state to undo.
+    if (!initiate) return
+    guildStore.disbandGuild(charId)
+    log.info { "Guild ${guild.id} disbanded by char=$charId" }
+    // TODO: The guild window does not close after disbanding. Sending
+    // GuildMembershipPacket(inGuild = false) updates the state (reopening the
+    // window shows the create-guild screen) but does not dismiss the currently
+    // open window. Check against the real game to see what packet closes it.
+    ctx.send(GuildMembershipPacket(inGuild = false, profile = null))
+  }
+
+  fun onMotdUpdate(event: PacketEvent<GuildMotdUpdatePacket>) {
+    val ctx = event.session
+    val state = ctx.attributes[PLAYER_STATE] ?: return
+    val charId = state.characterId ?: return
+    val guild = guildStore.getGuildForChar(charId) ?: return
+    log.info { "GuildMotdUpdate char=$charId guild=${guild.id} motd='${event.packet.motdText}'" }
+  }
+
+  fun onRankLabelUpdate(event: PacketEvent<GuildRankLabelUpdatePacket>) {
+    val ctx = event.session
+    val state = ctx.attributes[PLAYER_STATE] ?: return
+    val charId = state.characterId ?: return
+    val guild = guildStore.getGuildForChar(charId) ?: return
+    val rank = GuildRank.entries.getOrNull(event.packet.rankOrdinal)
+    log.info {
+      "GuildRankLabelUpdate char=$charId guild=${guild.id} rank=$rank label='${event.packet.rankLabel}'"
+    }
   }
 
   fun onRankPermissionUpdate(event: PacketEvent<GuildRankPermissionUpdatePacket>) {
@@ -164,6 +219,20 @@ constructor(
                     lastSeen = 0,
                     appearance = List(5) { 0 },
                     leader = member.leader,
+                )
+              },
+      )
+
+  private fun buildActivityLog(guild: Guild): GuildActivityLogPacket =
+      GuildActivityLogPacket(
+          totalCount = guild.activityLog.size.toShort(),
+          entries =
+              guild.activityLog.takeLast(MAX_ACTIVITY_LOG_ENTRIES).map { entry ->
+                GuildActivityLogEntry(
+                    type = entry.type.code,
+                    actor = entry.actor,
+                    target = entry.target,
+                    timestamp = entry.timestamp,
                 )
               },
       )
