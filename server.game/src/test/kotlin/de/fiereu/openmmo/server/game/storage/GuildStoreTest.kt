@@ -25,7 +25,7 @@ class GuildStoreTest :
         guild.members.map { it.name } shouldBe listOf("Leader", "Grunt")
       }
 
-      test("rank assign updates a member and expel removes them") {
+      test("rank assign updates a member and kick removes them") {
         val store = GuildStore()
         val guild = store.createGuild("Knights", "KNT", leaderId = 100L, leaderName = "Leader")
         store.addMember(guild, GuildMember(200L, "Recruit", GuildRank.GRUNT, leader = false))
@@ -51,10 +51,10 @@ class GuildStoreTest :
         byId.getValue(100L).leader shouldBe false
       }
 
-      test("depart unbinds the leaver; disband removes the guild") {
+      test("leave unbinds the leaver; disband removes the guild") {
         val store = GuildStore()
         store.createGuild("Knights", "KNT", leaderId = 100L, leaderName = "Leader")
-        store.departGuild(100L)
+        store.leaveGuild(100L)
         store.getGuildForChar(100L) shouldBe null
 
         store.createGuild("Knights", "KNT", leaderId = 100L, leaderName = "Leader")

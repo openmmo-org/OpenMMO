@@ -4,13 +4,13 @@ import de.fiereu.bytecodec.CodecScope
 import de.fiereu.bytecodec.PacketCodec
 import de.fiereu.bytecodec.S64LE
 
-data class GuildMemberExpelPacket(
+data class GuildMemberKickPacket(
     val targetEntityId: Long,
 )
 
-object GuildMemberExpelPacketCodec : PacketCodec<GuildMemberExpelPacket>() {
-  override fun CodecScope<GuildMemberExpelPacket>.body(): GuildMemberExpelPacket {
+object GuildMemberKickPacketCodec : PacketCodec<GuildMemberKickPacket>() {
+  override fun CodecScope<GuildMemberKickPacket>.body(): GuildMemberKickPacket {
     val targetEntityId = field(S64LE) { it.targetEntityId }
-    return GuildMemberExpelPacket(targetEntityId)
+    return GuildMemberKickPacket(targetEntityId)
   }
 }

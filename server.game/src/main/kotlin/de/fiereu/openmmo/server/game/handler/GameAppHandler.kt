@@ -27,15 +27,15 @@ import de.fiereu.openmmo.net.game.packets.RequestSocialProfilePacket
 import de.fiereu.openmmo.net.game.packets.SelectCharacterPacket
 import de.fiereu.openmmo.net.game.packets.UnblockPlayerPacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildActivityLogPageRequestPacket
-import de.fiereu.openmmo.net.game.packets.guild.GuildDepartPacket
-import de.fiereu.openmmo.net.game.packets.guild.GuildDisbandTogglePacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildCreatePacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildDisbandPacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildInvitePacket
-import de.fiereu.openmmo.net.game.packets.guild.GuildMemberExpelPacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildLeavePacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildMemberKickPacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildMemberRankAssignPacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildMotdUpdatePacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildRankLabelUpdatePacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildRankPermissionUpdatePacket
-import de.fiereu.openmmo.net.game.packets.guild.TeamFoundPacket
 import de.fiereu.openmmo.server.game.services.DialogService
 import de.fiereu.openmmo.server.game.services.GuildService
 import de.fiereu.openmmo.server.game.services.InteractionService
@@ -89,13 +89,13 @@ constructor(
     on<RequestSocialProfilePacket> { event -> socialService.onRequestSocialProfile(event) }
     on<CancelSocialInteractionPacket> { event -> socialService.onCancelSocialInteraction(event) }
 
-    on<TeamFoundPacket> { event -> guildService.onFoundTeam(event) }
+    on<GuildCreatePacket> { event -> guildService.onCreateGuild(event) }
     on<GuildInvitePacket> { event -> guildService.onGuildInvite(event) }
     on<GuildRankPermissionUpdatePacket> { event -> guildService.onRankPermissionUpdate(event) }
     on<GuildMemberRankAssignPacket> { event -> guildService.onRankAssign(event) }
-    on<GuildMemberExpelPacket> { event -> guildService.onExpel(event) }
-    on<GuildDepartPacket> { event -> guildService.onDepart(event) }
-    on<GuildDisbandTogglePacket> { event -> guildService.onDisbandToggle(event) }
+    on<GuildMemberKickPacket> { event -> guildService.onKick(event) }
+    on<GuildLeavePacket> { event -> guildService.onLeave(event) }
+    on<GuildDisbandPacket> { event -> guildService.onDisband(event) }
     on<GuildMotdUpdatePacket> { event -> guildService.onMotdUpdate(event) }
     on<GuildRankLabelUpdatePacket> { event -> guildService.onRankLabelUpdate(event) }
     on<GuildActivityLogPageRequestPacket> { event -> guildService.onActivityLogPageRequest(event) }

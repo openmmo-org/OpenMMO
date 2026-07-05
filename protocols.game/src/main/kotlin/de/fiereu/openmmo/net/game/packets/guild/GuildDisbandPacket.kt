@@ -5,15 +5,15 @@ import de.fiereu.bytecodec.CodecScope
 import de.fiereu.bytecodec.PacketCodec
 import de.fiereu.bytecodec.S64LE
 
-data class GuildDisbandTogglePacket(
+data class GuildDisbandPacket(
     val initiate: Boolean,
     val ownerEntityId: Long,
 )
 
-object GuildDisbandTogglePacketCodec : PacketCodec<GuildDisbandTogglePacket>() {
-  override fun CodecScope<GuildDisbandTogglePacket>.body(): GuildDisbandTogglePacket {
+object GuildDisbandPacketCodec : PacketCodec<GuildDisbandPacket>() {
+  override fun CodecScope<GuildDisbandPacket>.body(): GuildDisbandPacket {
     val initiate = field(Bool) { it.initiate }
     val ownerEntityId = field(S64LE) { it.ownerEntityId }
-    return GuildDisbandTogglePacket(initiate, ownerEntityId)
+    return GuildDisbandPacket(initiate, ownerEntityId)
   }
 }

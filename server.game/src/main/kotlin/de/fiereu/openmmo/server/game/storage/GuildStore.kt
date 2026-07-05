@@ -83,7 +83,7 @@ class GuildStore @Inject constructor() {
     }
   }
 
-  fun departGuild(charId: Long) {
+  fun leaveGuild(charId: Long) {
     val guildId = guildByChar.remove(charId) ?: return
     guilds[guildId]?.members?.removeAll { it.id == charId }
   }

@@ -6,11 +6,12 @@ import de.fiereu.openmmo.common.enums.GuildRank
 import de.fiereu.openmmo.net.game.packets.guild.GuildActivityLogEntry
 import de.fiereu.openmmo.net.game.packets.guild.GuildActivityLogPacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildActivityLogPageRequestPacket
-import de.fiereu.openmmo.net.game.packets.guild.GuildDepartPacket
-import de.fiereu.openmmo.net.game.packets.guild.GuildDisbandTogglePacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildCreatePacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildDisbandPacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildInvitePacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildLeavePacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildMemberEntry
-import de.fiereu.openmmo.net.game.packets.guild.GuildMemberExpelPacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildMemberKickPacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildMemberRankAssignPacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildMembershipPacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildMotdUpdatePacket
@@ -18,7 +19,6 @@ import de.fiereu.openmmo.net.game.packets.guild.GuildProfileData
 import de.fiereu.openmmo.net.game.packets.guild.GuildRankLabelUpdatePacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildRankPermissionUpdatePacket
 import de.fiereu.openmmo.net.game.packets.guild.SyncGuildMembersPacket
-import de.fiereu.openmmo.net.game.packets.guild.TeamFoundPacket
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import de.fiereu.openmmo.server.game.storage.Guild
@@ -43,21 +43,21 @@ constructor(
     private val characterStore: CharacterStore,
 ) {
 
-  fun onFoundTeam(event: PacketEvent<TeamFoundPacket>) {
+  fun onCreateGuild(event: PacketEvent<GuildCreatePacket>) {
     val ctx = event.session
     val state = ctx.attributes[PLAYER_STATE] ?: return
     val charId = state.characterId ?: return
     val stored = characterStore.getCharacter(charId) ?: return
     val packet = event.packet
     log.info {
-      "FoundTeam name='${packet.teamName}' tag='${packet.teamTag}' char=$charId money=${stored.info.money}"
+      "CreateGuild name='${packet.guildName}' tag='${packet.guildTag}' char=$charId money=${stored.info.money}"
     }
     if (stored.info.money < GUILD_FOUND_COST) {
       log.info { "Insufficient funds to found a guild (need $GUILD_FOUND_COST)" }
       return
     }
     characterStore.addMoney(charId, -GUILD_FOUND_COST)
-    val guild = guildStore.createGuild(packet.teamName, packet.teamTag, charId, stored.info.name)
+    val guild = guildStore.createGuild(packet.guildName, packet.guildTag, charId, stored.info.name)
     ctx.send(buildMembership(guild))
     ctx.send(buildMemberSync(guild))
   }
@@ -106,32 +106,32 @@ constructor(
     ctx.send(buildMemberSync(guild))
   }
 
-  fun onExpel(event: PacketEvent<GuildMemberExpelPacket>) {
+  fun onKick(event: PacketEvent<GuildMemberKickPacket>) {
     val ctx = event.session
     val state = ctx.attributes[PLAYER_STATE] ?: return
     val charId = state.characterId ?: return
     val guild = guildStore.getGuildForChar(charId) ?: return
     guildStore.removeMember(guild, event.packet.targetEntityId)
-    log.info { "Expel char=$charId member=${event.packet.targetEntityId}" }
+    log.info { "Kick char=$charId member=${event.packet.targetEntityId}" }
     ctx.send(buildMemberSync(guild))
   }
 
-  fun onDepart(event: PacketEvent<GuildDepartPacket>) {
+  fun onLeave(event: PacketEvent<GuildLeavePacket>) {
     val ctx = event.session
     val state = ctx.attributes[PLAYER_STATE] ?: return
     val charId = state.characterId ?: return
-    guildStore.departGuild(charId)
-    log.info { "GuildDepart char=$charId" }
+    guildStore.leaveGuild(charId)
+    log.info { "GuildLeave char=$charId" }
     ctx.send(GuildMembershipPacket(inGuild = false, profile = null))
   }
 
-  fun onDisbandToggle(event: PacketEvent<GuildDisbandTogglePacket>) {
+  fun onDisband(event: PacketEvent<GuildDisbandPacket>) {
     val ctx = event.session
     val state = ctx.attributes[PLAYER_STATE] ?: return
     val charId = state.characterId ?: return
     val initiate = event.packet.initiate
     val guild = guildStore.getGuildForChar(charId)
-    log.info { "GuildDisbandToggle char=$charId guild=${guild?.id} initiate=$initiate" }
+    log.info { "GuildDisband char=$charId guild=${guild?.id} initiate=$initiate" }
     if (guild == null) return
     // We disband immediately on initiate, so a follow-up cancel has no pending state to undo.
     if (!initiate) return
