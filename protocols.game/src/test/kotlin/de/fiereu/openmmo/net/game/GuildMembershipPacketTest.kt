@@ -2,9 +2,9 @@ package de.fiereu.openmmo.net.game
 
 import de.fiereu.bytecodec.test.decodeBytes
 import de.fiereu.bytecodec.test.encodeToBytes
-import de.fiereu.openmmo.net.game.packets.GuildMembershipPacket
-import de.fiereu.openmmo.net.game.packets.GuildMembershipPacketCodec
-import de.fiereu.openmmo.net.game.packets.GuildProfileData
+import de.fiereu.openmmo.net.game.packets.guild.GuildMembershipPacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildMembershipPacketCodec
+import de.fiereu.openmmo.net.game.packets.guild.GuildProfileData
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 

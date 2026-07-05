@@ -5,6 +5,7 @@ import de.fiereu.network.bidi
 import de.fiereu.network.c2s
 import de.fiereu.network.s2c
 import de.fiereu.openmmo.net.game.packets.*
+import de.fiereu.openmmo.net.game.packets.guild.*
 
 object GameProtocol : Protocol() {
   override val compressed: Boolean = true

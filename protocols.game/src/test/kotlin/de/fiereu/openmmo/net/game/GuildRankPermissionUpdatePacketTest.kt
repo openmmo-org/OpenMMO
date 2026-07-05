@@ -4,8 +4,8 @@ import de.fiereu.bytecodec.test.decodeBytes
 import de.fiereu.bytecodec.test.encodeToBytes
 import de.fiereu.openmmo.common.enums.GuildPermission
 import de.fiereu.openmmo.common.enums.GuildRank
-import de.fiereu.openmmo.net.game.packets.GuildRankPermissionUpdatePacket
-import de.fiereu.openmmo.net.game.packets.GuildRankPermissionUpdatePacketCodec
+import de.fiereu.openmmo.net.game.packets.guild.GuildRankPermissionUpdatePacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildRankPermissionUpdatePacketCodec
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
