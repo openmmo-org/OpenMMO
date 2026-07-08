@@ -138,6 +138,7 @@ object GameProtocol : Protocol() {
     s2c<WorldJoinConfirmPacket>(0x2Fu, WorldJoinConfirmPacketCodec)
 
     c2s<BattleActionPacket>(0x30u, BattleActionPacketCodec)
+    s2c<BattleOpenPacket>(0x30u, BattleOpenPacketCodec) // wild battle-open (validated vs capture)
 
     s2c<BattleBulkStatePacket>(0x31u, BattleBulkStatePacketCodec)
 
