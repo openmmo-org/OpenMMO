@@ -119,6 +119,19 @@ action (by hand or via a bot) any time before its timeout.
   -Porg.gradle.java.installations.paths=<jdk21>,<jdk25>` when a task needs
   toolchain resolution across both JDKs (e.g. building ByteDex alongside this
   repo).
+- **KSP + configuration-cache cross-drive bug:** if `GRADLE_USER_HOME`
+  (Gradle's cache, `~/.gradle` by default) is on a different drive letter
+  than this project, `:server.game:kspKotlin`/`:server.login:kspKotlin`
+  fail whenever KSP has to actually re-run: `IllegalArgumentException: this
+  and base files have different roots: C:\...\dagger-...jar!\...Provider
+  .class and F:\...\server.game`. KSP's AA worker calls Java's
+  `Path.relativize()` between a Gradle-cache jar entry and the project
+  directory, which throws if the two paths don't share a root (drive
+  letter). `configuration-cache` is disabled in this repo's
+  `gradle.properties` to work around it durably (`--no-configuration-cache`
+  fixes it per-invocation if you ever re-enable it locally). Re-enable if
+  this gets fixed upstream in KSP, or if `GRADLE_USER_HOME` and the project
+  end up on the same drive.
 - **game-db health check occasionally slow:** `dev-up`'s Postgres
   healthcheck-tolerant probe has hit an intermittent multi-minute stall
   specifically on `game-db` (not `login-db`) during a live capture session,
