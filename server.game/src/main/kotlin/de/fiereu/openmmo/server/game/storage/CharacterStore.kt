@@ -1,7 +1,11 @@
 package de.fiereu.openmmo.server.game.storage
 
 import de.fiereu.openmmo.common.CharacterInfo
-import de.fiereu.openmmo.common.Pokemon
+import de.fiereu.openmmo.server.game.domain.Gender
+import de.fiereu.openmmo.server.game.domain.IVs
+import de.fiereu.openmmo.server.game.domain.Nature
+import de.fiereu.openmmo.server.game.domain.OwnedPokemon
+import de.fiereu.openmmo.server.game.domain.PokemonMoveSlot
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
@@ -10,10 +14,15 @@ import javax.inject.Singleton
 
 data class StoredCharacter(
     val info: CharacterInfo,
-    val pokemon: MutableList<Pokemon>,
-    val pcStorage: MutableList<Pokemon>,
+    val pokemon: MutableList<OwnedPokemon>,
+    val pcStorage: MutableList<OwnedPokemon>,
     val items: MutableMap<Int, Int>,
 )
+
+enum class PokemonDepositTarget {
+  PARTY,
+  PC
+}
 
 @Singleton
 class CharacterStore @Inject constructor() {
@@ -68,7 +77,15 @@ class CharacterStore @Inject constructor() {
             lureLeft = 0,
             lureItemId = 0,
         )
-    val stored = StoredCharacter(info, mutableListOf(), mutableListOf(), mutableMapOf())
+    val stored =
+        StoredCharacter(
+            info = info,
+            pokemon =
+                mutableListOf(
+                    createStarterPokemon(ownerName = name, userId = userId, characterId = id)),
+            pcStorage = mutableListOf(),
+            items = mutableMapOf(),
+        )
     characters[id] = stored
     charactersByUser.getOrPut(userId) { mutableListOf() }.add(id)
     return stored
@@ -104,8 +121,22 @@ class CharacterStore @Inject constructor() {
     characters[characterId] = stored.copy(info = newInfo)
   }
 
-  fun addPokemon(characterId: Long, pokemon: Pokemon) {
-    characters[characterId]?.pokemon?.add(pokemon)
+  fun getParty(characterId: Long): List<OwnedPokemon> =
+      characters[characterId]?.pokemon ?: emptyList()
+
+  fun addPokemon(characterId: Long, pokemon: OwnedPokemon) {
+    addCaughtPokemon(characterId, pokemon)
+  }
+
+  fun addCaughtPokemon(characterId: Long, pokemon: OwnedPokemon): PokemonDepositTarget? {
+    val stored = characters[characterId] ?: return null
+    return if (stored.pokemon.size < 6) {
+      stored.pokemon.add(pokemon)
+      PokemonDepositTarget.PARTY
+    } else {
+      stored.pcStorage.add(pokemon)
+      PokemonDepositTarget.PC
+    }
   }
 
   fun addMoney(characterId: Long, amount: Int) {
@@ -113,4 +144,29 @@ class CharacterStore @Inject constructor() {
     val newInfo = stored.info.copy(money = stored.info.money + amount)
     characters[characterId] = stored.copy(info = newInfo)
   }
+
+  private fun createStarterPokemon(
+      ownerName: String,
+      userId: Int,
+      characterId: Long,
+  ): OwnedPokemon =
+      OwnedPokemon(
+          uid = "starter-$characterId-1",
+          speciesId = 1,
+          nickname = "Bulbasaur",
+          level = 5,
+          exp = 0,
+          nature = Nature.HARDY,
+          ability = "overgrow",
+          gender = Gender.MALE,
+          shiny = false,
+          ivs = IVs(hp = 10, atk = 10, def = 10, spa = 10, spd = 10, spe = 10),
+          moves = listOf(PokemonMoveSlot(moveId = 33, ppUp = 0, ppCurrent = 35)),
+          friendship = 70,
+          otWallet = "user:$userId",
+          otName = ownerName,
+          pid = userId.toUInt(),
+          metLevel = 5,
+          metLocation = "starter",
+      )
 }

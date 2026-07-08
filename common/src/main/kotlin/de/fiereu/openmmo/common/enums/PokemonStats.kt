@@ -18,7 +18,7 @@ open class PokemonStats(private val individualCap: Int, private val totalCap: In
     get() = hp + atk + def + spAtk + spDef + spd
 
   private fun cr(value: Int): Byte {
-    if (value <= 0) error("Value can't be <= 0")
+    if (value < 0) error("Value can't be < 0")
     if (value > individualCap) error("Value exceeds individual capacity")
     if (total > totalCap) error("Total value exceeds capacity")
     return value.toByte()
@@ -92,7 +92,7 @@ class PokemonBattleStats :
     get() = hp + atk + def + spAtk + spDef + spd + acc + evs
 
   private fun cr(value: Int): Byte {
-    if (value <= 0) error("Value can't be <= 0")
+    if (value < 0) error("Value can't be < 0")
     if (value > individualCap) error("Value exceeds individual capacity")
     if (total > totalCap) error("Total value exceeds capacity")
     return value.toByte()

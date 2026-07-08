@@ -23,6 +23,8 @@ constructor(
       info: CharacterInfo,
       facing: Direction = Direction.DOWN,
       z: Int = 0,
+      hasFollower: Boolean = false,
+      followerDexId: Short = 0,
   ): LoadEntityPacket {
     return LoadEntityPacket(
         entityId = info.id,
@@ -36,8 +38,8 @@ constructor(
         z = z,
         facing = facing,
         status = EntityStatus.NONE,
-        hasFollower = false,
-        followerDexId = 0,
+        hasFollower = hasFollower,
+        followerDexId = followerDexId,
     )
   }
 

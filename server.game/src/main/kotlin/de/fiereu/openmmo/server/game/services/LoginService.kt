@@ -3,7 +3,6 @@ package de.fiereu.openmmo.server.game.services
 import de.fiereu.network.PacketEvent
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.CharacterInfo
-import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.enums.ChatType
 import de.fiereu.openmmo.common.enums.EntityStatus
 import de.fiereu.openmmo.common.enums.Language
@@ -17,6 +16,7 @@ import de.fiereu.openmmo.net.game.packets.CreateCharacterPacket
 import de.fiereu.openmmo.net.game.packets.JoinPacket
 import de.fiereu.openmmo.net.game.packets.JoinResponsePacket
 import de.fiereu.openmmo.net.game.packets.LoadEntityPacket
+import de.fiereu.openmmo.net.game.packets.LocalPlayerStatePacket
 import de.fiereu.openmmo.net.game.packets.NewAuthData
 import de.fiereu.openmmo.net.game.packets.PokemonContainerPacket
 import de.fiereu.openmmo.net.game.packets.RenderScreenPacket
@@ -24,6 +24,7 @@ import de.fiereu.openmmo.net.game.packets.RequestCharactersPacket
 import de.fiereu.openmmo.net.game.packets.RequestPlayerPacket
 import de.fiereu.openmmo.net.game.packets.SelectCharacterPacket
 import de.fiereu.openmmo.net.game.packets.SelectedCharacterPacket
+import de.fiereu.openmmo.server.game.domain.OwnedPokemon
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.session.PlayerState
 import de.fiereu.openmmo.server.game.session.SessionRegistry
@@ -101,7 +102,7 @@ constructor(
               characterInfo = stored.info,
               skinSet = SkinSet(),
               guildId = null,
-              pokemon = stored.pokemon.take(1),
+              pokemon = PartyPokemonMapper.toWireParty(stored.pokemon).take(1),
           )
         }
     return CharactersListPacket(entries)
@@ -132,11 +133,12 @@ constructor(
 
     val containers =
         mapOf(
-            PokemonContainer.PARTY to stored.pokemon,
-            PokemonContainer.PC to stored.pcStorage,
-            PokemonContainer.BATTLE_BOX_1 to emptyList<Pokemon>(),
-            PokemonContainer.BATTLE_BOX_2 to emptyList<Pokemon>(),
-            PokemonContainer.DAYCARE to emptyList<Pokemon>(),
+            PokemonContainer.PARTY to PartyPokemonMapper.toWireParty(stored.pokemon),
+            PokemonContainer.PC to
+                PartyPokemonMapper.toWireContainer(stored.pcStorage, PokemonContainer.PC),
+            PokemonContainer.BATTLE_BOX_1 to emptyList(),
+            PokemonContainer.BATTLE_BOX_2 to emptyList(),
+            PokemonContainer.DAYCARE to emptyList(),
         )
     for ((container, pokemon) in containers) {
       ctx.send(
@@ -158,6 +160,7 @@ constructor(
           ))
     }
 
+    ctx.send(buildLocalPlayerState(info, stored.pokemon))
     ctx.send(SelectedCharacterPacket(info))
     ctx.send(
         ChatMessagePacket(
@@ -168,6 +171,35 @@ constructor(
         ))
 
     preloadMapAndJoin(ctx, state, info)
+  }
+
+  private fun buildLocalPlayerState(
+      info: CharacterInfo,
+      party: List<OwnedPokemon>,
+  ): LocalPlayerStatePacket {
+    val partyDex = party.take(6).map { it.speciesId.toShort() }
+    val partyForms = party.take(6).map { 0.toByte() }
+    val caught = party.map { it.speciesId.toShort() }.distinct()
+    return LocalPlayerStatePacket(
+        region = info.positionRegionId,
+        mapId = info.positionMapId.toShort(),
+        moveSpeed = 0.05f,
+        x = info.positionX,
+        y = info.positionY,
+        z = 0,
+        money = info.money,
+        gender = info.rivalSex,
+        skinTone = 30000.toShort(),
+        hairColor = 30000.toShort(),
+        playtime = 0.0,
+        flags = 27,
+        partyDex = partyDex,
+        partyForms = partyForms,
+        pokedexSeen = caught,
+        pokedexCaught = caught,
+        badges = emptyList(),
+        variables = emptyList(),
+    )
   }
 
   private fun preloadMapAndJoin(
@@ -221,7 +253,16 @@ constructor(
 
     log.info { "Sending LoadEntity for character '${info.name}'" }
     val facing = state.facingDirection
-    val loadEntity = mapLoadService.createLoadEntity(info, facing)
+    val currentParty = characterStore.getParty(charId)
+    val hasFollower = currentParty.isNotEmpty()
+    val followerDexId = (currentParty.firstOrNull()?.speciesId ?: 0).toShort()
+    val loadEntity =
+        mapLoadService.createLoadEntity(
+            info,
+            facing,
+            hasFollower = hasFollower,
+            followerDexId = followerDexId,
+        )
     ctx.send(loadEntity)
 
     npcService.spawnNpcsForMap(ctx, info.positionBankId.toInt(), info.positionMapId.toInt())
@@ -235,16 +276,14 @@ constructor(
     state.x = info.positionX
     state.y = info.positionY
 
-    val currentParty = characterStore.getCharacter(charId)?.pokemon ?: emptyList()
-    val hasFollower = currentParty.isNotEmpty()
-    val followerDexId = (currentParty.firstOrNull()?.dexId ?: 0).toShort()
+    ctx.send(buildLocalPlayerState(info, currentParty))
 
     val others = sessionRegistry.getOthersInMap(charId, regionId, bankId, mapId)
     for (other in others) {
       val otherState = other.attributes[PLAYER_STATE] ?: continue
       val otherCharId = otherState.characterId ?: continue
       val otherStored = characterStore.getCharacter(otherCharId) ?: continue
-      val otherParty: List<Pokemon> = otherStored.pokemon
+      val otherParty = otherStored.pokemon
       ctx.send(
           LoadEntityPacket(
               entityId = otherCharId,
@@ -259,7 +298,7 @@ constructor(
               facing = otherState.facingDirection,
               status = EntityStatus.NONE,
               hasFollower = otherParty.isNotEmpty(),
-              followerDexId = (otherParty.firstOrNull()?.dexId ?: 0).toShort(),
+              followerDexId = (otherParty.firstOrNull()?.speciesId ?: 0).toShort(),
           ))
     }
 
