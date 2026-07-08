@@ -20,7 +20,7 @@ data class CharactersListPacket(val characters: List<CharacterEntry>)
 
 private val CharacterInfoAsymmetric: Codec<CharacterInfo> =
     object : Codec<CharacterInfo> {
-      override fun read(buf: ReadBuffer): CharacterInfo = CharacterInfoCodecLong.read(buf)
+      override fun read(buf: ReadBuffer): CharacterInfo = CharacterInfoCodecShort.read(buf)
 
       override fun write(buf: WriteBuffer, value: CharacterInfo) {
         CharacterInfoCodecShort.write(buf, value)

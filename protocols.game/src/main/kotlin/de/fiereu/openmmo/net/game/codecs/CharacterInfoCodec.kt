@@ -25,15 +25,16 @@ class CharacterInfoCodec(private val withExtraLong: Boolean) : PacketCodec<Chara
     val createdAt = field(EpochSecondsS32LE, CharacterInfo::createdAt)
     field(S32LE) { 0 }
     field(S8) { 0 }
-    field(S32LE) { 0 }
+    field(S32LE) { 28014 }
     val money = field(S32LE, CharacterInfo::money)
     field(S16LE) { 0 }
     field(S32LE) { 0 }
     val permissions = field(U8) { it.permissions and 0xFF }
     field(S8) { 0 }
-    field(S8) { 0 }
-    field(S32LE) { 0 }
-    repeat(8) { field(S8) { 0 } }
+    field(S8) { 0x5b }
+    field(S32LE) { 211456 }
+    field(S32LE) { 25559552 }
+    field(S32LE) { 25559552 }
     val remainingSafariSteps = field(S16LE, CharacterInfo::remainingSafariSteps)
     val remainingSafariBalls = field(S8, CharacterInfo::remainingSafariBalls)
     field(S32LE) { 0 }
@@ -41,15 +42,15 @@ class CharacterInfoCodec(private val withExtraLong: Boolean) : PacketCodec<Chara
     val battleBoxExtraSlots = field(S8, CharacterInfo::battleBoxExtraSlots)
     val templateAmount = field(S8, CharacterInfo::templateAmount)
     field(S8) { 0 }
-    field(S8) { 0 }
-    field(S8) { 0 }
+    field(S8) { 2 }
+    field(S8) { (-1).toByte() }
     val positionRegionId = field(S8, CharacterInfo::positionRegionId)
     val positionBankId = field(S8, CharacterInfo::positionBankId)
     val positionMapId = field(S8, CharacterInfo::positionMapId)
-    field(S8) { 0 }
+    field(S8) { 1 }
     val positionX = field(S16LE, CharacterInfo::positionX)
     val positionY = field(S16LE, CharacterInfo::positionY)
-    field(S8) { 0 }
+    field(S8) { 2 }
     field(S8) { 0 }
     val repelLeft = field(S16LE, CharacterInfo::repelLeft)
     val repelItemId = field(S16LE, CharacterInfo::repelItemId)
