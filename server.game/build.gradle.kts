@@ -5,6 +5,7 @@ plugins {
   id("buildsrc.convention.sonarlint")
   id("buildsrc.common.keys")
   alias(libs.plugins.ksp)
+  alias(libs.plugins.kotlin.serialization)
 }
 
 group = "de.fiereu.openmmo"
@@ -24,6 +25,7 @@ dependencies {
 
   implementation(libs.typesafe.config)
   implementation(libs.kotlinx.coroutines)
+  implementation(libs.kotlinx.serialization.json)
   implementation(libs.kotlin.logging)
   implementation(libs.logback)
 

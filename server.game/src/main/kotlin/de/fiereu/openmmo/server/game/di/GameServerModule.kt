@@ -5,6 +5,7 @@ import dagger.Provides
 import de.fiereu.openmmo.common.auth.SessionTokenVerifier
 import de.fiereu.openmmo.common.io.PemKeyLoader
 import de.fiereu.openmmo.common.io.resource
+import de.fiereu.openmmo.server.game.battle.BattleSessionClient
 import de.fiereu.openmmo.server.game.config.GameServerConfig
 import io.netty.channel.EventLoopGroup
 import io.netty.channel.MultiThreadIoEventLoopGroup
@@ -42,4 +43,16 @@ object GameServerModule {
   @Provides
   @Singleton
   fun coroutineScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+  /**
+   * Client for the Battle-Service sidecar (Track A). Defaults to the sidecar's localhost bind;
+   * override with BATTLE_SERVICE_HOST / BATTLE_SERVICE_PORT.
+   */
+  @Provides
+  @Singleton
+  fun battleSessionClient(): BattleSessionClient {
+    val host = System.getenv("BATTLE_SERVICE_HOST") ?: "127.0.0.1"
+    val port = System.getenv("BATTLE_SERVICE_PORT")?.toIntOrNull() ?: 7801
+    return BattleSessionClient(host, port)
+  }
 }
