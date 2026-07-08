@@ -119,19 +119,33 @@ action (by hand or via a bot) any time before its timeout.
   -Porg.gradle.java.installations.paths=<jdk21>,<jdk25>` when a task needs
   toolchain resolution across both JDKs (e.g. building ByteDex alongside this
   repo).
-- **KSP + configuration-cache cross-drive bug:** if `GRADLE_USER_HOME`
-  (Gradle's cache, `~/.gradle` by default) is on a different drive letter
-  than this project, `:server.game:kspKotlin`/`:server.login:kspKotlin`
-  fail whenever KSP has to actually re-run: `IllegalArgumentException: this
-  and base files have different roots: C:\...\dagger-...jar!\...Provider
-  .class and F:\...\server.game`. KSP's AA worker calls Java's
-  `Path.relativize()` between a Gradle-cache jar entry and the project
-  directory, which throws if the two paths don't share a root (drive
-  letter). `configuration-cache` is disabled in this repo's
-  `gradle.properties` to work around it durably (`--no-configuration-cache`
-  fixes it per-invocation if you ever re-enable it locally). Re-enable if
-  this gets fixed upstream in KSP, or if `GRADLE_USER_HOME` and the project
-  end up on the same drive.
+- **KSP cross-drive bug (real fix: relocate `GRADLE_USER_HOME`):** if
+  `GRADLE_USER_HOME` (Gradle's cache, `~/.gradle` by default) is on a
+  different drive letter than this project, `:server.game:kspKotlin`/
+  `:server.login:kspKotlin` fail: `IllegalArgumentException: this and base
+  files have different roots: C:\...\dagger-...jar!\...Provider.class and
+  F:\...\server.game`. KSP's AA worker calls Java's `Path.relativize()`
+  between a Gradle-cache jar entry and the project directory, which throws
+  if the two paths don't share a root (drive letter). **Disabling
+  `configuration-cache` (already done, in `gradle.properties`) only masks
+  this for builds where KSP would otherwise be skipped/cached** — the first
+  time this bit us it looked fixed, but any change that expands the Dagger
+  component graph (a new `@Inject` wire-up) forces KSP to actually process
+  the dagger jar regardless of configuration-cache, and the same exception
+  comes back. The **actual fix** on this box: `GRADLE_USER_HOME` is
+  relocated to `F:\coding\games\PokeBROMMO\toolchains\gradle-home` (same
+  drive as the project) — set as a Windows **user-level env var**, so it's
+  a machine-config change, not something a repo file can carry. **This
+  won't apply to a session that was already running when it was set** —
+  Windows doesn't push env var changes into existing processes. If you hit
+  the cross-drive error, export it explicitly for your session:
+  - bash: `export GRADLE_USER_HOME="F:/coding/games/PokeBROMMO/toolchains/gradle-home"`
+  - PowerShell: `$env:GRADLE_USER_HOME = "F:\coding\games\PokeBROMMO\toolchains\gradle-home"`
+
+  A genuinely fresh shell/session picks up the persisted default with zero
+  setup. If this machine's cache and project ever end up on the same drive
+  again (or KSP fixes the underlying `relativize()` bug upstream), both
+  this relocation and the configuration-cache disable can be reverted.
 - **game-db health check occasionally slow:** `dev-up`'s Postgres
   healthcheck-tolerant probe has hit an intermittent multi-minute stall
   specifically on `game-db` (not `login-db`) during a live capture session,
