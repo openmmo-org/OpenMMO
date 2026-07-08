@@ -177,6 +177,24 @@ class T0PlayerPartyPacketsTest :
         decoded.pokemon.container shouldBe PokemonContainer.PARTY
       }
 
+      test("LoadEntityPacket decodes golden follower samples with one-byte flags") {
+        val otherBag =
+            LoadEntityPacketCodec.decodeBytes(
+                hexToBytes(
+                    "0090c8afe045a51900005c0326fc0afc0f140200008000144f00740068006500720042006100670000000285010e03ed020000000004f501"))
+        val zhongguo =
+            LoadEntityPacketCodec.decodeBytes(
+                hexToBytes(
+                    "0090488f85aa2e1901004c03138c0bfc02b40004009c7a0068006f006e006700670075006f006c0061006f0068006500690000000285011203e302000142000c1e0120"))
+
+        otherBag.name shouldBe "OtherBag"
+        otherBag.hasFollower shouldBe true
+        otherBag.followerDexId shouldBe 501
+        zhongguo.name shouldBe "zhongguolaohei"
+        zhongguo.hasFollower shouldBe true
+        zhongguo.followerDexId shouldBe 286
+      }
+
       test("LoadEntityPacket encodes entity id and follower flag") {
         val bytes =
             LoadEntityPacketCodec.encodeToBytes(
