@@ -26,6 +26,7 @@ class BagServiceTest :
       test("bag open emits validated main and small container payloads") {
         val store = CharacterStore()
         val character = store.getCharactersByUser(1).first()
+        character.items.clear()
         character.items[17] = 3
         val session = CapturingBagSessionContext()
         session.attributes[PLAYER_STATE] =
@@ -44,12 +45,29 @@ class BagServiceTest :
 
         val small = session.sent[1] as BagInventoryPacket
         small.containerId shouldBe BagService.CONTAINER_SMALL
-        small.entries shouldBe emptyList()
+        small.entries.shouldHaveSize(1)
+        small.entries.first().itemId shouldBe 17
+      }
+
+      test("new characters are seeded with small bag items") {
+        val store = CharacterStore()
+        val character = store.getCharactersByUser(1).first()
+        val session = CapturingBagSessionContext()
+        session.attributes[PLAYER_STATE] =
+            PlayerState(userId = character.info.userId, characterId = character.info.id)
+
+        BagService(store).onBagOpen(PacketEvent(BagOpenRequestPacket(), session))
+
+        val small = session.sent[1] as BagInventoryPacket
+        small.containerId shouldBe BagService.CONTAINER_SMALL
+        small.entries.shouldHaveSize(3)
+        small.entries.map { it.itemId } shouldBe listOf(1025, 1026, 1027)
       }
 
       test("bag open with empty inventory still emits empty valid containers") {
         val store = CharacterStore()
         val character = store.getCharactersByUser(1).first()
+        character.items.clear()
         val session = CapturingBagSessionContext()
         session.attributes[PLAYER_STATE] =
             PlayerState(userId = character.info.userId, characterId = character.info.id)

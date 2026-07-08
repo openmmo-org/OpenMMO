@@ -35,8 +35,9 @@ constructor(
 
     // v31914 sends one 0x70 response per supported bag container. Container 0x0001 has a larger,
     // still-undecoded entry shape and is intentionally not emitted until a follow-up capture lands.
-    ctx.send(BagInventoryPacket(CONTAINER_MAIN, itemEntries(stored.items)))
-    ctx.send(BagInventoryPacket(CONTAINER_SMALL, emptyList()))
+    val entries = itemEntries(stored.items)
+    ctx.send(BagInventoryPacket(CONTAINER_MAIN, entries))
+    ctx.send(BagInventoryPacket(CONTAINER_SMALL, entries.take(MAX_SMALL_ENTRIES)))
     bagLog.info { "Sending BagInventory for character $charId" }
   }
 

@@ -90,12 +90,19 @@ class CharacterStore @Inject constructor() {
                 mutableListOf(
                     createStarterPokemon(ownerName = name, userId = userId, characterId = id)),
             pcStorage = mutableListOf(),
-            items = mutableMapOf(),
+            items = seededItems(),
         )
     characters[id] = stored
     charactersByUser.getOrPut(userId) { mutableListOf() }.add(id)
     return stored
   }
+
+  private fun seededItems(): MutableMap<Int, Int> =
+      mutableMapOf(
+          1025 to 500,
+          1026 to 1000,
+          1027 to 1500,
+      )
 
   private fun normalizePlayerGender(gender: Byte): Byte = if (gender.toInt() == 1) 1 else 0
 
