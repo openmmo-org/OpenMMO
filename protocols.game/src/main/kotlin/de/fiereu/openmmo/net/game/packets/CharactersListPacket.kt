@@ -41,6 +41,7 @@ private object CharacterEntryCodec : PacketCodec<CharacterEntry>() {
           null
         }
     val partySize = field(U8) { it.pokemon.size }
+    reserved(byte = 0)
     val party = List(partySize) { field(PokemonCodec) { entry -> entry.pokemon[it] } }
     return CharacterEntry(info, skin, guildId, party)
   }

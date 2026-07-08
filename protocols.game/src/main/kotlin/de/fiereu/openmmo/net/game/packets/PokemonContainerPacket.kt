@@ -25,11 +25,14 @@ private val PokemonListPrefixedU8: Codec<List<Pokemon>> =
     object : Codec<List<Pokemon>> {
       override fun read(buf: ReadBuffer): List<Pokemon> {
         val n = U8.read(buf)
+        val reserved = S8.read(buf)
+        require(reserved == 0.toByte()) { "Pokemon container reserved byte must be zero" }
         return List(n) { PokemonCodec.read(buf) }
       }
 
       override fun write(buf: WriteBuffer, value: List<Pokemon>) {
         U8.write(buf, value.size)
+        S8.write(buf, 0)
         value.forEach { PokemonCodec.write(buf, it) }
       }
     }

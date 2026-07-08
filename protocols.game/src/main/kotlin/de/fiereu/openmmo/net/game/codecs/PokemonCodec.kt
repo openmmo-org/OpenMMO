@@ -67,7 +67,7 @@ object PokemonCodec : PacketCodec<Pokemon>() {
     field(S8) { 0 }
     field(S8) { 0 }
     field(PokemonUnknownBytes) { ByteArray(0) }
-    repeat(12) { field(S8) { 0 } }
+    repeat(4) { field(S8) { 0 } }
     return Pokemon(
         id,
         container,

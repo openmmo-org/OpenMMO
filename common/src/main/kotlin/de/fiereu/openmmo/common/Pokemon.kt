@@ -28,7 +28,7 @@ data class Pokemon(
     val isRaidEncounter: Boolean,
     val caughtAt: LocalDateTime
 ) {
-  val nature: PokemonNature = PokemonNature.entries[seed % PokemonNature.entries.size]
+  val nature: PokemonNature = PokemonNature.entries[Math.floorMod(seed, PokemonNature.entries.size)]
 
   init {
     require(moves.size <= 4) { "A Pokemon can't have more than 4 moves" }
