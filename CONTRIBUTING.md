@@ -18,6 +18,32 @@ project context lives in the parent repo: `docs/CEO-NOTES.md` and
   PR touches it, flag it clearly so the reviewer checks for opcode clashes.
 - Don't force-push shared branches; don't rewrite `master` history.
 
+## IMPORTANT: this box's clones are SHARED, not per-agent
+
+`F:\coding\games\PokeBROMMO\openmmo` is **one working directory shared by
+everyone working on this machine** — it is not a personal checkout. Checking
+out a different branch here changes what *everyone* sees, and can collide
+with someone else's uncommitted work.
+
+**Before switching branches or committing, run `git status` first.** If you
+need your own branch checked out while someone else's WIP is sitting in the
+shared clone, make yourself an isolated worktree instead of touching the
+shared checkout:
+
+```bash
+git worktree add ../openmmo-<yourname-or-branch> -b <your-branch>
+```
+
+This gives you a separate directory with its own checkout (same `.git`
+history, `git worktree list` from any of them shows all of them). Remember
+to copy `.env` into it — it's gitignored, so worktrees don't share it.
+
+`F:\coding\games\PokeBROMMO\openmmo-run` is a **dedicated worktree pinned to
+`master`**, used for running the live dev servers via `scripts/dev-up.sh` /
+`dev-up.ps1` — use it (not the shared main clone) when you just need a
+running server to test against, so booting the stack never depends on
+whatever branch someone else has checked out.
+
 ## Local dev setup
 
 Needs **two JDKs**: JDK 25 for the server, JDK 21 for ByteDex (capture
