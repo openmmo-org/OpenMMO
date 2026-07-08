@@ -52,7 +52,12 @@ constructor(
                         identity = SessionIdentity.ServerRoot(rootKey),
                         applicationProtocol = GameProtocol,
                         applicationHandlerFactory = { handlerProvider.get() },
-                        options = PipelineOptions(checksumSize = config.checksumSize),
+                        options =
+                            PipelineOptions(
+                                checksumSize = config.checksumSize,
+                                diagnosticsCaptureEnabled = config.diagnosticsCapture,
+                                diagnosticsCaptureDir = config.diagnosticsCaptureDir,
+                            ),
                     )
                     val session = ch.session() ?: error("session missing after installPipeline")
                     ch.pipeline()

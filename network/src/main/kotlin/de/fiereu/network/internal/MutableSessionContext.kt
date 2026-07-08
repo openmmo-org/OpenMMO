@@ -23,6 +23,8 @@ internal class MutableSessionContext(
     override val side: Side,
     override val channel: Channel,
     internal val applicationProtocol: Protocol,
+    override val diagnosticsCaptureEnabled: Boolean = false,
+    override val diagnosticsCaptureDir: String = "captures",
 ) : SessionContext {
 
   override val remoteAddress: SocketAddress

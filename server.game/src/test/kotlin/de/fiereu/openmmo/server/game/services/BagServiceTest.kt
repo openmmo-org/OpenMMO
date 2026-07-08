@@ -73,6 +73,8 @@ private class CapturingBagSessionContext : SessionContext {
   override val phase: SessionPhase = SessionPhase.ESTABLISHED
   override val handshakeCompletedAt: Instant? = Instant.now()
   override val attributes: SessionAttributes = MapSessionAttributes()
+  override val diagnosticsCaptureEnabled: Boolean = false
+  override val diagnosticsCaptureDir: String = "captures"
 
   override fun send(packet: Any): ChannelFuture {
     sent.add(packet)

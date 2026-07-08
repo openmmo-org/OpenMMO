@@ -13,6 +13,8 @@ object ConfigLoader {
         checksumSize = config.getInt("server.checksumSize"),
         rootKeyResource = config.getString("server.rootKeyResource"),
         sessionSecret = secret.toByteArray(Charsets.UTF_8),
+        diagnosticsCapture = config.getBoolean("server.diagnosticsCapture"),
+        diagnosticsCaptureDir = config.getString("server.diagnosticsCaptureDir"),
     )
   }
 }

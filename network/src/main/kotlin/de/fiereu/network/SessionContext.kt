@@ -18,6 +18,12 @@ interface SessionContext {
 
   val attributes: SessionAttributes
 
+  /** See [PipelineOptions.diagnosticsCaptureEnabled]. */
+  val diagnosticsCaptureEnabled: Boolean
+
+  /** See [PipelineOptions.diagnosticsCaptureDir]. */
+  val diagnosticsCaptureDir: String
+
   fun send(packet: Any): ChannelFuture
 
   fun close(reason: () -> String = { "no reason" })

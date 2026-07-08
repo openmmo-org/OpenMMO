@@ -27,7 +27,14 @@ fun installPipeline(
     options: PipelineOptions = PipelineOptions(),
 ) {
   val channel = pipeline.channel()
-  val session = MutableSessionContext(side, channel, applicationProtocol)
+  val session =
+      MutableSessionContext(
+          side,
+          channel,
+          applicationProtocol,
+          diagnosticsCaptureEnabled = options.diagnosticsCaptureEnabled,
+          diagnosticsCaptureDir = options.diagnosticsCaptureDir,
+      )
   channel.attr(SESSION_KEY).set(session)
 
   val handshakeHandler: ProtocolHandler =

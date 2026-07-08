@@ -49,4 +49,34 @@ class CompressionTest :
         out.readBytes(read)
         read shouldBe payload
       }
+
+      test("encoder + decoder roundtrip for real captured id=2 316-byte payload") {
+        // Exact payload captured off the live game server for CharactersListPacket
+        // (captures/server-s2c-capture.log, id=2 len=316) -- the packet CEO flagged as
+        // implicated in the client's "invalid stored block lengths" DataFormatException.
+        val payloadHex =
+            "0100900100000000005400650073007400000000000100000000268f4e6a268f4e6a00000000" +
+                "0000000000b80b00000000000000000800000000000000000000000000000000000000000000" +
+                "000000000001330300040004000000000000000000000000000000ff0f000000000000000000" +
+                "000000000000000000000000000000ff0f000000000000000000000000000000000000000000" +
+                "0000000001285d6a8ee5a9ba1000000000000000000000000000000000000100000100010000" +
+                "00000000000000000054006500730074000000420075006c0062006100730061007500720000" +
+                "0000000519000000000000000000002100000000000000230000000000000000000000000000" +
+                "00000000000000000000000000004a29a5140000000000000000000000278f4e6a0000000000" +
+                "000000000000000000000000"
+        val payload = payloadHex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+        payload.size shouldBe 316
+        val enc = EmbeddedChannel(CompressionEncoder(threshold = 256))
+        enc.writeOutbound(Unpooled.wrappedBuffer(byteArrayOf(0x02.toByte()) + payload))
+        val compressed = enc.readOutbound<ByteBuf>()
+        compressed.getByte(0) shouldBe 0x02.toByte()
+        compressed.getByte(1) shouldBe 1
+        val dec = EmbeddedChannel(CompressionDecoder())
+        dec.writeInbound(compressed)
+        val out = dec.readInbound<ByteBuf>()
+        out.readByte() shouldBe 0x02.toByte()
+        val read = ByteArray(out.readableBytes())
+        out.readBytes(read)
+        read shouldBe payload
+      }
     })

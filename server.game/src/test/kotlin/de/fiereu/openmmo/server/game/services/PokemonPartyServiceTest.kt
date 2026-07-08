@@ -51,6 +51,9 @@ private class CapturingSessionContext : SessionContext {
   override val attributes: SessionAttributes
     get() = throw NotImplementedError()
 
+  override val diagnosticsCaptureEnabled: Boolean = false
+  override val diagnosticsCaptureDir: String = "captures"
+
   override fun send(packet: Any): ChannelFuture {
     sent.add(packet)
     return channel.newSucceededFuture()

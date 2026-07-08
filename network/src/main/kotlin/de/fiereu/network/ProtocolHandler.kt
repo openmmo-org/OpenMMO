@@ -1,6 +1,7 @@
 package de.fiereu.network
 
 import de.fiereu.bytecodec.Codec
+import de.fiereu.network.internal.DiagnosticsCaptureWriter
 import de.fiereu.network.internal.OutgoingPacket
 import de.fiereu.network.internal.SESSION_KEY
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -52,20 +53,49 @@ abstract class ProtocolHandler(
     try {
       if (msg.readableBytes() < 1) throw EmptyFrameException()
       val opcode = (msg.readByte().toInt() and 0xFF).toUByte()
+      if (side == Side.SERVER && session.diagnosticsCaptureEnabled) {
+        val hex = DiagnosticsCaptureWriter.hexOf(msg, msg.readerIndex(), msg.readableBytes())
+        DiagnosticsCaptureWriter.appendLine(
+            session.diagnosticsCaptureDir,
+            "server-c2s-capture.log",
+            "${System.currentTimeMillis()} ${protocol::class.simpleName ?: "UNKNOWN"} C2S " +
+                "id=${opcode.toInt()} len=${msg.readableBytes()} $hex",
+        )
+      }
       val registration = protocol.incomingRegistration(side, opcode)
       if (registration == null) {
         log.error { "No incoming codec for opcode 0x${opcode.toString(16)} on $side" }
         return
       }
-      val packet = decode(registration.codec, msg)
-      val trailing = msg.readableBytes()
-      if (trailing > 0) throw TrailingBytesException(opcode, trailing)
+      val packet =
+          try {
+            val decoded = decode(registration.codec, msg)
+            val trailing = msg.readableBytes()
+            if (trailing > 0) throw TrailingBytesException(opcode, trailing)
+            decoded
+          } catch (e: Exception) {
+            // This frame's boundary was already fixed by the length-prefixed frame decoder
+            // upstream, independent of anything below -- a codec choking on a packet whose
+            // wire layout we've mismodeled (wrong opcode mapping, unimplemented variant, etc.)
+            // cannot desync any OTHER packet's framing. Safe to skip this one packet rather
+            // than tear down the whole session over it. Only `Exception`, not `Throwable`: an
+            // `Error` (OOM, StackOverflow) still propagates and crashes loudly, as it should.
+            log.warn(e) {
+              "Failed to decode opcode 0x${opcode.toString(16)} on $side " +
+                  "(${msg.readableBytes()} byte(s) remaining); skipping packet"
+            }
+            return
+          }
       try {
         onPacket(PacketEvent(packet, session))
       } catch (t: Throwable) {
         onErrorInternal(ctx, t)
       }
     } catch (t: Throwable) {
+      // Don't let a real Error (OOM, StackOverflow) get funneled into onErrorInternal just
+      // because it propagated past the inner decode-only catch (which only catches
+      // Exception, on purpose) -- it must still escape and crash loudly.
+      if (t is Error) throw t
       onErrorInternal(ctx, t)
     } finally {
       msg.release()
@@ -100,6 +130,15 @@ abstract class ProtocolHandler(
   }
 
   override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
+    // An Error rethrown from channelRead's decode-failure path arrives here via Netty's own
+    // invoker (which catches Throwable escaping channelRead and redirects it to
+    // exceptionCaught). Forward it past this handler instead of routing it into the same
+    // graceful onError/session-close path as a real Exception -- letting it reach the
+    // pipeline tail is what actually surfaces it instead of quietly treating it as recoverable.
+    if (cause is Error) {
+      ctx.fireExceptionCaught(cause)
+      return
+    }
     onErrorInternal(ctx, cause)
   }
 

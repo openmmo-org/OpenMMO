@@ -41,9 +41,12 @@ bin/
 ### Mac OS ###
 .DS_Store
 
-+### Local environment / secrets ###
-+# Never commit local config or secrets. Use `.env.example` as the template.
-+.env
-+.env.*
-+!.env.example
-+docker-compose.override.yml
+### Local environment / secrets ###
+# Never commit local config or secrets. Use `.env.example` as the template.
+.env
+.env.*
+!.env.example
+docker-compose.override.yml
+
+### Dev-diagnostics capture taps (local, burner-account clean-room protocol reversing only) ###
+/captures/

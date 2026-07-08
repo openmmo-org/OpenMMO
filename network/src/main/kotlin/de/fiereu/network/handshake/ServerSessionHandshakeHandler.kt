@@ -69,7 +69,12 @@ internal class ServerSessionHandshakeHandler(
         pipeline.addBefore(
             PipelineNames.PROTOCOL_HANDLER,
             PipelineNames.COMPRESSION_ENCODER,
-            CompressionEncoder(options.compressionThreshold),
+            CompressionEncoder(
+                threshold = options.compressionThreshold,
+                protocolLabel = applicationProtocol::class.simpleName ?: "UNKNOWN",
+                captureEnabled = options.diagnosticsCaptureEnabled,
+                captureDir = options.diagnosticsCaptureDir,
+            ),
         )
       }
       val appHandler = applicationHandlerFactory()
