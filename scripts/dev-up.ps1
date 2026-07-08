@@ -13,7 +13,14 @@ param(
     [switch]$Stop
 )
 
-$ErrorActionPreference = "Stop"
+# NOTE: deliberately NOT setting $ErrorActionPreference = "Stop" globally.
+# Native tools (docker, docker compose) routinely write normal progress/status
+# text to stderr; under strict Stop preference PowerShell 5.1 promotes that
+# into a terminating NativeCommandError even on success (bit us once already
+# -- docker compose's "Network ... Creating" progress line killed the script
+# mid-boot). Cmdlet-level checks below use explicit -ErrorAction / $LASTEXITCODE
+# instead, and every failure path already calls `exit 1` explicitly.
+$ErrorActionPreference = "Continue"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoDir = Split-Path -Parent $ScriptDir
@@ -46,7 +53,10 @@ if ($Stop) {
     $env:JAVA_HOME = Find-Jdk25
     Push-Location $RepoDir
     try { & .\gradlew.bat --stop } catch {}
-    try { docker compose --env-file .env down } catch {}
+    # Routed through cmd.exe: docker's stderr progress chatter otherwise gets
+    # wrapped as PowerShell NativeCommandErrors (5.1 quirk) and taints the
+    # overall exit code even on success, which confuses automated callers.
+    cmd /c "docker compose -p openmmo --env-file .env down 2>&1"
     Pop-Location
     Write-Host "Stopped."
     exit 0
@@ -77,11 +87,23 @@ if (-not (Test-Path ".env")) {
     Write-Error ".env missing. Copy .env.example to .env and fill in values first."
     exit 1
 }
-docker compose --env-file .env up -d
+# Routed through cmd.exe: docker's stderr progress chatter otherwise gets
+# wrapped as PowerShell NativeCommandErrors (5.1 quirk) and taints the
+# overall exit code even on success, which confuses automated callers.
+cmd /c "docker compose -p openmmo --env-file .env up -d 2>&1"
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "docker compose up failed (exit $LASTEXITCODE). Check Docker Desktop is running."
+    Pop-Location
+    exit 1
+}
 foreach ($db in "login-db", "game-db") {
     Write-Host -NoNewline "  waiting for $db to be healthy..."
     for ($i = 0; $i -lt 30; $i++) {
-        $status = docker inspect --format '{{.State.Health.Status}}' $db 2>$null
+        # docker-compose.yml declares no HEALTHCHECK for these services, so
+        # `docker inspect --format '{{.State.Health.Status}}'` fails with a
+        # template-parsing error (no .State.Health key) instead of returning
+        # empty. Treat any failure the same as "no healthcheck defined" -- ok.
+        $status = cmd /c "docker inspect --format `"{{.State.Health.Status}}`" $db 2>nul"
         if ($status -eq "healthy" -or -not $status) { break }
         Start-Sleep -Seconds 1
     }
@@ -124,6 +146,10 @@ if ($loginReady -and $gameReady) {
     Write-Host ""
     Write-Host "Stack is up. login=admin/admin, connect the patched client at 127.0.0.1."
     Write-Host "Logs: $loginLog , $gameLog"
+    # Explicit exit 0: PowerShell's default process exit code reflects whether
+    # ANY error record was written during the session (e.g. docker's routine
+    # stderr chatter), not just whether this script's own logic succeeded.
+    exit 0
 } else {
     Write-Error "TIMED OUT waiting for servers. Check .devlogs\*.log for progress/errors."
     exit 1

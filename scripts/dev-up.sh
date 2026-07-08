@@ -53,7 +53,7 @@ if [ "$STOP" = "1" ]; then
   JAVA_HOME="$(find_jdk25)"
   export JAVA_HOME
   (cd "$REPO_DIR" && ./gradlew --stop) || true
-  (cd "$REPO_DIR" && docker compose --env-file .env down) || true
+  (cd "$REPO_DIR" && docker compose -p openmmo --env-file .env down) || true
   echo "Stopped."
   exit 0
 fi
@@ -86,7 +86,7 @@ if [ ! -f .env ]; then
   echo "  ERROR: .env missing. cp .env.example .env and fill in values first." >&2
   exit 1
 fi
-docker compose --env-file .env up -d
+docker compose -p openmmo --env-file .env up -d
 for db in login-db game-db; do
   echo -n "  waiting for $db to be healthy..."
   for _ in $(seq 1 30); do
