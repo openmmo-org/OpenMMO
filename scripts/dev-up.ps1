@@ -67,6 +67,31 @@ $env:JAVA_HOME = Find-Jdk25
 $env:PATH = "$($env:JAVA_HOME)\bin;$($env:PATH)"
 Write-Host "JAVA_HOME=$($env:JAVA_HOME)"
 
+# Gradle's daemon registry accumulates one entry per stopped daemon and is
+# never auto-pruned. On a box with many agents/worktrees restarting servers
+# all day, this grows large enough that starting fresh daemons against it
+# stalls past any reasonable timeout with ZERO output (no crash, no
+# stacktrace -- just silence). Bit us for real once already. Clear it
+# proactively if it's gotten big.
+$wrapperProps = Join-Path $RepoDir "gradle\wrapper\gradle-wrapper.properties"
+if (Test-Path $wrapperProps) {
+    $versionMatch = Select-String -Path $wrapperProps -Pattern 'gradle-([0-9.]+)-bin' | Select-Object -First 1
+    if ($versionMatch) {
+        $gradleVersion = $versionMatch.Matches[0].Groups[1].Value
+        $registry = Join-Path $env:USERPROFILE ".gradle\daemon\$gradleVersion\registry.bin"
+        if (Test-Path $registry) {
+            Push-Location $RepoDir
+            $statusOut = cmd /c ".\gradlew.bat --status 2>nul"
+            Pop-Location
+            $stoppedCount = ($statusOut | Select-String "STOPPED").Count
+            if ($stoppedCount -gt 15) {
+                Write-Host "  $stoppedCount stopped daemons registered -- clearing the registry (known stall cause)"
+                Remove-Item -Force -ErrorAction SilentlyContinue $registry, "$registry.lock"
+            }
+        }
+    }
+}
+
 Write-Host "== 2/5: checking ports 2106/7777/7778 =="
 foreach ($port in 2106, 7777, 7778) {
     $pid_ = Get-PortOwnerPid -Port $port

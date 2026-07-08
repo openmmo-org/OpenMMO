@@ -13,9 +13,13 @@ project context lives in the parent repo: `docs/CEO-NOTES.md` and
   `daycare`, ...). Branch off `master`.
 - Open a PR into `master` when the handler compiles, runs, and the target
   action no longer crashes the patched client against your local server.
-- `master` is protected: PRs require **1 approving review** before merge.
-  The **packet registry** (`protocols.game`) is a shared surface — if your
-  PR touches it, flag it clearly so the reviewer checks for opcode clashes.
+- `master` is protected: PRs required, direct pushes blocked (enforced for
+  everyone, admins included). GitHub's native approval count is 0 — every
+  agent here shares one GitHub identity, so self-approval isn't possible;
+  the real review gate is process (Codex-Review clears on substance, CEO
+  approves + merges). The **packet registry** (`protocols.game`) is a shared
+  surface — if your PR touches it, flag it clearly so the reviewer checks
+  for opcode clashes.
 - Don't force-push shared branches; don't rewrite `master` history.
 
 ## IMPORTANT: this box's clones are SHARED, not per-agent
@@ -61,6 +65,41 @@ docker compose --env-file .env up -d                  # login-db :20011, game-db
 ```
 
 Test login: `admin` / `admin` (seeded).
+
+## Integration test harness: server-side assertions
+
+`scripts/assert.sh` (+ `.ps1` twin) is the server-side half of the
+integration harness — it pairs with a client-side "did it crash" check
+(currently PokeAgent-Bot's burner-driving MCP tools) to verify a handler
+actually did the right thing, not just that the client didn't crash.
+
+Four subcommands, all exit 0 on pass / 1 on fail:
+- `mark [login|game]` — print a log-line checkpoint. Take one *before* the
+  driven action.
+- `check-clean --since N [--log login|game] [--strict]` — fail if any new
+  line since the checkpoint looks like a crash (`Exception`/`ERROR`/
+  `FATAL`/`Caused by:`). `WARN` lines don't fail by default — the codebase
+  uses `log.warn` for expected bad-input cases, not crashes; add `--strict`
+  to fail on those too.
+- `wait-for --since N --pattern REGEX [--log login|game] [--timeout SECS]`
+  — poll for an expected log line to appear. This is the "packet X was
+  handled" proxy: OpenMMO's services log a descriptive line per handled
+  packet (see `LoginService.kt`, `DialogService.kt`), so match on that
+  until a real protocol-level test client exists.
+- `db-query --container NAME --db/-Database NAME --user NAME --sql SQL` —
+  read-only Postgres query, for "state persisted" checks once a handler
+  actually writes to Postgres (as of the T0 player/party handler, nothing
+  does yet — accounts are seeded in-memory).
+
+Worked example against the T0 player-state handler merged in PR #4 (bash;
+PowerShell is the same shape with `-Since`/`-Log`/etc.):
+
+```bash
+mark=$(scripts/assert.sh mark game)
+# ... drive the action: client requests player state (character select) ...
+scripts/assert.sh wait-for --since "$mark" --pattern "Sending LoadEntity for character" --timeout 15
+scripts/assert.sh check-clean --since "$mark"
+```
 
 **Known bumps:**
 - If Gradle throws `The supplied javaHome seems to be invalid` referencing a

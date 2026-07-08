@@ -64,6 +64,24 @@ export JAVA_HOME
 export PATH="$JAVA_HOME/bin:$PATH"
 echo "JAVA_HOME=$JAVA_HOME"
 
+# Gradle's daemon registry accumulates one entry per stopped daemon and is
+# never auto-pruned. On a box with many agents/worktrees restarting servers
+# all day, this grows large enough that starting fresh daemons against it
+# stalls past any reasonable timeout with ZERO output (no crash, no
+# stacktrace -- just silence). Bit us for real once already. Clear it
+# proactively if it's gotten big.
+GRADLE_VERSION=$(grep -o 'gradle-[0-9.]*-bin' "$REPO_DIR/gradle/wrapper/gradle-wrapper.properties" 2>/dev/null | sed 's/^gradle-//;s/-bin$//')
+if [ -n "$GRADLE_VERSION" ]; then
+  REGISTRY="$HOME/.gradle/daemon/$GRADLE_VERSION/registry.bin"
+  if [ -f "$REGISTRY" ]; then
+    STOPPED_COUNT=$(cd "$REPO_DIR" && ./gradlew --status 2>/dev/null | grep -c STOPPED || true)
+    if [ "${STOPPED_COUNT:-0}" -gt 15 ]; then
+      echo "  $STOPPED_COUNT stopped daemons registered -- clearing the registry (known stall cause)"
+      rm -f "$REGISTRY" "${REGISTRY}.lock"
+    fi
+  fi
+fi
+
 echo "== 2/5: checking ports 2106/7777/7778 =="
 for port in 2106 7777 7778; do
   pid=$(port_owner_pid "$port" || true)
