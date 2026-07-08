@@ -6,7 +6,9 @@ import de.fiereu.openmmo.common.auth.SessionTokenVerifier
 import de.fiereu.openmmo.common.io.PemKeyLoader
 import de.fiereu.openmmo.common.io.resource
 import de.fiereu.openmmo.server.game.battle.BattleSessionClient
+import de.fiereu.openmmo.server.game.battle.CaughtPokemonSink
 import de.fiereu.openmmo.server.game.config.GameServerConfig
+import de.fiereu.openmmo.server.game.services.PokemonPartyService
 import io.netty.channel.EventLoopGroup
 import io.netty.channel.MultiThreadIoEventLoopGroup
 import io.netty.channel.nio.NioIoHandler
@@ -55,4 +57,14 @@ object GameServerModule {
     val port = System.getenv("BATTLE_SERVICE_PORT")?.toIntOrNull() ?: 7801
     return BattleSessionClient(host, port)
   }
+
+  /**
+   * Battle catch persistence → the merged PokemonPartyService.addCaughtPokemon (emits S2C 0x14).
+   */
+  @Provides
+  @Singleton
+  fun caughtPokemonSink(partyService: PokemonPartyService): CaughtPokemonSink =
+      CaughtPokemonSink { characterId, pokemon ->
+        partyService.addCaughtPokemon(characterId, pokemon)
+      }
 }

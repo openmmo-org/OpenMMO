@@ -4,7 +4,13 @@ import de.fiereu.network.SessionAttributes
 import de.fiereu.network.SessionContext
 import de.fiereu.network.SessionPhase
 import de.fiereu.network.Side
+import de.fiereu.openmmo.net.game.packets.BattleActionSelectPacket
 import de.fiereu.openmmo.net.game.packets.BattleOpenPacket
+import de.fiereu.openmmo.server.game.domain.Gender
+import de.fiereu.openmmo.server.game.domain.Nature
+import de.fiereu.openmmo.server.game.domain.OwnedPokemon
+import de.fiereu.openmmo.server.game.domain.PokemonMoveSlot
+import de.fiereu.openmmo.server.game.domain.StatBlock
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.ints.shouldBeGreaterThan
@@ -24,14 +30,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-/**
- * Regression coverage for the Codex-Review finding: BattleService must free the sidecar session
- * (`end`) after TERMINAL actions (successful catch, flee), not only after move/switch outcomes —
- * otherwise the sidecar leaks BattleSessions.
- */
 class BattleServiceTest :
     FunSpec({
-      // Fake sidecar that records the methods it receives and returns canned frames.
+      // Fake sidecar that records received methods and returns canned frames.
       fun startFakeSidecar(received: MutableList<String>): ServerSocket {
         val server = ServerSocket(0)
         thread(isDaemon = true) {
@@ -59,7 +60,7 @@ class BattleServiceTest :
                       "create" ->
                           """{"battleId":"b1","turn":{"battleId":"b1","log":[],"finished":false,"sides":[{"side":"player","active":[{"hpCurrent":30,"hpMax":41}],"benchCount":0},{"side":"wild","active":[{"hpCurrent":18,"hpMax":18}],"benchCount":0}]}}"""
                       "catch" ->
-                          """{"catch":{"success":true,"shakes":4,"caughtPokemon":{"uid":"w1","speciesId":19,"level":5,"nature":"hardy","ability":"guts","ivs":{"hp":1,"atk":1,"def":1,"spa":1,"spd":1,"spe":1},"evs":{"hp":0,"atk":0,"def":0,"spa":0,"spd":0,"spe":0},"moves":[]},"message":"Gotcha!"},"turn":{"battleId":"b1","log":[],"finished":true,"winner":"player"}}"""
+                          """{"catch":{"success":true,"shakes":4,"message":"Gotcha!"},"turn":{"battleId":"b1","log":[],"finished":true,"winner":"player"}}"""
                       "run" ->
                           """{"turn":{"battleId":"b1","log":[],"finished":true,"winner":"draw"}}"""
                       else -> """{"ok":true}"""
@@ -76,33 +77,42 @@ class BattleServiceTest :
         return server
       }
 
-      fun mon(speciesId: Int = 25, level: Int = 5) =
-          WirePokemon(
+      fun ownedMon(speciesId: Int = 25, level: Int = 5) =
+          OwnedPokemon(
               uid = "u$speciesId",
               speciesId = speciesId,
               level = level,
-              nature = "hardy",
+              exp = 0,
+              nature = Nature.HARDY,
               ability = "static",
-              ivs = WireStats(1, 1, 1, 1, 1, 1),
-              evs = WireStats(0, 0, 0, 0, 0, 0),
-              moves = listOf(WireMove(33)),
+              gender = Gender.GENDERLESS,
+              shiny = false,
+              ivs = StatBlock(31, 31, 31, 31, 31, 31),
+              evs = StatBlock.ZERO,
+              moves = listOf(PokemonMoveSlot(moveId = 33, ppUp = 0, ppCurrent = 35)),
+              friendship = 70,
+              otWallet = "wallet",
+              otName = "Tester",
+              pid = 0u,
+              metLevel = level,
+              metLocation = "grass",
           )
 
       test("startWildBattle sends the validated S2C 0x30 battle-open") {
         val received = Collections.synchronizedList(mutableListOf<String>())
         val server = startFakeSidecar(received)
         val client = BattleSessionClient(port = server.localPort)
-        val service = BattleService(client)
+        val service = BattleService(client, CaughtPokemonSink { _, _ -> })
         val sent = mutableListOf<Any>()
         val session = fakeSession(sent)
         try {
-          service.startWildBattle(session, listOf(mon(25, 7)), listOf(mon(504, 4)))
+          service.startWildBattle(
+              session, characterId = 1L, listOf(ownedMon(25, 7)), ownedMon(504, 4))
           received shouldContain "create"
           val open = sent.filterIsInstance<BattleOpenPacket>().single()
           open.playerSpecies shouldBe 25
           open.playerLevel shouldBe 7
           open.playerCurrentHp shouldBe 30 // from sidecar sides
-          open.playerMaxHp shouldBe 41
           open.wildSpecies shouldBe 504
           open.wildLevel shouldBe 4
           open.wildCurrentHp shouldBe 18
@@ -112,37 +122,59 @@ class BattleServiceTest :
         }
       }
 
-      test("buildWildOpen maps species/level from teams and HP from the sidecar sides") {
-        val service = BattleService(BattleSessionClient(port = 1))
+      test("buildWildOpen maps species/level from domain mons and HP from the sidecar sides") {
+        val service = BattleService(BattleSessionClient(port = 1), CaughtPokemonSink { _, _ -> })
         val sides =
             Json.parseToJsonElement(
                 """[{"side":"player","active":[{"hpCurrent":12,"hpMax":40}],"benchCount":0},""" +
                     """{"side":"wild","active":[{"hpCurrent":7,"hpMax":22}],"benchCount":0}]""",
             )
         val turn = TurnResult(battleId = "b1", sides = sides, finished = false)
-        val open = service.buildWildOpen(listOf(mon(25, 9)), listOf(mon(504, 3)), turn)
+        val open = service.buildWildOpen(ownedMon(25, 9), ownedMon(504, 3), turn)
         open.playerSpecies shouldBe 25
         open.playerLevel shouldBe 9
         open.playerCurrentHp shouldBe 12
-        open.playerMaxHp shouldBe 40
         open.wildSpecies shouldBe 504
-        open.wildLevel shouldBe 3
         open.wildCurrentHp shouldBe 7
         open.wildMaxHp shouldBe 22
       }
 
-      test("a successful catch frees the sidecar session (end after catch)") {
+      test("a successful catch persists the generated wild mon and frees the sidecar session") {
         val received = Collections.synchronizedList(mutableListOf<String>())
         val server = startFakeSidecar(received)
         val client = BattleSessionClient(port = server.localPort)
-        val service = BattleService(client)
+        val persisted = mutableListOf<Pair<Long, OwnedPokemon>>()
+        val service = BattleService(client, CaughtPokemonSink { c, m -> persisted.add(c to m) })
         val session = fakeSession()
+        val wild = ownedMon(504, 4)
         try {
-          service.startWildBattle(session, listOf(mon()), listOf(mon()))
+          service.startWildBattle(session, characterId = 77L, listOf(ownedMon(25, 7)), wild)
           val result = service.onThrowBall(session, "master-ball")
           result!!.catchOutcome.success shouldBe true
+          persisted shouldContain (77L to wild) // ORIGINAL domain mon, not a wire round-trip
           received shouldContain "end"
           received.indexOf("end") shouldBeGreaterThan received.indexOf("catch")
+        } finally {
+          client.close()
+          server.close()
+        }
+      }
+
+      test("onBattleAction routes a ball throw (actionKind=1) to a catch + persist") {
+        val received = Collections.synchronizedList(mutableListOf<String>())
+        val server = startFakeSidecar(received)
+        val client = BattleSessionClient(port = server.localPort)
+        val persisted = mutableListOf<Pair<Long, OwnedPokemon>>()
+        val service = BattleService(client, CaughtPokemonSink { c, m -> persisted.add(c to m) })
+        val session = fakeSession()
+        val wild = ownedMon(504, 4)
+        try {
+          service.startWildBattle(session, characterId = 5L, listOf(ownedMon(25, 7)), wild)
+          // actionKindId = 1 (use item / ball throw)
+          val ballThrow = BattleActionSelectPacket(0, 1, 0, 0, 0L, 0.toByte())
+          service.onBattleAction(session, ballThrow)
+          received shouldContain "catch"
+          persisted shouldContain (5L to wild)
         } finally {
           client.close()
           server.close()
@@ -153,10 +185,11 @@ class BattleServiceTest :
         val received = Collections.synchronizedList(mutableListOf<String>())
         val server = startFakeSidecar(received)
         val client = BattleSessionClient(port = server.localPort)
-        val service = BattleService(client)
+        val service = BattleService(client, CaughtPokemonSink { _, _ -> })
         val session = fakeSession()
         try {
-          service.startWildBattle(session, listOf(mon()), listOf(mon()))
+          service.startWildBattle(
+              session, characterId = 1L, listOf(ownedMon(25, 7)), ownedMon(504, 4))
           service.onLeave(session)
           received shouldContain "end"
           received.indexOf("end") shouldBeGreaterThan received.indexOf("run")

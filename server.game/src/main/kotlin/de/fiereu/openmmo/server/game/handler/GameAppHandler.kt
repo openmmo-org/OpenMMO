@@ -7,6 +7,7 @@ import de.fiereu.openmmo.common.enums.ChatType
 import de.fiereu.openmmo.common.enums.Language
 import de.fiereu.openmmo.net.game.GameProtocol
 import de.fiereu.openmmo.net.game.packets.AddFriendPacket
+import de.fiereu.openmmo.net.game.packets.BattleActionSelectPacket
 import de.fiereu.openmmo.net.game.packets.BlockPlayerPacket
 import de.fiereu.openmmo.net.game.packets.CancelSocialInteractionPacket
 import de.fiereu.openmmo.net.game.packets.ChatMessagePacket
@@ -26,6 +27,7 @@ import de.fiereu.openmmo.net.game.packets.RequestPlayerPacket
 import de.fiereu.openmmo.net.game.packets.RequestSocialProfilePacket
 import de.fiereu.openmmo.net.game.packets.SelectCharacterPacket
 import de.fiereu.openmmo.net.game.packets.UnblockPlayerPacket
+import de.fiereu.openmmo.server.game.battle.BattleService
 import de.fiereu.openmmo.server.game.services.DialogService
 import de.fiereu.openmmo.server.game.services.InteractionService
 import de.fiereu.openmmo.server.game.services.LoginService
@@ -50,6 +52,7 @@ constructor(
     private val interactionService: InteractionService,
     private val multiplayerService: MultiplayerService,
     private val socialService: SocialService,
+    private val battleService: BattleService,
     private val sessionRegistry: SessionRegistry,
     private val characterStore: CharacterStore,
     scope: CoroutineScope,
@@ -76,6 +79,10 @@ constructor(
     on<FriendProfileRequestPacket> { event -> socialService.onFriendProfileRequest(event) }
     on<RequestSocialProfilePacket> { event -> socialService.onRequestSocialProfile(event) }
     on<CancelSocialInteractionPacket> { event -> socialService.onCancelSocialInteraction(event) }
+
+    onSuspend<BattleActionSelectPacket> { event ->
+      battleService.onBattleAction(event.session, event.packet)
+    }
 
     on<KeepAlivePacket> { event -> event.session.send(event.packet) }
     on<ChatMessagePacket> { event -> onChatMessage(event) }
