@@ -37,6 +37,7 @@ constructor(
     // still-undecoded entry shape and is intentionally not emitted until a follow-up capture lands.
     ctx.send(BagInventoryPacket(CONTAINER_MAIN, itemEntries(stored.items)))
     ctx.send(BagInventoryPacket(CONTAINER_SMALL, emptyList()))
+    bagLog.info { "Sending BagInventory for character $charId" }
   }
 
   private fun itemEntries(items: Map<Int, Int>): List<BagItemEntry> =
