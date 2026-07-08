@@ -107,12 +107,28 @@ fi
 docker compose -p openmmo --env-file .env up -d
 for db in login-db game-db; do
   echo -n "  waiting for $db to be healthy..."
+  confirmed=0
   for _ in $(seq 1 30); do
-    status=$(docker inspect --format '{{.State.Health.Status}}' "$db" 2>/dev/null || echo "unknown")
-    if [ "$status" = "healthy" ] || [ "$status" = "unknown" ]; then break; fi
+    # docker-compose.yml declares no HEALTHCHECK, so a failed/empty result is
+    # a legitimate fast "ok, nothing to wait on". A `docker inspect` call
+    # that itself HANGS (Docker Desktop/WSL2 hiccup) is different -- seen in
+    # the wild as a multi-minute stall on one container while its sibling
+    # passed instantly. `timeout` bounds each attempt; exit 124 means the
+    # call itself stalled and must NOT be treated as ok (Codex-Review caught
+    # the PowerShell twin doing exactly that).
+    status=$(timeout 5 docker inspect --format '{{.State.Health.Status}}' "$db" 2>/dev/null)
+    rc=$?
+    if [ $rc -ne 124 ] && { [ "$status" = "healthy" ] || [ -z "$status" ]; }; then
+      confirmed=1
+      break
+    fi
     sleep 1
   done
-  echo " ok"
+  if [ "$confirmed" = "1" ]; then
+    echo " ok"
+  else
+    echo " WARNING: $db health check never completed cleanly after 30 attempts (docker inspect kept stalling/timing out) -- proceeding anyway, but this is the known intermittent-slowness issue, not a pass" >&2
+  fi
 done
 
 echo "== 4/5: starting login + game servers (background, logs in .devlogs/) =="

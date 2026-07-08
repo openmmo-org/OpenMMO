@@ -101,6 +101,12 @@ scripts/assert.sh wait-for --since "$mark" --pattern "Sending LoadEntity for cha
 scripts/assert.sh check-clean --since "$mark"
 ```
 
+Or use the ready-made recipe for this exact handler —
+`scripts/tests/assert-t0-player-party.sh` (+ `.ps1`): takes its own
+checkpoint, polls for the LoadEntity line (optionally scoped to a
+`--character NAME`), then asserts clean logs. Run it, then drive the
+action (by hand or via a bot) any time before its timeout.
+
 **Known bumps:**
 - If Gradle throws `The supplied javaHome seems to be invalid` referencing a
   path that no longer exists, a stale daemon registry is the cause — delete
@@ -113,6 +119,23 @@ scripts/assert.sh check-clean --since "$mark"
   -Porg.gradle.java.installations.paths=<jdk21>,<jdk25>` when a task needs
   toolchain resolution across both JDKs (e.g. building ByteDex alongside this
   repo).
+- **game-db health check occasionally slow:** `dev-up`'s Postgres
+  healthcheck-tolerant probe has hit an intermittent multi-minute stall
+  specifically on `game-db` (not `login-db`) during a live capture session,
+  even though both containers respond in ~180ms in isolated testing —
+  looks like an occasional Docker Desktop/WSL2 hiccup, not a code bug.
+  `dev-up.ps1` now hard-caps each probe attempt at 5s via a background job
+  (bash's fallback already tolerated failures), so this can no longer stall
+  the whole script, but the root intermittent slowness itself is still an
+  open low-priority follow-up if it recurs.
+- **Feature worktrees go stale on infra-only fixes:** a worktree pinned to
+  a feature branch (e.g. `openmmo` → `feat/domain-ports`) only gets
+  `master`'s fixes if someone merges/rebases master into it — which nobody
+  does for a personal feature branch. This bit us once: a stale copy of
+  `dev-up.ps1` sitting in a feature worktree looked like a new bug when it
+  was really just missing a day's worth of fixes. **Always invoke infra
+  scripts (`dev-up`, `assert`) from `openmmo-run`** (pinned to `master`,
+  always current) — never from a feature worktree.
 
 ## Ban safety (absolute)
 

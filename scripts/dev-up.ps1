@@ -123,16 +123,43 @@ if ($LASTEXITCODE -ne 0) {
 }
 foreach ($db in "login-db", "game-db") {
     Write-Host -NoNewline "  waiting for $db to be healthy..."
+    $confirmed = $false
     for ($i = 0; $i -lt 30; $i++) {
         # docker-compose.yml declares no HEALTHCHECK for these services, so
         # `docker inspect --format '{{.State.Health.Status}}'` fails with a
         # template-parsing error (no .State.Health key) instead of returning
-        # empty. Treat any failure the same as "no healthcheck defined" -- ok.
-        $status = cmd /c "docker inspect --format `"{{.State.Health.Status}}`" $db 2>nul"
-        if ($status -eq "healthy" -or -not $status) { break }
+        # empty. That's a legitimate, fast "ok, no healthcheck to wait on".
+        #
+        # Hard per-call timeout: a `docker inspect` call that itself hangs
+        # (Docker Desktop/WSL2 hiccup, daemon contention) would otherwise
+        # defeat this loop's whole 30-iteration budget by blocking on one
+        # iteration indefinitely -- seen in the wild as an unexplained
+        # multi-minute stall on one specific container while its sibling
+        # passed instantly. CRITICAL: a timed-out job is NOT the same as an
+        # empty result -- treating "the probe never came back" as "ok" would
+        # defeat the entire point of the check (Codex-Review caught this).
+        # Only a job that actually COMPLETED with an empty/healthy result
+        # counts as ok; a timeout must retry, never silently pass.
+        $job = Start-Job -ScriptBlock {
+            param($container)
+            cmd /c "docker inspect --format `"{{.State.Health.Status}}`" $container 2>nul"
+        } -ArgumentList $db
+        $completedJob = Wait-Job -Job $job -Timeout 5
+        if ($completedJob) {
+            $status = Receive-Job -Job $job
+            Remove-Job -Job $job -Force -ErrorAction SilentlyContinue
+            if ($status -eq "healthy" -or -not $status) { $confirmed = $true; break }
+        } else {
+            Remove-Job -Job $job -Force -ErrorAction SilentlyContinue
+            Write-Host -NoNewline " (stall, retry $($i + 1))"
+        }
         Start-Sleep -Seconds 1
     }
-    Write-Host " ok"
+    if ($confirmed) {
+        Write-Host " ok"
+    } else {
+        Write-Warning "  $db health check never completed cleanly after 30 attempts (Docker inspect kept stalling) -- proceeding anyway, but this is the known intermittent-slowness issue, not a pass"
+    }
 }
 
 Write-Host "== 4/5: starting login + game servers (background, logs in .devlogs\) =="
