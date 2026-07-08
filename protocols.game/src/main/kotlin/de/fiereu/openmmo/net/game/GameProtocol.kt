@@ -305,8 +305,8 @@ object GameProtocol : Protocol() {
 
     s2c<NamedCategoryEntriesPacket>(0x6Fu, NamedCategoryEntriesPacketCodec)
 
-    c2s<StorageBoxRequestPacket>(0x70u, StorageBoxRequestPacketCodec)
-    s2c<GtlMarketListingsPacket>(0x70u, GtlMarketListingsPacketCodec)
+    c2s<BagOpenRequestPacket>(0x70u, BagOpenRequestPacketCodec)
+    s2c<BagInventoryPacket>(0x70u, BagInventoryPacketCodec)
 
     c2s<GtlPurchaseListingPacket>(0x71u, GtlPurchaseListingPacketCodec)
     s2c<MatchmakingRentalsPacket>(0x71u, MatchmakingRentalsPacketCodec)
