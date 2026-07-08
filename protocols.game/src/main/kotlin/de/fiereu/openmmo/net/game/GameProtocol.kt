@@ -61,7 +61,7 @@ object GameProtocol : Protocol() {
     bidi<PokemonContainerPacket>(0x13u, PokemonContainerPacketCodec)
 
     c2s<EntityActionRequestPacket>(0x14u, EntityActionRequestPacketCodec)
-    s2c<SocialListEntryAddPacket>(0x14u, SocialListEntryAddPacketCodec)
+    s2c<SinglePokemonAddPacket>(0x14u, SinglePokemonAddPacketCodec)
 
     c2s<ChatLocalePreferencesPacket>(0x15u, ChatLocalePreferencesPacketCodec)
     s2c<SocialListEntryRemovePacket>(0x15u, SocialListEntryRemovePacketCodec)

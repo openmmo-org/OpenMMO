@@ -13,6 +13,8 @@ import de.fiereu.openmmo.net.game.packets.LocalPlayerStatePacket
 import de.fiereu.openmmo.net.game.packets.LocalPlayerStatePacketCodec
 import de.fiereu.openmmo.net.game.packets.PokemonContainerPacket
 import de.fiereu.openmmo.net.game.packets.PokemonContainerPacketCodec
+import de.fiereu.openmmo.net.game.packets.SinglePokemonAddPacket
+import de.fiereu.openmmo.net.game.packets.SinglePokemonAddPacketCodec
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
@@ -104,6 +106,16 @@ class T0PlayerPartyPacketsTest :
         decoded.pokemon.first().iVs.spAtk shouldBe 0
         decoded.pokemon.first().iVs.spDef shouldBe 0
         decoded.pokemon.first().iVs.spd shouldBe 0
+      }
+
+      test("SinglePokemonAddPacket encodes validated single-add header") {
+        val bytes =
+            SinglePokemonAddPacketCodec.encodeToBytes(SinglePokemonAddPacket(sampleWirePokemon()))
+        val decoded = SinglePokemonAddPacketCodec.decodeBytes(bytes)
+
+        bytes[0] shouldBe 0.toByte()
+        decoded.pokemon.dexId shouldBe 1
+        decoded.pokemon.container shouldBe PokemonContainer.PARTY
       }
 
       test("LoadEntityPacket encodes entity id and follower flag") {
