@@ -1,10 +1,17 @@
 package de.fiereu.openmmo.server.game.battle
 
 import de.fiereu.network.SessionContext
+import de.fiereu.openmmo.net.game.packets.BattleOpenPacket
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 private val log = KotlinLogging.logger {}
 
@@ -41,9 +48,54 @@ class BattleService @Inject constructor(private val sidecar: BattleSessionClient
     val created = sidecar.create(playerTeam, wildTeam)
     battleBySession[session] = created.battleId
     log.info { "Wild battle ${created.battleId} started (${playerTeam.size}v${wildTeam.size})" }
-    // TODO(capture): emit BattleStartScene(0xCA)/BattleScreenOpen(0x47) + send-out
-    //   packets from created.turn; see docs/BATTLE-PACKET-MAP.md.
+    // Open the battle on the client with the validated S2C 0x30 battle-init.
+    session.send(buildWildOpen(playerTeam, wildTeam, created.turn))
+    // TODO(PR#9): translate created.turn.log + subsequent turn logs → the S2C event
+    //   codecs (0x33/0x16/0x79/0x31); see docs/BATTLE-PACKET-MAP.md.
     return created
+  }
+
+  /**
+   * Build the S2C `0x30` battle-open from the sidecar's opening snapshot: species/level come from
+   * the team DTOs, current/max HP from the sidecar `sides`. TODO(session): the player name + entity
+   * ids are still template-derived in [BattleOpenPacket.wild] — patch them from the live session
+   * next.
+   */
+  fun buildWildOpen(
+      playerTeam: List<WirePokemon>,
+      wildTeam: List<WirePokemon>,
+      turn: TurnResult,
+  ): BattleOpenPacket {
+    val player = playerTeam.first()
+    val wild = wildTeam.first()
+    val (playerCur, playerMax) = activeHp(turn.sides, "player")
+    val (wildCur, wildMax) = activeHp(turn.sides, "wild")
+    return BattleOpenPacket.wild(
+        playerSpecies = player.speciesId,
+        playerLevel = player.level,
+        playerCurrentHp = playerCur,
+        playerMaxHp = playerMax,
+        wildSpecies = wild.speciesId,
+        wildLevel = wild.level,
+        wildCurrentHp = wildCur,
+        wildMaxHp = wildMax,
+    )
+  }
+
+  /**
+   * Read (currentHp, maxHp) for the active mon of the given side from the sidecar `sides` snapshot.
+   */
+  private fun activeHp(sides: JsonElement?, side: String): Pair<Int, Int> {
+    val arr = sides as? JsonArray ?: return 0 to 0
+    for (entry in arr) {
+      val obj = entry.jsonObject
+      if (obj["side"]?.jsonPrimitive?.content != side) continue
+      val active = obj["active"]?.jsonArray?.firstOrNull()?.jsonObject ?: return 0 to 0
+      val cur = active["hpCurrent"]?.jsonPrimitive?.intOrNull ?: 0
+      val max = active["hpMax"]?.jsonPrimitive?.intOrNull ?: 0
+      return cur to max
+    }
+    return 0 to 0
   }
 
   /** C2S BattleMoveUse(0x0A) → sidecar choice("move N"). */
