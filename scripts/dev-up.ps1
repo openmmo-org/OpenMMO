@@ -48,9 +48,28 @@ function Get-PortOwnerPid([int]$Port) {
     return $null
 }
 
+function Find-GradleUserHome {
+    # Don't override a deliberately-set GRADLE_USER_HOME.
+    if ($env:GRADLE_USER_HOME) {
+        return $env:GRADLE_USER_HOME
+    }
+    # Relies on a persisted Windows user-level env var, which does NOT
+    # propagate into already-running shells/sessions (this bit us for real
+    # -- a session started before the var was set silently kept using the
+    # default ~\.gradle, re-triggering the KSP cross-drive bug). Resolve it
+    # explicitly here instead of trusting inheritance.
+    $candidate = Join-Path $ToolchainsDir "gradle-home"
+    if (Test-Path $candidate) {
+        return $candidate
+    }
+    return $null
+}
+
 if ($Stop) {
     Write-Host "Stopping login/game servers (via gradlew --stop) and Postgres containers..."
     $env:JAVA_HOME = Find-Jdk25
+    $gradleUserHome = Find-GradleUserHome
+    if ($gradleUserHome) { $env:GRADLE_USER_HOME = $gradleUserHome }
     Push-Location $RepoDir
     try { & .\gradlew.bat --stop } catch {}
     # Routed through cmd.exe: docker's stderr progress chatter otherwise gets
@@ -66,6 +85,12 @@ Write-Host "== 1/5: resolving JDK 25 =="
 $env:JAVA_HOME = Find-Jdk25
 $env:PATH = "$($env:JAVA_HOME)\bin;$($env:PATH)"
 Write-Host "JAVA_HOME=$($env:JAVA_HOME)"
+
+$gradleUserHome = Find-GradleUserHome
+if ($gradleUserHome) {
+    $env:GRADLE_USER_HOME = $gradleUserHome
+    Write-Host "GRADLE_USER_HOME=$($env:GRADLE_USER_HOME)"
+}
 
 # Gradle's daemon registry accumulates one entry per stopped daemon and is
 # never auto-pruned. On a box with many agents/worktrees restarting servers

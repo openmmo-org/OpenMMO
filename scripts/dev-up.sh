@@ -44,6 +44,24 @@ find_jdk25() {
   exit 1
 }
 
+find_gradle_user_home() {
+  # Don't override a deliberately-set GRADLE_USER_HOME.
+  if [ -n "${GRADLE_USER_HOME:-}" ]; then
+    echo "$GRADLE_USER_HOME"
+    return
+  fi
+  # Relies on a persisted Windows user-level env var, which does NOT
+  # propagate into already-running shells/sessions (this bit us for real --
+  # a session started before the var was set silently kept using the
+  # default C:\Users\<user>\.gradle, re-triggering the KSP cross-drive
+  # bug). Resolve it explicitly here instead of trusting inheritance.
+  if [ -n "$TOOLCHAINS_DIR" ] && [ -d "$TOOLCHAINS_DIR/gradle-home" ]; then
+    echo "$TOOLCHAINS_DIR/gradle-home"
+    return
+  fi
+  echo ""
+}
+
 port_owner_pid() {
   netstat -ano 2>/dev/null | grep -E ":$1[[:space:]].*LISTENING" | awk '{print $NF}' | head -1
 }
@@ -52,6 +70,8 @@ if [ "$STOP" = "1" ]; then
   echo "Stopping login/game servers (via gradlew --stop) and Postgres containers..."
   JAVA_HOME="$(find_jdk25)"
   export JAVA_HOME
+  GRADLE_USER_HOME="$(find_gradle_user_home)"
+  [ -n "$GRADLE_USER_HOME" ] && export GRADLE_USER_HOME
   (cd "$REPO_DIR" && ./gradlew --stop) || true
   (cd "$REPO_DIR" && docker compose -p openmmo --env-file .env down) || true
   echo "Stopped."
@@ -63,6 +83,12 @@ JAVA_HOME="$(find_jdk25)"
 export JAVA_HOME
 export PATH="$JAVA_HOME/bin:$PATH"
 echo "JAVA_HOME=$JAVA_HOME"
+
+GRADLE_USER_HOME="$(find_gradle_user_home)"
+if [ -n "$GRADLE_USER_HOME" ]; then
+  export GRADLE_USER_HOME
+  echo "GRADLE_USER_HOME=$GRADLE_USER_HOME"
+fi
 
 # Gradle's daemon registry accumulates one entry per stopped daemon and is
 # never auto-pruned. On a box with many agents/worktrees restarting servers
