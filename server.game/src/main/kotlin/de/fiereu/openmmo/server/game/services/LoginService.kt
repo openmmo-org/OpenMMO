@@ -77,9 +77,10 @@ constructor(
       log.warn { "Create character from unknown session" }
       return
     }
-    val name = event.packet.name
+    val packet = event.packet
+    val name = packet.name
     log.info { "Creating character '$name' for userId=${state.userId}" }
-    characterStore.createCharacter(state.userId, name)
+    characterStore.createCharacter(state.userId, name, packet.gender, packet.cosmetics)
     ctx.send(buildCharacterList(state.userId))
   }
 
@@ -177,8 +178,8 @@ constructor(
       info: CharacterInfo,
       party: List<OwnedPokemon>,
   ): LocalPlayerStatePacket {
-    val partyDex = party.take(6).map { it.speciesId.toShort() }
-    val partyForms = party.take(6).map { 0.toByte() }
+    // Validated login capture has empty partyDex/partyForms here even when 0x13 carries one party
+    // member. Keep 0xF3 focused on player state; 0x13 is the party source of truth.
     val caught = party.map { it.speciesId.toShort() }.distinct()
     return LocalPlayerStatePacket(
         region = info.positionRegionId,
@@ -193,8 +194,8 @@ constructor(
         hairColor = 30000.toShort(),
         playtime = 0.0,
         flags = 27,
-        partyDex = partyDex,
-        partyForms = partyForms,
+        partyDex = emptyList(),
+        partyForms = emptyList(),
         pokedexSeen = caught,
         pokedexCaught = caught,
         badges = emptyList(),

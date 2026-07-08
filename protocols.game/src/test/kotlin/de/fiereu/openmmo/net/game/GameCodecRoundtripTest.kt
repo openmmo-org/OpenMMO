@@ -3,6 +3,8 @@ package de.fiereu.openmmo.net.game
 import de.fiereu.bytecodec.test.decodeBytes
 import de.fiereu.bytecodec.test.encodeToBytes
 import de.fiereu.openmmo.common.enums.Direction
+import de.fiereu.openmmo.net.game.packets.CreateCharacterPacket
+import de.fiereu.openmmo.net.game.packets.CreateCharacterPacketCodec
 import de.fiereu.openmmo.net.game.packets.DialogStatePacket
 import de.fiereu.openmmo.net.game.packets.DialogStatePacketCodec
 import de.fiereu.openmmo.net.game.packets.EntityLeavePacket
@@ -37,6 +39,13 @@ class GameCodecRoundtripTest :
       test("MovementPacket roundtrip") {
         val pkt = MovementPacket(x = 100, y = 250, direction = Direction.DOWN)
         MovementPacketCodec.decodeBytes(MovementPacketCodec.encodeToBytes(pkt)) shouldBe pkt
+      }
+
+      test("CreateCharacterPacket consumes gender and trailing cosmetics bytes") {
+        val packet =
+            CreateCharacterPacket("NewGuy", gender = 1, cosmetics = ByteArray(17) { it.toByte() })
+        CreateCharacterPacketCodec.decodeBytes(
+            CreateCharacterPacketCodec.encodeToBytes(packet)) shouldBe packet
       }
 
       test("DialogStatePacket roundtrip") {

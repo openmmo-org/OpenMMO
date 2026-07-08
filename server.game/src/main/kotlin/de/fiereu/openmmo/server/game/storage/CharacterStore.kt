@@ -48,6 +48,8 @@ class CharacterStore @Inject constructor() {
   fun createCharacter(
       userId: Int,
       name: String,
+      gender: Byte = 0,
+      cosmetics: ByteArray = ByteArray(0),
   ): StoredCharacter {
     val id = generateEntityId()
     val now = LocalDateTime.now()
@@ -57,7 +59,9 @@ class CharacterStore @Inject constructor() {
             name = name,
             namePrefix = "",
             userId = userId,
-            rivalSex = 0,
+            // CharacterInfo currently has no separate player-gender field; until the DB/cosmetics
+            // model grows one, this field carries the player's actual decoded gender for 0xF3.
+            rivalSex = gender,
             lastLogin = now,
             createdAt = now,
             money = 3000,
