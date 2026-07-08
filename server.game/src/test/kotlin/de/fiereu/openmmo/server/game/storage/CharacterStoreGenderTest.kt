@@ -11,4 +11,11 @@ class CharacterStoreGenderTest :
 
         character.info.rivalSex shouldBe 1
       }
+
+      test("createCharacter sanitizes invalid create gender enum for character list") {
+        val store = CharacterStore()
+        val character = store.createCharacter(userId = 99, name = "GenderThree", gender = 3)
+
+        character.info.rivalSex shouldBe 0
+      }
     })

@@ -61,7 +61,9 @@ class CharacterStore @Inject constructor() {
             userId = userId,
             // CharacterInfo currently has no separate player-gender field; until the DB/cosmetics
             // model grows one, this field carries the player's actual decoded gender for 0xF3.
-            rivalSex = gender,
+            // The v31914 client treats this as a small enum in 0x02/0xF3 and crashes on values
+            // outside the observed player-gender domain, so sanitize create bytes before storing.
+            rivalSex = normalizePlayerGender(gender),
             lastLogin = now,
             createdAt = now,
             money = 3000,
@@ -94,6 +96,8 @@ class CharacterStore @Inject constructor() {
     charactersByUser.getOrPut(userId) { mutableListOf() }.add(id)
     return stored
   }
+
+  private fun normalizePlayerGender(gender: Byte): Byte = if (gender.toInt() == 1) 1 else 0
 
   fun getCharacter(id: Long): StoredCharacter? = characters[id]
 
