@@ -8,6 +8,8 @@ data class CharacterInfo(
     val namePrefix: String = "",
     val userId: Int,
     val rivalSex: Byte,
+    val gender: Byte = rivalSex,
+    val cosmetics: ByteArray = ByteArray(0),
     val lastLogin: LocalDateTime,
     val createdAt: LocalDateTime,
     val money: Int,

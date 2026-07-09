@@ -9,6 +9,7 @@ import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.net.game.codecs.SkinSet
+import de.fiereu.openmmo.net.game.codecs.opaqueSkinSet
 import de.fiereu.openmmo.net.game.packets.CharacterEntry
 import de.fiereu.openmmo.net.game.packets.CharactersListPacket
 import de.fiereu.openmmo.net.game.packets.CharactersListPacketCodec
@@ -204,6 +205,28 @@ class T0PlayerPartyPacketsTest :
         zhongguo.name shouldBe "zhongguolaohei"
         zhongguo.hasFollower shouldBe true
         zhongguo.followerDexId shouldBe 286
+      }
+
+      test("LoadEntityPacket echoes opaque create cosmetics bytes") {
+        val cosmetics = byteArrayOf(0x00, 0x03, 0x00, 0x11, 0x22, 0x33)
+        val bytes =
+            LoadEntityPacketCodec.encodeToBytes(
+                LoadEntityPacket(
+                    entityId = 1L,
+                    skin = opaqueSkinSet(cosmetics),
+                    name = "SkinEcho",
+                    regionId = 1,
+                    bankId = 2,
+                    mapId = 3,
+                    x = 4,
+                    y = 5,
+                    z = 0,
+                    facing = de.fiereu.openmmo.common.enums.Direction.DOWN,
+                    hasFollower = false,
+                    followerDexId = 0,
+                ))
+
+        bytes.copyOfRange(9, 9 + cosmetics.size) shouldBe cosmetics
       }
 
       test("LoadEntityPacket encodes entity id and follower flag") {

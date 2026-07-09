@@ -64,6 +64,8 @@ class CharacterStore @Inject constructor() {
             // The v31914 client treats this as a small enum in 0x02/0xF3 and crashes on values
             // outside the observed player-gender domain, so sanitize create bytes before storing.
             rivalSex = normalizePlayerGender(gender),
+            gender = normalizePlayerGender(gender),
+            cosmetics = cosmetics.copyOf(),
             lastLogin = now,
             createdAt = now,
             money = 3000,

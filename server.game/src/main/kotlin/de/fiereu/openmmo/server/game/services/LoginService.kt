@@ -9,6 +9,7 @@ import de.fiereu.openmmo.common.enums.Language
 import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.codecs.SkinSet
+import de.fiereu.openmmo.net.game.codecs.opaqueSkinSet
 import de.fiereu.openmmo.net.game.packets.CharacterEntry
 import de.fiereu.openmmo.net.game.packets.CharactersListPacket
 import de.fiereu.openmmo.net.game.packets.ChatMessagePacket
@@ -95,13 +96,16 @@ constructor(
     }
   }
 
+  private fun skinSetFromCosmetics(info: CharacterInfo): SkinSet =
+      if (info.cosmetics.isNotEmpty()) opaqueSkinSet(info.cosmetics) else SkinSet()
+
   private fun buildCharacterList(userId: Int): CharactersListPacket {
     val characters = characterStore.getCharactersByUser(userId)
     val entries =
         characters.map { stored ->
           CharacterEntry(
               characterInfo = stored.info,
-              skinSet = SkinSet(),
+              skinSet = skinSetFromCosmetics(stored.info),
               guildId = null,
               pokemon = PartyPokemonMapper.toWireParty(stored.pokemon).take(1),
           )
@@ -288,7 +292,7 @@ constructor(
       ctx.send(
           LoadEntityPacket(
               entityId = otherCharId,
-              skin = SkinSet(),
+              skin = skinSetFromCosmetics(otherStored.info),
               name = otherStored.info.name,
               regionId = otherState.regionId,
               bankId = otherState.bankId,
@@ -306,7 +310,7 @@ constructor(
     val selfEntity =
         LoadEntityPacket(
             entityId = charId,
-            skin = SkinSet(),
+            skin = skinSetFromCosmetics(info),
             name = info.name,
             regionId = regionId,
             bankId = bankId,

@@ -6,7 +6,7 @@ import java.util.*
 
 data class Skin(val slot: SkinSlot, val type: UShort?, val color: UByte?)
 
-class SkinSet : EnumMap<SkinSlot, Skin>(SkinSlot::class.java) {
+class SkinSet(val rawBytes: ByteArray? = null) : EnumMap<SkinSlot, Skin>(SkinSlot::class.java) {
   fun put(skin: Skin) {
     this[skin.slot] = skin
   }
@@ -45,5 +45,33 @@ class SkinSetCodec(
   }
 }
 
-val DefaultSkinSetCodec: Codec<SkinSet> = SkinSetCodec()
+private object RawSkinBytesCodec : Codec<ByteArray> {
+  override fun read(buf: ReadBuffer): ByteArray {
+    val bytes = ByteArray(buf.remaining())
+    buf.readBytes(bytes)
+    return bytes
+  }
+
+  override fun write(buf: WriteBuffer, value: ByteArray) {
+    buf.writeBytes(value)
+  }
+}
+
+fun opaqueSkinSet(bytes: ByteArray): SkinSet = SkinSet(bytes.copyOf())
+
+private val ParsedDefaultSkinSetCodec: Codec<SkinSet> = SkinSetCodec()
+
+val DefaultSkinSetCodec: Codec<SkinSet> =
+    object : Codec<SkinSet> {
+      override fun read(buf: ReadBuffer): SkinSet = ParsedDefaultSkinSetCodec.read(buf)
+
+      override fun write(buf: WriteBuffer, value: SkinSet) {
+        val rawBytes = value.rawBytes
+        if (rawBytes != null) {
+          RawSkinBytesCodec.write(buf, rawBytes)
+        } else {
+          ParsedDefaultSkinSetCodec.write(buf, value)
+        }
+      }
+    }
 val SkinSetCodecNoLeading: Codec<SkinSet> = SkinSetCodec(withLeadingByte = false)

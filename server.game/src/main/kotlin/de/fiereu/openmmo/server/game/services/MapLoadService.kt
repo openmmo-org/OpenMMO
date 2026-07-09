@@ -7,6 +7,7 @@ import de.fiereu.openmmo.common.enums.EntityStatus
 import de.fiereu.openmmo.maps.MapDef
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.codecs.SkinSet
+import de.fiereu.openmmo.net.game.codecs.opaqueSkinSet
 import de.fiereu.openmmo.net.game.packets.LoadEntityPacket
 import de.fiereu.openmmo.net.game.packets.MapData
 import javax.inject.Inject
@@ -28,7 +29,7 @@ constructor(
   ): LoadEntityPacket {
     return LoadEntityPacket(
         entityId = info.id,
-        skin = SkinSet(),
+        skin = if (info.cosmetics.isNotEmpty()) opaqueSkinSet(info.cosmetics) else SkinSet(),
         name = info.name,
         regionId = info.positionRegionId.toInt(),
         bankId = info.positionBankId.toInt(),
