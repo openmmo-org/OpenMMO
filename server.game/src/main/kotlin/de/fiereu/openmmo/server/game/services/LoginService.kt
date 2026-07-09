@@ -81,8 +81,14 @@ constructor(
     val packet = event.packet
     val name = packet.name
     log.info { "Creating character '$name' for userId=${state.userId}" }
-    characterStore.createCharacter(state.userId, name, packet.gender, packet.cosmetics)
+    val stored = characterStore.createCharacter(state.userId, name, packet.gender, packet.cosmetics)
     ctx.send(buildCharacterList(state.userId))
+    // The real client's create-character flow doesn't return to character-select on its own --
+    // it waits to be dropped straight into the world, same as picking an existing character does.
+    // Sending only the refreshed list here left the client parked on the New Character screen
+    // forever (validated 2026-07-09: the S2C list update went out, no exception, client never
+    // sent a follow-up select).
+    selectAndSpawnCharacter(ctx, state, stored.info.id)
   }
 
   fun onCharacterRequest(event: PacketEvent<RequestCharactersPacket>) {
@@ -116,8 +122,7 @@ constructor(
   fun onCharacterSelected(event: PacketEvent<SelectCharacterPacket>) {
     val ctx = event.session
     val charId = event.packet.characterId
-    val stored = characterStore.getCharacter(charId)
-    if (stored == null) {
+    if (characterStore.getCharacter(charId) == null) {
       log.warn { "Character $charId not found" }
       return
     }
@@ -126,6 +131,17 @@ constructor(
       log.warn { "No session for channel" }
       return
     }
+    selectAndSpawnCharacter(ctx, state, charId)
+  }
+
+  /**
+   * Binds the session to [charId] and drives it into the world: party/PC containers, player state,
+   * the selected-character ack, a welcome chat line, then the map load. Shared by character SELECT
+   * and by CREATE, which auto-selects the character it just made (the real client's create flow
+   * expects to land in-world, not back at character-select).
+   */
+  private fun selectAndSpawnCharacter(ctx: SessionContext, state: PlayerState, charId: Long) {
+    val stored = characterStore.getCharacter(charId) ?: return
 
     state.characterId = charId
     sessionRegistry.bindCharacter(ctx, charId)
