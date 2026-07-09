@@ -23,7 +23,7 @@ import java.time.Instant
 
 class BagServiceTest :
     FunSpec({
-      test("bag open emits validated main and small container payloads") {
+      test("bag open emits validated deferred-large, main, and small container payloads") {
         val store = CharacterStore()
         val character = store.getCharactersByUser(1).first()
         character.items.clear()
@@ -34,8 +34,12 @@ class BagServiceTest :
 
         BagService(store).onBagOpen(PacketEvent(BagOpenRequestPacket(), session))
 
-        session.sent.shouldHaveSize(2)
-        val main = session.sent[0] as BagInventoryPacket
+        session.sent.shouldHaveSize(3)
+        val deferredLarge = session.sent[0] as BagInventoryPacket
+        deferredLarge.containerId shouldBe BagService.CONTAINER_DEFERRED_LARGE
+        deferredLarge.entries.shouldHaveSize(0)
+
+        val main = session.sent[1] as BagInventoryPacket
         main.containerId shouldBe BagService.CONTAINER_MAIN
         main.entries.shouldHaveSize(1)
         main.entries.first().categoryFlags shouldBe 1
@@ -43,7 +47,7 @@ class BagServiceTest :
         main.entries.first().quantity shouldBe 3
         main.entries.first().slotDuplicate shouldBe main.entries.first().slot
 
-        val small = session.sent[1] as BagInventoryPacket
+        val small = session.sent[2] as BagInventoryPacket
         small.containerId shouldBe BagService.CONTAINER_SMALL
         small.entries.shouldHaveSize(1)
         small.entries.first().itemId shouldBe 17
@@ -58,13 +62,18 @@ class BagServiceTest :
 
         BagService(store).onBagOpen(PacketEvent(BagOpenRequestPacket(), session))
 
-        val small = session.sent[1] as BagInventoryPacket
+        val small = session.sent[2] as BagInventoryPacket
         small.containerId shouldBe BagService.CONTAINER_SMALL
         small.entries.shouldHaveSize(3)
         small.entries.map { it.itemId } shouldBe listOf(1025, 1026, 1027)
       }
 
       test("bag open with empty inventory still emits empty valid containers") {
+        // Regression test for the 2026-07-09 bag-render client crash (Fatal Render Error, NPE in
+        // the client's item lookup). Root cause: we never sent a response for container 0x0001 at
+        // all. Golden capture (2026-07-07-232143-first-manual.log) shows the real server always
+        // sends 0x0001 (20 entries there, sent first) before 0x0000 -- the client expects *a*
+        // response for every container it renders, even an empty one.
         val store = CharacterStore()
         val character = store.getCharactersByUser(1).first()
         character.items.clear()
@@ -76,6 +85,7 @@ class BagServiceTest :
 
         session.sent shouldBe
             listOf(
+                BagInventoryPacket(BagService.CONTAINER_DEFERRED_LARGE, emptyList()),
                 BagInventoryPacket(BagService.CONTAINER_MAIN, emptyList()),
                 BagInventoryPacket(BagService.CONTAINER_SMALL, emptyList()),
             )

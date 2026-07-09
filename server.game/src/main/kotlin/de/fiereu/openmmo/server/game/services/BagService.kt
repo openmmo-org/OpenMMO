@@ -33,9 +33,14 @@ constructor(
       return
     }
 
-    // v31914 sends one 0x70 response per supported bag container. Container 0x0001 has a larger,
-    // still-undecoded entry shape and is intentionally not emitted until a follow-up capture lands.
+    // v31914's real bag-open response covers every container the client renders, container 0x0001
+    // first (golden capture 2026-07-07-232143-first-manual.log, S2C 0x70 burst). We never sent
+    // 0x0001 at all, which crashed bag-render client-side (null item lookup) -- the client expects
+    // *a* response for that container even with nothing in it. Container 0x0001's populated-entry
+    // shape is larger and still undecoded, but an empty container needs no entries to encode, so
+    // send it empty until a follow-up capture with real data lands.
     val entries = itemEntries(stored.items)
+    ctx.send(BagInventoryPacket(CONTAINER_DEFERRED_LARGE, emptyList()))
     ctx.send(BagInventoryPacket(CONTAINER_MAIN, entries))
     ctx.send(BagInventoryPacket(CONTAINER_SMALL, entries.take(MAX_SMALL_ENTRIES)))
     bagLog.info { "Sending BagInventory for character $charId" }

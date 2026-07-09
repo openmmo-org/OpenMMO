@@ -5,16 +5,19 @@
 #
 # What it asserts:
 #   1. The server logged "Sending BagInventory for character <id>" --
-#      emitted by BagService.onBagOpen right after sending both
-#      BagInventoryPacket (0x70) responses (main + small container).
-#      Closest proxy to "packet was emitted" until a protocol-level test
-#      client exists. (This log line was added alongside this recipe --
-#      BagService previously only logged its warn/error paths.)
+#      emitted by BagService.onBagOpen right after sending all three
+#      BagInventoryPacket (0x70) responses (deferred-large, main, small
+#      container). Closest proxy to "packet was emitted" until a
+#      protocol-level test client exists. (This log line was added
+#      alongside this recipe -- BagService previously only logged its
+#      warn/error paths.)
 #   2. No crash/exception was logged in the same window (check-clean).
 #
-# Note: container 0x0001 (the larger, still-undecoded entry shape) is
-# intentionally not emitted yet -- this only confirms the two containers
-# BagService currently sends, not full bag coverage.
+# Note: container 0x0001's populated-entry shape (~216 bytes, larger than
+# the standard 43-byte entry) is still undecoded, so BagService always sends
+# it empty for now (2026-07-09 fix -- omitting it entirely crashed the
+# client's bag render). Real per-item content for that container needs a
+# follow-up capture.
 #
 # Usage:
 #   scripts/tests/assert-bag-open.sh [--timeout SECS]
