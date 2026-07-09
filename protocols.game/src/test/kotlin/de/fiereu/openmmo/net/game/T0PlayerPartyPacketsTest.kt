@@ -105,9 +105,7 @@ class T0PlayerPartyPacketsTest :
       }
 
       test("PokemonContainerPacket decodes validated login party capture") {
-        val bytes =
-            hexToBytes(
-                "01010100c088dd554ca51900000090c8afe045a5190090c8afe045a519010000f501aef0421a0090c8afe045a5194f0074006800650072004200610067000000000000000614000000de000000003b0021002700000000001f1e00000000000000000000010100010000000000000000040502ffffffff0300efbdf71e0100002000000000000000877f42690000ffff00")
+        val bytes = goldenLoginPartyContainer()
 
         val packet = PokemonContainerPacketCodec.decodeBytes(bytes)
 
@@ -118,6 +116,19 @@ class T0PlayerPartyPacketsTest :
         packet.pokemon.first().dexId shouldBe 501
         packet.pokemon.first().containerSlot shouldBe 0
         packet.pokemon.first().ot shouldBe "OtherBag"
+      }
+
+      test("PokemonContainerPacket emits validated no-held-item sentinels") {
+        val golden = goldenLoginPartyContainer()
+        val decoded = PokemonContainerPacketCodec.decodeBytes(golden)
+        val encoded = PokemonContainerPacketCodec.encodeToBytes(decoded)
+
+        golden.size shouldBe 145
+        encoded.size shouldBe 145
+        le16(golden, 115) shouldBe 0xffff
+        le16(encoded, 115) shouldBe 0xffff
+        golden.takeLast(4).toByteArray() shouldBe byteArrayOf(0x00, -1, -1, 0x00)
+        encoded.takeLast(4).toByteArray() shouldBe byteArrayOf(0x00, -1, -1, 0x00)
       }
 
       test("PokemonContainerPacket codec preserves zero IVs") {
@@ -219,6 +230,10 @@ class T0PlayerPartyPacketsTest :
         bytes.takeLast(2).toByteArray().let { le16(it, 0) } shouldBe 1
       }
     })
+
+private fun goldenLoginPartyContainer(): ByteArray =
+    hexToBytes(
+        "01010100c088dd554ca51900000090c8afe045a5190090c8afe045a519010000f501aef0421a0090c8afe045a5194f0074006800650072004200610067000000000000000614000000de000000003b0021002700000000001f1e00000000000000000000010100010000000000000000040502ffffffff0300efbdf71e0100002000000000000000877f42690000ffff00")
 
 private fun sampleCharacterInfo(): CharacterInfo =
     CharacterInfo(

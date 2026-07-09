@@ -41,7 +41,8 @@ object PokemonCodec : PacketCodec<Pokemon>() {
           spAtk = field(U8) { it.eVs.spAtk }
           spDef = field(U8) { it.eVs.spDef }
         }
-    repeat(11) { field(S8) { 0 } }
+    repeat(9) { field(S8) { 0 } }
+    field(U16LE) { 0xffff }
     val iVs = decompressIVs(field(S32LE) { it.iVs.compress() })
     field(S8) { 0 }
     field(S64LE) { 0L }
@@ -67,7 +68,9 @@ object PokemonCodec : PacketCodec<Pokemon>() {
     field(S8) { 0 }
     field(S8) { 0 }
     field(PokemonUnknownBytes) { ByteArray(0) }
-    repeat(4) { field(S8) { 0 } }
+    field(S8) { 0 }
+    field(U16LE) { 0xffff }
+    field(S8) { 0 }
     return Pokemon(
         id,
         container,
