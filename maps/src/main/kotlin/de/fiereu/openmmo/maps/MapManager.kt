@@ -1,6 +1,5 @@
 package de.fiereu.openmmo.maps
 
-import de.fiereu.openmmo.common.enums.MapType
 import de.fiereu.openmmo.net.game.packets.LoadMapPacket
 import de.fiereu.openmmo.net.game.packets.MapData
 import java.util.concurrent.ConcurrentHashMap
@@ -29,36 +28,36 @@ class MapManager @Inject constructor() {
   fun size(): Int = maps.size
 
   // romType/branch choice: docs/protocol/loadmap-spec.md. All 3 golden 0x10 samples we have are
-  // romType=2 (SpecialMapData); one is explicitly an INSIDE map, matching the bedroom our
-  // characters spawn in. Heuristic (n=1 indoor sample) per Kimi-Decode-Economy: INSIDE/
-  // SECRET_BASE maps emit SpecialMapData, everything else keeps the GbaMapData shape our server
-  // already emitted (now byte-corrected). Revisit if more indoor/outdoor captures land.
+  // romType=2 (SpecialMapData) and one is explicitly an INSIDE map -- but that sample is a
+  // DIFFERENT physical map (bank=134) than the ones we serve (e.g. bank=51/map=3), and we have no
+  // ground truth for OUR maps' real SpecialMapData field values (rF1, border connections). Tried
+  // emitting SpecialMapData for INSIDE/SECRET_BASE maps 2026-07-09 (PR #41) using placeholder
+  // values (rF1=0, no connections) copied from the golden sample's shape, not its map-specific
+  // content -- regressed indoor spawn entirely: the client's own ROM-mismatch check rejects it
+  // ("Possible rom corruption detected"), the client never follows up with a player request, and
+  // spawn never completes (confirmed via live capture + game-server.log: our LoadMapPacket sends
+  // successfully, no server-side exception, the client just stops). Reverted to always emitting
+  // GbaMapData (romType=1) -- the shape our server emitted before #41, which spawns correctly for
+  // every map we serve. GbaMapData's byte layout AND the GbaConnection targetRegion fix from #41
+  // are kept; only this branch CHOICE is reverted. Emitting SpecialMapData for our own indoor maps
+  // needs real per-map ground truth (a golden capture of one of OUR maps) before it's safe to try
+  // again.
   fun createLoadMapPacket(
       map: MapDef,
       reloadPlayer: Boolean = false,
       deleteCache: Boolean = false,
-  ): LoadMapPacket {
-    val isSpecial = map.mapType == MapType.INSIDE || map.mapType == MapType.SECRET_BASE
-    return LoadMapPacket(
-        reloadPlayer = reloadPlayer,
-        deleteCache = deleteCache,
-        romType = if (isSpecial) 2 else 1,
-        bankId = map.bankId.toInt() and 0xFF,
-        mapId = map.mapId.toInt() and 0xFF,
-        // Wire regionId (offset 4) is a distinct, finer-grained field from MapDef.regionId (our
-        // own "which parsed world" lookup key, always 1 for Hoenn) -- our prior packets sent 0
-        // here (by accident, via a hardcoded reserved byte) with no observed issue, so keep it.
-        regionId = 0,
-        mapData =
-            if (isSpecial) {
-              MapData.SpecialMapData(
-                  rF1 = 0,
-                  borderConnections = emptyList(),
-                  lighting = map.lighting,
-                  weather = map.weather,
-                  mapType = map.mapType,
-              )
-            } else {
+  ): LoadMapPacket =
+      LoadMapPacket(
+          reloadPlayer = reloadPlayer,
+          deleteCache = deleteCache,
+          romType = 1,
+          bankId = map.bankId.toInt() and 0xFF,
+          mapId = map.mapId.toInt() and 0xFF,
+          // Wire regionId (offset 4) is a distinct, finer-grained field from MapDef.regionId (our
+          // own "which parsed world" lookup key, always 1 for Hoenn) -- our prior packets sent 0
+          // here (by accident, via a hardcoded reserved byte) with no observed issue, so keep it.
+          regionId = 0,
+          mapData =
               MapData.GbaMapData(
                   width = map.width,
                   height = map.height,
@@ -74,10 +73,8 @@ class MapManager @Inject constructor() {
                   encounterType = map.encounterType,
                   tiles = map.borderTiles,
                   connections = map.connections,
-              )
-            },
-    )
-  }
+              ),
+      )
 
   private fun key(regionId: Byte, bankId: Byte, mapId: Byte): Long =
       ((regionId.toLong() and 0xFF) shl 16) or
