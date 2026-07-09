@@ -33,7 +33,7 @@ object GameProtocol : Protocol() {
     c2s<ChatMessageSendPacket>(0x08u, ChatMessageSendPacketCodec)
     s2c<EntityLeavePacket>(0x08u, EntityLeavePacketCodec)
 
-    bidi<ChatMessagePacket>(0x09u, ChatMessagePacketCodec)
+    s2c<ChatMessagePacket>(0x09u, ChatMessagePacketCodec)
 
     c2s<BattleMoveUsePacket>(0x0Au, BattleMoveUsePacketCodec)
     s2c<WorldFlagTableResetPacket>(0x0Au, WorldFlagTableResetPacketCodec)

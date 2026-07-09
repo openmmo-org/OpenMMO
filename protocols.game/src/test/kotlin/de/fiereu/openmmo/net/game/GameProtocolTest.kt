@@ -69,10 +69,18 @@ class GameProtocolTest :
             TokenPayloadPacket::class
       }
 
+      test("0x09 ChatMessagePacket is S2C only") {
+        GameProtocol.outgoingRegistration(Side.SERVER, ChatMessagePacket::class)?.opcode shouldBe
+            0x09u
+        GameProtocol.outgoingRegistration(Side.CLIENT, ChatMessagePacket::class) shouldBe null
+        GameProtocol.incomingRegistration(Side.CLIENT, 0x09u)?.type shouldBe
+            ChatMessagePacket::class
+        GameProtocol.incomingRegistration(Side.SERVER, 0x09u) shouldBe null
+      }
+
       test("bidi packets are registered both directions") {
         val bidi =
             listOf(
-                ChatMessagePacket::class,
                 LoadMapPacket::class,
                 KeepAlivePacket::class,
             )
