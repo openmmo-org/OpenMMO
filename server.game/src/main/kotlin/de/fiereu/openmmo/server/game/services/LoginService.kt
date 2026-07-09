@@ -111,7 +111,18 @@ constructor(
         characters.map { stored ->
           CharacterEntry(
               characterInfo = stored.info,
-              skinSet = skinSetFromCosmetics(stored.info),
+              // NOT skinSetFromCosmetics(stored.info) here. DefaultSkinSetCodec's write() special-
+              // cases a SkinSet built from opaqueSkinSet(): it writes the raw create-cosmetics
+              // bytes
+              // verbatim with no length marker, but its read() always expects the structured
+              // mask+per-slot layout -- fine for LoadEntityPacket (S2C-only, client echoes its own
+              // bytes back to itself) but wrong here, where the real client parses every entry
+              // structurally. Root-caused 2026-07-09: any account with a real-cosmetics character
+              // in
+              // its list corrupted every field after that entry's skin, hanging relogin on
+              // "Loading..." (partySize decoded as 0, ~186 trailing bytes unread). Until cosmetics
+              // have a real structured decode, always send the default structured skin here.
+              skinSet = SkinSet(),
               guildId = null,
               pokemon = PartyPokemonMapper.toWireParty(stored.pokemon).take(1),
           )
