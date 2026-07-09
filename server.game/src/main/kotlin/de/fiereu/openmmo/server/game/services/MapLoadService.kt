@@ -7,7 +7,6 @@ import de.fiereu.openmmo.common.enums.EntityStatus
 import de.fiereu.openmmo.maps.MapDef
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.codecs.SkinSet
-import de.fiereu.openmmo.net.game.codecs.opaqueSkinSet
 import de.fiereu.openmmo.net.game.packets.LoadEntityPacket
 import de.fiereu.openmmo.net.game.packets.MapData
 import javax.inject.Inject
@@ -29,7 +28,15 @@ constructor(
   ): LoadEntityPacket {
     return LoadEntityPacket(
         entityId = info.id,
-        skin = if (info.cosmetics.isNotEmpty()) opaqueSkinSet(info.cosmetics) else SkinSet(),
+        // Always the structured default skin, never the opaque create-cosmetics echo.
+        // DefaultSkinSetCodec's write() special-cases opaque/raw SkinSets (writes cosmetics bytes
+        // verbatim, no length marker) but its read() always expects the structured mask+per-slot
+        // layout -- corrupts every LoadEntityPacket field after skin (name, position, facing,
+        // follower) for any character with real cosmetics. Root-caused 2026-07-09: decoded our own
+        // captured LoadEntityPacket bytes back through this codec and got a garbled name. Real
+        // per-character cosmetic look needs a byte-exact structured decode of the create-cosmetics
+        // format, which doesn't exist yet.
+        skin = SkinSet(),
         name = info.name,
         regionId = info.positionRegionId.toInt(),
         bankId = info.positionBankId.toInt(),

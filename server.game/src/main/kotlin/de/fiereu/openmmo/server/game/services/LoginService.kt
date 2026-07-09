@@ -9,7 +9,6 @@ import de.fiereu.openmmo.common.enums.Language
 import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.codecs.SkinSet
-import de.fiereu.openmmo.net.game.codecs.opaqueSkinSet
 import de.fiereu.openmmo.net.game.packets.CharacterEntry
 import de.fiereu.openmmo.net.game.packets.CharactersListPacket
 import de.fiereu.openmmo.net.game.packets.ChatMessagePacket
@@ -102,26 +101,17 @@ constructor(
     }
   }
 
-  private fun skinSetFromCosmetics(info: CharacterInfo): SkinSet =
-      if (info.cosmetics.isNotEmpty()) opaqueSkinSet(info.cosmetics) else SkinSet()
-
   private fun buildCharacterList(userId: Int): CharactersListPacket {
     val characters = characterStore.getCharactersByUser(userId)
     val entries =
         characters.map { stored ->
           CharacterEntry(
               characterInfo = stored.info,
-              // NOT skinSetFromCosmetics(stored.info) here. DefaultSkinSetCodec's write() special-
-              // cases a SkinSet built from opaqueSkinSet(): it writes the raw create-cosmetics
-              // bytes
-              // verbatim with no length marker, but its read() always expects the structured
-              // mask+per-slot layout -- fine for LoadEntityPacket (S2C-only, client echoes its own
-              // bytes back to itself) but wrong here, where the real client parses every entry
-              // structurally. Root-caused 2026-07-09: any account with a real-cosmetics character
-              // in
-              // its list corrupted every field after that entry's skin, hanging relogin on
-              // "Loading..." (partySize decoded as 0, ~186 trailing bytes unread). Until cosmetics
-              // have a real structured decode, always send the default structured skin here.
+              // Always the structured default skin, never the opaque create-cosmetics echo --
+              // see the identical note on LoadEntityPacket's skin field for why (DefaultSkinSet-
+              // Codec's write/read asymmetry). Root-caused 2026-07-09: a real-cosmetics character
+              // in the list corrupted every field after its own skin entry, hanging relogin on
+              // "Loading..." (partySize decoded as 0, ~186 trailing bytes unread).
               skinSet = SkinSet(),
               guildId = null,
               pokemon = PartyPokemonMapper.toWireParty(stored.pokemon).take(1),
@@ -319,7 +309,14 @@ constructor(
       ctx.send(
           LoadEntityPacket(
               entityId = otherCharId,
-              skin = skinSetFromCosmetics(otherStored.info),
+              // Always the structured default skin, not the opaque create-cosmetics echo -- see
+              // the note in MapLoadService.createLoadEntity. A cosmetics-bearing character's real
+              // opaque bytes here corrupted every field after skin (name, position, facing,
+              // follower) for BOTH the character's own client and every other player who sees
+              // them. Root-caused 2026-07-09: decoded our own captured LoadEntityPacket bytes
+              // (entityId=167936) back through this codec -- name came out as garbage, 3 trailing
+              // bytes unread.
+              skin = SkinSet(),
               name = otherStored.info.name,
               regionId = otherState.regionId,
               bankId = otherState.bankId,
@@ -337,7 +334,8 @@ constructor(
     val selfEntity =
         LoadEntityPacket(
             entityId = charId,
-            skin = skinSetFromCosmetics(info),
+            // Structured default skin -- see the note above on the other-players LoadEntityPacket.
+            skin = SkinSet(),
             name = info.name,
             regionId = regionId,
             bankId = bankId,
