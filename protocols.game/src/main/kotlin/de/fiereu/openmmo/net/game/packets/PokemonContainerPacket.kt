@@ -25,6 +25,8 @@ private val PokemonListPrefixedU8: Codec<List<Pokemon>> =
     object : Codec<List<Pokemon>> {
       override fun read(buf: ReadBuffer): List<Pokemon> {
         val n = U8.read(buf)
+        // Golden empty 0x13 packets (e.g. 00 01 00) omit the reserved byte when count == 0.
+        if (n == 0) return emptyList()
         val reserved = S8.read(buf)
         require(reserved == 0.toByte()) { "Pokemon container reserved byte must be zero" }
         return List(n) { PokemonCodec.read(buf) }
@@ -32,8 +34,11 @@ private val PokemonListPrefixedU8: Codec<List<Pokemon>> =
 
       override fun write(buf: WriteBuffer, value: List<Pokemon>) {
         U8.write(buf, value.size)
-        S8.write(buf, 0)
-        value.forEach { PokemonCodec.write(buf, it) }
+        // Match the golden short form: no reserved byte for an empty list.
+        if (value.isNotEmpty()) {
+          S8.write(buf, 0)
+          value.forEach { PokemonCodec.write(buf, it) }
+        }
       }
     }
 
