@@ -72,10 +72,11 @@ if ($Stop) {
     if ($gradleUserHome) { $env:GRADLE_USER_HOME = $gradleUserHome }
     Push-Location $RepoDir
     try { & .\gradlew.bat --stop } catch {}
-    # Routed through cmd.exe: docker's stderr progress chatter otherwise gets
-    # wrapped as PowerShell NativeCommandErrors (5.1 quirk) and taints the
-    # overall exit code even on success, which confuses automated callers.
-    cmd /c "docker compose -p openmmo --env-file .env down 2>&1"
+    # Direct invocation, not cmd /c -- see the matching comment at the "up -d"
+    # call below for why: cmd.exe nesting silently swallows output/exit code
+    # on this box and can hang the whole script. $ErrorActionPreference is
+    # already "Continue" so a direct call handles stderr chatter fine.
+    & docker compose -p openmmo --env-file .env down 2>&1 | ForEach-Object { Write-Host $_ }
     Pop-Location
     Write-Host "Stopped."
     exit 0
@@ -106,7 +107,7 @@ if (Test-Path $wrapperProps) {
         $registry = Join-Path $env:USERPROFILE ".gradle\daemon\$gradleVersion\registry.bin"
         if (Test-Path $registry) {
             Push-Location $RepoDir
-            $statusOut = cmd /c ".\gradlew.bat --status 2>nul"
+            $statusOut = & .\gradlew.bat --status 2>$null
             Pop-Location
             $stoppedCount = ($statusOut | Select-String "STOPPED").Count
             if ($stoppedCount -gt 15) {
@@ -137,12 +138,20 @@ if (-not (Test-Path ".env")) {
     Write-Error ".env missing. Copy .env.example to .env and fill in values first."
     exit 1
 }
-# Routed through cmd.exe: docker's stderr progress chatter otherwise gets
-# wrapped as PowerShell NativeCommandErrors (5.1 quirk) and taints the
-# overall exit code even on success, which confuses automated callers.
-cmd /c "docker compose -p openmmo --env-file .env up -d 2>&1"
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "docker compose up failed (exit $LASTEXITCODE). Check Docker Desktop is running."
+# Direct native invocation, NOT cmd /c: this used to be routed through
+# cmd.exe to dodge a PowerShell 5.1 quirk where stderr progress chatter gets
+# wrapped as NativeCommandErrors and taints the exit code -- but on this box
+# that cmd.exe nesting itself silently swallows all output and $LASTEXITCODE
+# (confirmed in isolation: even `cmd /c "echo hello"` returns nothing here),
+# and the whole script hung right at this line with zero further output.
+# $ErrorActionPreference is already "Continue" (set above) so a direct call
+# handles the original stderr-chatter concern fine without the nested-cmd
+# stall risk.
+$dockerUpOutput = & docker compose -p openmmo --env-file .env up -d 2>&1
+$dockerUpExitCode = $LASTEXITCODE
+$dockerUpOutput | ForEach-Object { Write-Host $_ }
+if ($dockerUpExitCode -ne 0) {
+    Write-Error "docker compose up failed (exit $dockerUpExitCode). Check Docker Desktop is running."
     Pop-Location
     exit 1
 }
@@ -167,7 +176,7 @@ foreach ($db in "login-db", "game-db") {
         # counts as ok; a timeout must retry, never silently pass.
         $job = Start-Job -ScriptBlock {
             param($container)
-            cmd /c "docker inspect --format `"{{.State.Health.Status}}`" $container 2>nul"
+            & docker inspect --format "{{.State.Health.Status}}" $container 2>$null
         } -ArgumentList $db
         $completedJob = Wait-Job -Job $job -Timeout 5
         if ($completedJob) {

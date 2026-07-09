@@ -142,8 +142,7 @@ for db in login-db game-db; do
     # passed instantly. `timeout` bounds each attempt; exit 124 means the
     # call itself stalled and must NOT be treated as ok (Codex-Review caught
     # the PowerShell twin doing exactly that).
-    status=$(timeout 5 docker inspect --format '{{.State.Health.Status}}' "$db" 2>/dev/null)
-    rc=$?
+    status=$(timeout 5 docker inspect --format '{{.State.Health.Status}}' "$db" 2>/dev/null) && rc=0 || rc=$?
     if [ $rc -ne 124 ] && { [ "$status" = "healthy" ] || [ -z "$status" ]; }; then
       confirmed=1
       break
