@@ -122,13 +122,13 @@ constructor(
                       when (gbaDirection) {
                         3 -> targetMap.width - 1
                         4 -> 0
-                        else -> (prevX - connection.unknown).coerceIn(0, targetMap.width - 1)
+                        else -> (prevX - connection.offset).coerceIn(0, targetMap.width - 1)
                       }
                   val targetY =
                       when (gbaDirection) {
                         1 -> 0
                         2 -> targetMap.height - 1
-                        else -> (prevY - connection.unknown).coerceIn(0, targetMap.height - 1)
+                        else -> (prevY - connection.offset).coerceIn(0, targetMap.height - 1)
                       }
                   edgeTransition(
                       ctx,

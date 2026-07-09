@@ -20,8 +20,8 @@ object RenderUtil {
   fun connections(conns: List<ParsedConnection>): String {
     if (conns.isEmpty()) return EMPTY_LIST
     return conns.joinToString(LIST_SEP, LIST_OPEN, LIST_CLOSE) {
-      "MapData.GbaConnection(direction = ${it.direction}, unknown = ${it.offset}," +
-          " targetBank = ${it.targetBank}, targetMap = ${it.targetMap})"
+      "MapData.GbaConnection(direction = ${it.direction}, offset = ${it.offset}," +
+          " targetBank = ${it.targetBank}, targetMap = ${it.targetMap}, targetRegion = 1)"
     }
   }
 
