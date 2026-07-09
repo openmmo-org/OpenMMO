@@ -132,6 +132,19 @@ class T0PlayerPartyPacketsTest :
         encoded.takeLast(4).toByteArray() shouldBe byteArrayOf(0x00, -1, -1, 0x00)
       }
 
+      test("PokemonContainerPacket round-trips short empty list (golden 00 01 00)") {
+        val bytes = hexToBytes("000100")
+
+        val packet = PokemonContainerPacketCodec.decodeBytes(bytes)
+        packet.container shouldBe PokemonContainer.PC
+        packet.hasChange shouldBe true
+        packet.delete shouldBe false
+        packet.pokemon shouldBe emptyList()
+
+        val encoded = PokemonContainerPacketCodec.encodeToBytes(packet)
+        encoded shouldBe bytes
+      }
+
       test("PokemonContainerPacket codec preserves zero IVs") {
         val pokemon =
             sampleWirePokemon()
