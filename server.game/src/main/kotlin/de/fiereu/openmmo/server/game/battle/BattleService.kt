@@ -2,6 +2,7 @@ package de.fiereu.openmmo.server.game.battle
 
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.net.game.packets.BattleActionSelectPacket
+import de.fiereu.openmmo.net.game.packets.BattleEntityDeltaPacket
 import de.fiereu.openmmo.net.game.packets.BattleOpenPacket
 import de.fiereu.openmmo.server.game.domain.OwnedPokemon
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -57,10 +58,16 @@ constructor(
       val battleId: String,
       val wildMon: OwnedPokemon,
       val characterId: Long,
+      /** The two per-mon entity ids stamped into the 0x30 open; every event reuses them. */
+      val playerMonEntityId: Long,
+      val wildMonEntityId: Long,
   )
 
   /** session → active battle. */
   private val battleBySession = ConcurrentHashMap<SessionContext, BattleState>()
+
+  /** Session-global source of battle-mon entity ids (see [BattleEntityIdAllocator]). */
+  private val entityIds = BattleEntityIdAllocator()
 
   /**
    * Start a wild battle for [session]. [playerTeam] comes from the party (PokemonPartyService);
@@ -74,20 +81,43 @@ constructor(
       wildMon: OwnedPokemon,
   ): CreateResult {
     val created = sidecar.create(playerTeam.map { it.toWire() }, listOf(wildMon.toWire()))
-    battleBySession[session] = BattleState(created.battleId, wildMon, characterId)
+    // Assign the two per-mon entity ids for THIS battle and track them so every S2C event reuses
+    // the exact ids the client learns from the 0x30 open below.
+    val playerMonEntityId = entityIds.next()
+    val wildMonEntityId = entityIds.next()
+    battleBySession[session] =
+        BattleState(created.battleId, wildMon, characterId, playerMonEntityId, wildMonEntityId)
     log.info { "Wild battle ${created.battleId} started for character $characterId" }
-    session.send(buildWildOpen(playerTeam.first(), wildMon, created.turn))
+    session.send(
+        buildWildOpen(
+            playerTeam.first(),
+            wildMon,
+            created.turn,
+            playerCharEntityId = characterId,
+            playerMonEntityId = playerMonEntityId,
+            wildMonEntityId = wildMonEntityId,
+        ),
+    )
     // TODO(PR-next, gated on capture #2 + live client): translate created.turn.log + subsequent
-    //   turn logs → the S2C event codecs (0x33/0x16/0x79/0x31); see docs/BATTLE-PACKET-MAP.md.
+    //   turn logs → the S2C event codecs (0x33/0x16/0x79/0x31) via [hpDeltas] + siblings; see
+    //   docs/BATTLE-PACKET-MAP.md.
     return created
   }
 
   /**
    * Build the S2C `0x30` battle-open: species/level from the domain mons, current/max HP from the
-   * sidecar `sides`. TODO(session): player name + entity ids are template-derived in
-   * [BattleOpenPacket.wild] — patch them from the live session next.
+   * sidecar `sides`, and the session-assigned entity ids (player character + both active mons). The
+   * ids default to the captured template's ids so callers that don't care (unit tests) stay
+   * byte-exact vs the capture. TODO(session): player name is still template-derived.
    */
-  fun buildWildOpen(player: OwnedPokemon, wild: OwnedPokemon, turn: TurnResult): BattleOpenPacket {
+  fun buildWildOpen(
+      player: OwnedPokemon,
+      wild: OwnedPokemon,
+      turn: TurnResult,
+      playerCharEntityId: Long = BattleOpenPacket.TEMPLATE_PLAYER_CHAR_ENTITY_ID,
+      playerMonEntityId: Long = BattleOpenPacket.TEMPLATE_PLAYER_MON_ENTITY_ID,
+      wildMonEntityId: Long = BattleOpenPacket.TEMPLATE_WILD_MON_ENTITY_ID,
+  ): BattleOpenPacket {
     val (playerCur, playerMax) = activeHp(turn.sides, "player")
     val (wildCur, wildMax) = activeHp(turn.sides, "wild")
     return BattleOpenPacket.wild(
@@ -99,7 +129,27 @@ constructor(
         wildLevel = wild.level,
         wildCurrentHp = wildCur,
         wildMaxHp = wildMax,
+        playerCharEntityId = playerCharEntityId,
+        playerMonEntityId = playerMonEntityId,
+        wildMonEntityId = wildMonEntityId,
     )
+  }
+
+  /**
+   * The validated S2C `0x16` HP deltas for a turn, keyed to THIS session's tracked battle-mon
+   * entity ids — i.e. the same ids the client learned from the `0x30` open. This is the seam the
+   * full turn-event stream (still gated on capture #2) will emit through; it never guesses an
+   * unvalidated layout. Empty if the session has no active battle.
+   *
+   * NOTE: intentionally **not** called by a live path yet — the gated call sites ([onBattleAction],
+   * [onMoveUse]) explain why (a lone, unpaced 0x16 risks a client desync). It is exercised by tests
+   * that assert the entity-id threading is correct, so the pump can wire it verbatim
+   * post-capture-#2.
+   */
+  fun hpDeltas(session: SessionContext, turn: TurnResult): List<BattleEntityDeltaPacket> {
+    val state = battleBySession[session] ?: return emptyList()
+    return BattleEventTranslator.hpDeltas(
+        turn.sides, state.playerMonEntityId, state.wildMonEntityId)
   }
 
   /**
@@ -116,14 +166,21 @@ constructor(
       ACTION_NAV -> Unit // menu advance/confirm — no sidecar action
       else -> Unit // TODO(capture #2): FIGHT→attack move-select variant
     }
-    // TODO(PR-next): translate the resulting turn.log → the S2C event codecs (0x33/0x16/0x79/0x31).
+    // GATED (capture #2): emit the turn-event stream here — [hpDeltas] (validated 0x16, keyed to
+    // the
+    //   tracked entity ids) + the 0x33 move-announce / 0x79 / 0x31 siblings, paced by C2S 0x36.
+    //   Deliberately NOT wired yet: a lone, unpaced 0x16 (a damage delta for a move never announced
+    //   via 0x33, sent outside the 0x36 pull) would desync/crash the live client. [hpDeltas] is the
+    //   ready, entity-id-keyed seam that pump will call once capture #2 validates the ordering.
   }
 
   /** C2S BattleMoveUse(0x0A) → sidecar choice("move N"). */
   suspend fun onMoveUse(session: SessionContext, moveSlotIndex: Int): TurnResult? {
     val state = battleBySession[session] ?: return null
     val turn = sidecar.choice(state.battleId, "move ${moveSlotIndex + 1}")
-    // TODO(capture): translate turn.log/sides → S2C battle event packets.
+    // GATED (capture #2): emit via [hpDeltas] + siblings once turn-stream ordering + 0x36 pacing
+    // are
+    //   validated; a standalone 0x16 here risks a live-client desync (see onBattleAction).
     finishIfEnded(session, turn)
     return turn
   }

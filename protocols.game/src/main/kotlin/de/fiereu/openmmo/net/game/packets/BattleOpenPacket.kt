@@ -48,8 +48,30 @@ class BattleOpenPacket(val raw: ByteArray) {
   val wildMaxHp: Int
     get() = u16le(172)
 
+  /**
+   * The player **character** entity id (8-byte LE @47) — the overworld character the party belongs
+   * to. Session-sourced (= the logged-in character's entity id) so a live battle references the
+   * same entity the client already knows from the overworld, not the captured sample's character.
+   */
+  val playerCharEntityId: Long
+    get() = u64le(47)
+
+  /** The player **active-mon** entity id (8-byte LE @82); every S2C event must reuse this id. */
+  val playerMonEntityId: Long
+    get() = u64le(82)
+
+  /** The **wild-mon** entity id (8-byte LE @153); every S2C event must reuse this id. */
+  val wildMonEntityId: Long
+    get() = u64le(153)
+
   private fun u16le(off: Int): Int =
       (raw[off].toInt() and 0xFF) or ((raw[off + 1].toInt() and 0xFF) shl 8)
+
+  private fun u64le(off: Int): Long {
+    var v = 0L
+    for (i in 0 until 8) v = v or ((raw[off + i].toLong() and 0xFF) shl (8 * i))
+    return v
+  }
 
   override fun equals(other: Any?): Boolean =
       other is BattleOpenPacket && raw.contentEquals(other.raw)
@@ -61,6 +83,20 @@ class BattleOpenPacket(val raw: ByteArray) {
           "wild=#$wildSpecies L$wildLevel $wildCurrentHp/$wildMaxHp)"
 
   companion object {
+    /**
+     * Entity ids baked into the captured template (capture #1: `captures/2026-07-07-232143`). Used
+     * as [wild] defaults so omitting the ids reproduces the captured bytes byte-exact (unit tests);
+     * a live battle overrides them with session-assigned ids.
+     */
+    const val TEMPLATE_PLAYER_CHAR_ENTITY_ID = 0x19a545e0afc89000L
+    const val TEMPLATE_PLAYER_MON_ENTITY_ID = 0x19a54c55dd88c000L
+    const val TEMPLATE_WILD_MON_ENTITY_ID = 0x1aaa78ad8908c000L
+
+    // Byte offsets of the three 8-byte LE entity ids inside the 206B template.
+    private const val OFF_PLAYER_CHAR_ENTITY = 47
+    private const val OFF_PLAYER_MON_ENTITY = 82
+    private const val OFF_WILD_MON_ENTITY = 153
+
     /**
      * Captured 206B template (the Patrat-catch sample). Fixed regions (header, player name/entity,
      * stat blocks, markers) are preserved from real bytes; [wild] patches the validated mon fields.
@@ -76,10 +112,13 @@ class BattleOpenPacket(val raw: ByteArray) {
         )
 
     /**
-     * Build a wild battle-open by patching the validated mon fields onto the captured template.
+     * Build a wild battle-open by patching the validated mon fields + the three per-battle entity
+     * ids onto the captured template. The entity ids default to the captured template's ids (so a
+     * plain `wild(species…)` call is byte-exact vs the capture); a live battle passes
+     * session-assigned ids — the SAME ids that must key every subsequent S2C event packet.
      *
-     * TODO(session): parameterize player name + entity ids from the live session; TODO(capture):
-     *   the stat/status regions are still template-derived — refine as more captures land.
+     * TODO(capture): the stat/status regions are still template-derived — refine as more captures
+     *   land; player name is still template-derived pending a session-name source.
      */
     fun wild(
         playerSpecies: Int,
@@ -90,6 +129,9 @@ class BattleOpenPacket(val raw: ByteArray) {
         wildLevel: Int,
         wildCurrentHp: Int,
         wildMaxHp: Int,
+        playerCharEntityId: Long = TEMPLATE_PLAYER_CHAR_ENTITY_ID,
+        playerMonEntityId: Long = TEMPLATE_PLAYER_MON_ENTITY_ID,
+        wildMonEntityId: Long = TEMPLATE_WILD_MON_ENTITY_ID,
     ): BattleOpenPacket {
       val b = TEMPLATE.copyOf()
       putU16le(b, 90, playerSpecies)
@@ -100,12 +142,19 @@ class BattleOpenPacket(val raw: ByteArray) {
       b[163] = wildLevel.toByte()
       putU16le(b, 170, wildCurrentHp)
       putU16le(b, 172, wildMaxHp)
+      putU64le(b, OFF_PLAYER_CHAR_ENTITY, playerCharEntityId)
+      putU64le(b, OFF_PLAYER_MON_ENTITY, playerMonEntityId)
+      putU64le(b, OFF_WILD_MON_ENTITY, wildMonEntityId)
       return BattleOpenPacket(b)
     }
 
     private fun putU16le(b: ByteArray, off: Int, v: Int) {
       b[off] = (v and 0xFF).toByte()
       b[off + 1] = ((v shr 8) and 0xFF).toByte()
+    }
+
+    private fun putU64le(b: ByteArray, off: Int, v: Long) {
+      for (i in 0 until 8) b[off + i] = ((v shr (8 * i)) and 0xFF).toByte()
     }
 
     private fun hexToBytes(hex: String): ByteArray =
