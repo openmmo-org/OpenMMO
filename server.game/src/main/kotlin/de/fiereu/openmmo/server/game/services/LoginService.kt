@@ -13,6 +13,8 @@ import de.fiereu.openmmo.net.game.packets.CharacterEntry
 import de.fiereu.openmmo.net.game.packets.CharactersListPacket
 import de.fiereu.openmmo.net.game.packets.ChatMessagePacket
 import de.fiereu.openmmo.net.game.packets.CreateCharacterPacket
+import de.fiereu.openmmo.net.game.packets.InventoryItemEntry
+import de.fiereu.openmmo.net.game.packets.InventoryUpdatePacket
 import de.fiereu.openmmo.net.game.packets.JoinPacket
 import de.fiereu.openmmo.net.game.packets.JoinResponsePacket
 import de.fiereu.openmmo.net.game.packets.LoadEntityPacket
@@ -183,6 +185,12 @@ constructor(
     }
 
     ctx.send(buildLocalPlayerState(info, stored.pokemon))
+    // Real PokeMMO sends this once at login/spawn, right after LocalPlayerState (id=243) --
+    // it's what allocates the client's sa0[pocketIndex] pocket array entry. Without it, the bag
+    // UI ctor (f.TT) NPEs on the very first bag-key press (no network round-trip involved --
+    // see captures/client-crash-dumps and docs/protocol/bag-spec.md). id=107 is NOT required for
+    // the default Items pocket per the real login->spawn->bag-open capture (zero id=107 sent).
+    ctx.send(buildInventoryUpdate(stored.items))
     ctx.send(SelectedCharacterPacket(info))
     ctx.send(
         ChatMessagePacket(
@@ -193,6 +201,24 @@ constructor(
         ))
 
     preloadMapAndJoin(ctx, state, info)
+  }
+
+  private fun buildInventoryUpdate(items: Map<Int, Int>): InventoryUpdatePacket {
+    // pocketIndex=1 is the default Items pocket (r30.kf1 per docs/protocol/bag-spec.md). Our
+    // storage has no separate item-instance id; itemId is unique per pocket in our single-pocket
+    // model, so it doubles as the instanceId (the client's per-pocket HashMap key).
+    val entries =
+        items.entries
+            .sortedBy { it.key }
+            .map { (itemId, quantity) ->
+              InventoryItemEntry(
+                  instanceId = itemId.toLong(),
+                  itemId = itemId.toShort(),
+                  quantity = quantity.toShort(),
+                  pocketIndex = ITEMS_POCKET_INDEX,
+              )
+            }
+    return InventoryUpdatePacket(pocketIndex = ITEMS_POCKET_INDEX, reset = true, entries = entries)
   }
 
   private fun buildLocalPlayerState(
@@ -357,5 +383,10 @@ constructor(
     socialService.sendFriendList(ctx)
 
     log.info { "Player $charId spawned in bank=$bankId map=$mapId; ${others.size} others present" }
+  }
+
+  companion object {
+    // r30.kf1 per docs/protocol/bag-spec.md -- the default Items pocket.
+    private const val ITEMS_POCKET_INDEX = 1
   }
 }

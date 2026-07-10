@@ -184,7 +184,10 @@ object GameProtocol : Protocol() {
     s2c<BattleMoveDisableUpdatePacket>(0x3Fu, BattleMoveDisableUpdatePacketCodec)
 
     c2s<SubmitBreedingPartyPacket>(0x40u, SubmitBreedingPartyPacketCodec)
-    s2c<BattleSidePartyPacket>(0x40u, BattleSidePartyPacketCodec)
+    // 0x40 S2C was a mislabeled, unimplemented placeholder (BattleSidePartyPacket, zero refs
+    // anywhere in server.game) -- repurposed for the real f.oo0_0 inventory-update packet per
+    // docs/protocol/bag-spec.md. See InventoryUpdatePacket.kt.
+    s2c<InventoryUpdatePacket>(0x40u, InventoryUpdatePacketCodec)
 
     c2s<MonsterFavoriteTogglePacket>(0x41u, MonsterFavoriteTogglePacketCodec)
     s2c<BattlePokemonSpritePacket>(0x41u, BattlePokemonSpritePacketCodec)
