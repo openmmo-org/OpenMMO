@@ -140,6 +140,11 @@ constructor(
    * entity ids — i.e. the same ids the client learned from the `0x30` open. This is the seam the
    * full turn-event stream (still gated on capture #2) will emit through; it never guesses an
    * unvalidated layout. Empty if the session has no active battle.
+   *
+   * NOTE: intentionally **not** called by a live path yet — the gated call sites ([onBattleAction],
+   * [onMoveUse]) explain why (a lone, unpaced 0x16 risks a client desync). It is exercised by tests
+   * that assert the entity-id threading is correct, so the pump can wire it verbatim
+   * post-capture-#2.
    */
   fun hpDeltas(session: SessionContext, turn: TurnResult): List<BattleEntityDeltaPacket> {
     val state = battleBySession[session] ?: return emptyList()
@@ -161,14 +166,21 @@ constructor(
       ACTION_NAV -> Unit // menu advance/confirm — no sidecar action
       else -> Unit // TODO(capture #2): FIGHT→attack move-select variant
     }
-    // TODO(PR-next): translate the resulting turn.log → the S2C event codecs (0x33/0x16/0x79/0x31).
+    // GATED (capture #2): emit the turn-event stream here — [hpDeltas] (validated 0x16, keyed to
+    // the
+    //   tracked entity ids) + the 0x33 move-announce / 0x79 / 0x31 siblings, paced by C2S 0x36.
+    //   Deliberately NOT wired yet: a lone, unpaced 0x16 (a damage delta for a move never announced
+    //   via 0x33, sent outside the 0x36 pull) would desync/crash the live client. [hpDeltas] is the
+    //   ready, entity-id-keyed seam that pump will call once capture #2 validates the ordering.
   }
 
   /** C2S BattleMoveUse(0x0A) → sidecar choice("move N"). */
   suspend fun onMoveUse(session: SessionContext, moveSlotIndex: Int): TurnResult? {
     val state = battleBySession[session] ?: return null
     val turn = sidecar.choice(state.battleId, "move ${moveSlotIndex + 1}")
-    // TODO(capture): translate turn.log/sides → S2C battle event packets.
+    // GATED (capture #2): emit via [hpDeltas] + siblings once turn-stream ordering + 0x36 pacing
+    // are
+    //   validated; a standalone 0x16 here risks a live-client desync (see onBattleAction).
     finishIfEnded(session, turn)
     return turn
   }
