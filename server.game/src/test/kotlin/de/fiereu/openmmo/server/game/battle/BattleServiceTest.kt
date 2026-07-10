@@ -15,6 +15,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.netty.channel.Channel
 import io.netty.channel.ChannelFuture
 import io.netty.channel.embedded.EmbeddedChannel
@@ -116,6 +117,64 @@ class BattleServiceTest :
           open.wildSpecies shouldBe 504
           open.wildLevel shouldBe 4
           open.wildCurrentHp shouldBe 18
+        } finally {
+          client.close()
+          server.close()
+        }
+      }
+
+      test("startWildBattle stamps session entity ids into the 0x30 open and keys events to them") {
+        val received = Collections.synchronizedList(mutableListOf<String>())
+        val server = startFakeSidecar(received)
+        val client = BattleSessionClient(port = server.localPort)
+        val service = BattleService(client, CaughtPokemonSink { _, _ -> })
+        val sent = mutableListOf<Any>()
+        val session = fakeSession(sent)
+        val characterId = 0x79000L // a character entity id: (7 shl 16) or 0x9000
+        try {
+          service.startWildBattle(
+              session, characterId = characterId, listOf(ownedMon(25, 7)), ownedMon(504, 4))
+          val open = sent.filterIsInstance<BattleOpenPacket>().single()
+
+          // The player-character entity is the live session's character, not the template's.
+          open.playerCharEntityId shouldBe characterId
+          // The two mon entities are freshly allocated, distinct, and in the battle-mon space.
+          open.playerMonEntityId shouldNotBe open.wildMonEntityId
+          (open.playerMonEntityId and 0xFFFFL) shouldBe 0xC000L
+          (open.wildMonEntityId and 0xFFFFL) shouldBe 0xC000L
+
+          // The S2C event stream is keyed to the SAME ids the client learned from the open.
+          val sides =
+              Json.parseToJsonElement(
+                  """[{"side":"player","active":[{"hpCurrent":30,"hpMax":41}],"benchCount":0},""" +
+                      """{"side":"wild","active":[{"hpCurrent":18,"hpMax":18}],"benchCount":0}]""",
+              )
+          val turn = TurnResult(battleId = "b1", sides = sides, finished = false)
+          val deltas = service.hpDeltas(session, turn)
+          deltas.map { it.entityId } shouldBe listOf(open.playerMonEntityId, open.wildMonEntityId)
+          deltas.map { it.currentHp } shouldBe listOf(30.toShort(), 18.toShort())
+        } finally {
+          client.close()
+          server.close()
+        }
+      }
+
+      test("each battle allocates its own fresh mon entity ids") {
+        val received = Collections.synchronizedList(mutableListOf<String>())
+        val server = startFakeSidecar(received)
+        val client = BattleSessionClient(port = server.localPort)
+        val service = BattleService(client, CaughtPokemonSink { _, _ -> })
+        try {
+          val sentA = mutableListOf<Any>()
+          val sentB = mutableListOf<Any>()
+          service.startWildBattle(
+              fakeSession(sentA), characterId = 1L, listOf(ownedMon(25, 7)), ownedMon(504, 4))
+          service.startWildBattle(
+              fakeSession(sentB), characterId = 2L, listOf(ownedMon(25, 7)), ownedMon(506, 3))
+          val openA = sentA.filterIsInstance<BattleOpenPacket>().single()
+          val openB = sentB.filterIsInstance<BattleOpenPacket>().single()
+          openA.wildMonEntityId shouldNotBe openB.wildMonEntityId
+          openA.playerMonEntityId shouldNotBe openB.playerMonEntityId
         } finally {
           client.close()
           server.close()

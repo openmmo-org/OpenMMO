@@ -85,6 +85,61 @@ class BattleOpenPacketTest :
         // survives a codec round-trip
         BattleOpenPacketCodec.decodeBytes(BattleOpenPacketCodec.encodeToBytes(p)) shouldBe p
       }
+
+      test("decodes the per-mon + player-char entity ids from the real samples") {
+        val catch = BattleOpenPacketCodec.decodeBytes(catchEncounter)
+        catch.playerCharEntityId shouldBe 0x19a545e0afc89000L
+        catch.playerMonEntityId shouldBe 0x19a54c55dd88c000L
+        catch.wildMonEntityId shouldBe 0x1aaa78ad8908c000L
+
+        val fled = BattleOpenPacketCodec.decodeBytes(fledEncounter)
+        // same party mon across both encounters → identical player-mon id...
+        fled.playerMonEntityId shouldBe 0x19a54c55dd88c000L
+        // ...but a fresh wild each encounter → a different wild-mon id.
+        fled.wildMonEntityId shouldBe 0x1aaa7857c588c000L
+      }
+
+      test("wild() stamps session-supplied entity ids and stays a valid 206B packet") {
+        val p =
+            BattleOpenPacket.wild(
+                playerSpecies = 25,
+                playerLevel = 12,
+                playerCurrentHp = 30,
+                playerMaxHp = 41,
+                wildSpecies = 504,
+                wildLevel = 5,
+                wildCurrentHp = 22,
+                wildMaxHp = 22,
+                playerCharEntityId = 0x79000L,
+                playerMonEntityId = 0x0BB000000001C000L,
+                wildMonEntityId = 0x0BB000000002C000L,
+            )
+        p.raw.size shouldBe 206
+        p.playerCharEntityId shouldBe 0x79000L
+        p.playerMonEntityId shouldBe 0x0BB000000001C000L
+        p.wildMonEntityId shouldBe 0x0BB000000002C000L
+        // the validated mon fields are still patched alongside the ids
+        p.playerSpecies shouldBe 25
+        p.wildSpecies shouldBe 504
+        BattleOpenPacketCodec.decodeBytes(BattleOpenPacketCodec.encodeToBytes(p)) shouldBe p
+      }
+
+      test("wild() defaults the entity ids to the captured template ids (byte-exact)") {
+        val p =
+            BattleOpenPacket.wild(
+                playerSpecies = 501,
+                playerLevel = 7,
+                playerCurrentHp = 11,
+                playerMaxHp = 25,
+                wildSpecies = 504,
+                wildLevel = 4,
+                wildCurrentHp = 18,
+                wildMaxHp = 18,
+            )
+        p.playerCharEntityId shouldBe BattleOpenPacket.TEMPLATE_PLAYER_CHAR_ENTITY_ID
+        p.playerMonEntityId shouldBe BattleOpenPacket.TEMPLATE_PLAYER_MON_ENTITY_ID
+        p.wildMonEntityId shouldBe BattleOpenPacket.TEMPLATE_WILD_MON_ENTITY_ID
+      }
     })
 
 private fun hex(s: String): ByteArray =
