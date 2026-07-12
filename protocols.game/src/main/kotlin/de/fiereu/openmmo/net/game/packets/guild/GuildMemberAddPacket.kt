@@ -1,4 +1,4 @@
-package de.fiereu.openmmo.net.game.packets
+package de.fiereu.openmmo.net.game.packets.guild
 
 import de.fiereu.bytecodec.*
 
@@ -11,7 +11,7 @@ data class GuildMemberAppearance(
     val slots: List<Short>,
 )
 
-data class GuildRosterAddPacket(
+data class GuildMemberAddPacket(
     val rank: Byte,
     val entityId: Long,
     val value: Int,
@@ -31,13 +31,13 @@ internal object GuildMemberAppearanceCodec : PacketCodec<GuildMemberAppearance>(
   }
 }
 
-object GuildRosterAddPacketCodec : PacketCodec<GuildRosterAddPacket>() {
-  override fun CodecScope<GuildRosterAddPacket>.body(): GuildRosterAddPacket {
-    val rank = field(S8, GuildRosterAddPacket::rank)
-    val entityId = field(S64LE, GuildRosterAddPacket::entityId)
-    val value = field(S32LE, GuildRosterAddPacket::value)
-    val appearance = field(GuildMemberAppearanceCodec, GuildRosterAddPacket::appearance)
-    val leader = field(Bool, GuildRosterAddPacket::leader)
-    return GuildRosterAddPacket(rank, entityId, value, appearance, leader)
+object GuildMemberAddPacketCodec : PacketCodec<GuildMemberAddPacket>() {
+  override fun CodecScope<GuildMemberAddPacket>.body(): GuildMemberAddPacket {
+    val rank = field(S8, GuildMemberAddPacket::rank)
+    val entityId = field(S64LE, GuildMemberAddPacket::entityId)
+    val value = field(S32LE, GuildMemberAddPacket::value)
+    val appearance = field(GuildMemberAppearanceCodec, GuildMemberAddPacket::appearance)
+    val leader = field(Bool, GuildMemberAddPacket::leader)
+    return GuildMemberAddPacket(rank, entityId, value, appearance, leader)
   }
 }

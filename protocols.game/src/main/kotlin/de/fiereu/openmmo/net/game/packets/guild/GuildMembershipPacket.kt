@@ -1,4 +1,4 @@
-package de.fiereu.openmmo.net.game.packets
+package de.fiereu.openmmo.net.game.packets.guild
 
 import de.fiereu.bytecodec.*
 
@@ -6,16 +6,19 @@ data class GuildProfileData(
     val guildId: Long,
     val name: String,
     val tag: String,
-    val memberCount: Int,
-    val description: String,
-    val motd: Int,
+    val foundedAt: Int,
+    val message: String,
+    val updatedAt: Int,
     val value1: Short,
     val value2: Short,
     val value3: Short,
     val value4: Short,
     val value5: Short,
-    val value6: Int,
-    val rankNames: List<String>,
+    val unk1: Int,
+    val rankCount: Int,
+    val unk2: Int,
+    val unk3: Int,
+    val flag: Byte,
 )
 
 data class GuildMembershipPacket(
@@ -28,32 +31,36 @@ private object GuildProfileDataCodec : PacketCodec<GuildProfileData>() {
     val guildId = field(S64LE, GuildProfileData::guildId)
     val name = field(Utf16LeNullTerminated, GuildProfileData::name)
     val tag = field(Utf16LeNullTerminated, GuildProfileData::tag)
-    val memberCount = field(S32LE, GuildProfileData::memberCount)
-    val description = field(Utf16LeNullTerminated, GuildProfileData::description)
-    val motd = field(S32LE, GuildProfileData::motd)
+    val foundedAt = field(S32LE, GuildProfileData::foundedAt)
+    val message = field(Utf16LeNullTerminated, GuildProfileData::message)
+    val updatedAt = field(S32LE, GuildProfileData::updatedAt)
     val value1 = field(S16LE, GuildProfileData::value1)
     val value2 = field(S16LE, GuildProfileData::value2)
     val value3 = field(S16LE, GuildProfileData::value3)
     val value4 = field(S16LE, GuildProfileData::value4)
     val value5 = field(S16LE, GuildProfileData::value5)
-    val value6 = field(S32LE, GuildProfileData::value6)
-    val rankCount = field(S8) { it.rankNames.size.toByte() }
-    val rankNames =
-        List(rankCount.toInt()) { i -> field(Utf16LeNullTerminated) { it.rankNames[i] } }
+    val unk1 = field(S32LE, GuildProfileData::unk1)
+    val rankCount = field(S32LE, GuildProfileData::rankCount)
+    val unk2 = field(S32LE, GuildProfileData::unk2)
+    val unk3 = field(S32LE, GuildProfileData::unk3)
+    val flag = field(S8, GuildProfileData::flag)
     return GuildProfileData(
         guildId,
         name,
         tag,
-        memberCount,
-        description,
-        motd,
+        foundedAt,
+        message,
+        updatedAt,
         value1,
         value2,
         value3,
         value4,
         value5,
-        value6,
-        rankNames,
+        unk1,
+        rankCount,
+        unk2,
+        unk3,
+        flag,
     )
   }
 }

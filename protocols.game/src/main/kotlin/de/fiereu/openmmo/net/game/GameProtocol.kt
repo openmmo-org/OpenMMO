@@ -5,6 +5,7 @@ import de.fiereu.network.bidi
 import de.fiereu.network.c2s
 import de.fiereu.network.s2c
 import de.fiereu.openmmo.net.game.packets.*
+import de.fiereu.openmmo.net.game.packets.guild.*
 
 object GameProtocol : Protocol() {
   override val compressed: Boolean = true
@@ -347,31 +348,31 @@ object GameProtocol : Protocol() {
 
     s2c<GtlPriceHistoryPacket>(0x7Fu, GtlPriceHistoryPacketCodec)
 
-    c2s<TeamFoundPacket>(0x80u, TeamFoundPacketCodec)
+    c2s<GuildCreatePacket>(0x80u, GuildCreatePacketCodec)
     s2c<GuildMembershipPacket>(0x80u, GuildMembershipPacketCodec)
 
     c2s<GuildMotdUpdatePacket>(0x81u, GuildMotdUpdatePacketCodec)
     s2c<GuildProfileSyncPacket>(0x81u, GuildProfileSyncPacketCodec)
 
-    c2s<GuildDepartPacket>(0x82u, GuildDepartPacketCodec)
+    c2s<GuildLeavePacket>(0x82u, GuildLeavePacketCodec)
 
-    c2s<GuildChatSendPacket>(0x83u, GuildChatSendPacketCodec)
-    s2c<GuildRosterAddPacket>(0x83u, GuildRosterAddPacketCodec)
+    c2s<GuildInvitePacket>(0x83u, GuildInvitePacketCodec)
+    s2c<GuildMemberAddPacket>(0x83u, GuildMemberAddPacketCodec)
 
     c2s<GuildMemberRankAssignPacket>(0x84u, GuildMemberRankAssignPacketCodec)
     s2c<GuildMemberRankChangePacket>(0x84u, GuildMemberRankChangePacketCodec)
 
-    c2s<GuildMemberExpelPacket>(0x85u, GuildMemberExpelPacketCodec)
-    s2c<GuildRosterRemovePacket>(0x85u, GuildRosterRemovePacketCodec)
+    c2s<GuildMemberKickPacket>(0x85u, GuildMemberKickPacketCodec)
+    s2c<GuildMemberRemovePacket>(0x85u, GuildMemberRemovePacketCodec)
 
     c2s<GuildRankPermissionUpdatePacket>(0x86u, GuildRankPermissionUpdatePacketCodec)
     s2c<GuildMemberPresencePacket>(0x86u, GuildMemberPresencePacketCodec)
 
-    c2s<GuildDisbandToggleRequestPacket>(0x87u, GuildDisbandToggleRequestPacketCodec)
+    c2s<GuildDisbandPacket>(0x87u, GuildDisbandPacketCodec)
     s2c<ContactCategoryGroupPacket>(0x87u, ContactCategoryGroupPacketCodec)
 
     c2s<GuildRankLabelUpdatePacket>(0x88u, GuildRankLabelUpdatePacketCodec)
-    s2c<GuildRosterBulkPacket>(0x88u, GuildRosterBulkPacketCodec)
+    s2c<SyncGuildMembersPacket>(0x88u, SyncGuildMembersPacketCodec)
 
     c2s<GuildActivityLogPageRequestPacket>(0x89u, GuildActivityLogPageRequestPacketCodec)
     s2c<GuildActivityLogPacket>(0x89u, GuildActivityLogPacketCodec)
