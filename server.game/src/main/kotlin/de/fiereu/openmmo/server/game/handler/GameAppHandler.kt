@@ -26,7 +26,18 @@ import de.fiereu.openmmo.net.game.packets.RequestPlayerPacket
 import de.fiereu.openmmo.net.game.packets.RequestSocialProfilePacket
 import de.fiereu.openmmo.net.game.packets.SelectCharacterPacket
 import de.fiereu.openmmo.net.game.packets.UnblockPlayerPacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildActivityLogPageRequestPacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildCreatePacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildDisbandPacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildInvitePacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildLeavePacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildMemberKickPacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildMemberRankAssignPacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildMotdUpdatePacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildRankLabelUpdatePacket
+import de.fiereu.openmmo.net.game.packets.guild.GuildRankPermissionUpdatePacket
 import de.fiereu.openmmo.server.game.services.DialogService
+import de.fiereu.openmmo.server.game.services.GuildService
 import de.fiereu.openmmo.server.game.services.InteractionService
 import de.fiereu.openmmo.server.game.services.LoginService
 import de.fiereu.openmmo.server.game.services.MovementService
@@ -50,6 +61,7 @@ constructor(
     private val interactionService: InteractionService,
     private val multiplayerService: MultiplayerService,
     private val socialService: SocialService,
+    private val guildService: GuildService,
     private val sessionRegistry: SessionRegistry,
     private val characterStore: CharacterStore,
     scope: CoroutineScope,
@@ -76,6 +88,17 @@ constructor(
     on<FriendProfileRequestPacket> { event -> socialService.onFriendProfileRequest(event) }
     on<RequestSocialProfilePacket> { event -> socialService.onRequestSocialProfile(event) }
     on<CancelSocialInteractionPacket> { event -> socialService.onCancelSocialInteraction(event) }
+
+    on<GuildCreatePacket> { event -> guildService.onCreateGuild(event) }
+    on<GuildInvitePacket> { event -> guildService.onGuildInvite(event) }
+    on<GuildRankPermissionUpdatePacket> { event -> guildService.onRankPermissionUpdate(event) }
+    on<GuildMemberRankAssignPacket> { event -> guildService.onRankAssign(event) }
+    on<GuildMemberKickPacket> { event -> guildService.onKick(event) }
+    on<GuildLeavePacket> { event -> guildService.onLeave(event) }
+    on<GuildDisbandPacket> { event -> guildService.onDisband(event) }
+    on<GuildMotdUpdatePacket> { event -> guildService.onMotdUpdate(event) }
+    on<GuildRankLabelUpdatePacket> { event -> guildService.onRankLabelUpdate(event) }
+    on<GuildActivityLogPageRequestPacket> { event -> guildService.onActivityLogPageRequest(event) }
 
     on<KeepAlivePacket> { event -> event.session.send(event.packet) }
     on<ChatMessagePacket> { event -> onChatMessage(event) }

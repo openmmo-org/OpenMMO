@@ -51,7 +51,7 @@ class CharacterStore @Inject constructor() {
             rivalSex = 0,
             lastLogin = now,
             createdAt = now,
-            money = 3000,
+            money = 30000,
             permissions = 8,
             remainingSafariSteps = 0,
             remainingSafariBalls = 0,
