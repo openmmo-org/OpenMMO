@@ -5,6 +5,7 @@ import de.fiereu.network.bidi
 import de.fiereu.network.c2s
 import de.fiereu.network.s2c
 import de.fiereu.openmmo.net.game.packets.*
+import de.fiereu.openmmo.net.game.packets.battle.*
 import de.fiereu.openmmo.net.game.packets.guild.*
 
 object GameProtocol : Protocol() {
@@ -139,6 +140,7 @@ object GameProtocol : Protocol() {
     s2c<WorldJoinConfirmPacket>(0x2Fu, WorldJoinConfirmPacketCodec)
 
     c2s<BattleActionPacket>(0x30u, BattleActionPacketCodec)
+    s2c<BattleFieldStatePacket>(0x30u, BattleFieldStatePacketCodec)
 
     s2c<BattleBulkStatePacket>(0x31u, BattleBulkStatePacketCodec)
 
@@ -151,10 +153,10 @@ object GameProtocol : Protocol() {
     c2s<SpectateRequestPacket>(0x34u, SpectateRequestPacketCodec)
     s2c<BattleSlotEventEnumPacket>(0x34u, BattleSlotEventEnumPacketCodec)
 
-    c2s<LeaveBattlePacket>(0x35u, LeaveBattlePacketCodec)
-    s2c<BattleSlotMoveEventPacket>(0x35u, BattleSlotMoveEventPacketCodec)
+    c2s<BattleLeavePacket>(0x35u, BattleLeavePacketCodec)
+    s2c<BattleSwitchInPacket>(0x35u, BattleSwitchInPacketCodec)
 
-    c2s<RequestNextBattleSequencePacket>(0x36u, RequestNextBattleSequencePacketCodec)
+    c2s<BattleSequencePacket>(0x36u, BattleSequencePacketCodec)
     s2c<BattleSlotFlagEventPacket>(0x36u, BattleSlotFlagEventPacketCodec)
 
     c2s<BattleSlotActionPacket>(0x37u, BattleSlotActionPacketCodec)
@@ -166,7 +168,7 @@ object GameProtocol : Protocol() {
     c2s<BattleUseItemPacket>(0x39u, BattleUseItemPacketCodec)
     s2c<BattleLabeledMoveEventPacket>(0x39u, BattleLabeledMoveEventPacketCodec)
 
-    c2s<SetBattleMonsterAppearancePacket>(0x3Au, SetBattleMonsterAppearancePacketCodec)
+    c2s<BattleAppearancePacket>(0x3Au, BattleAppearancePacketCodec)
     s2c<BattleEnumPairEventPacket>(0x3Au, BattleEnumPairEventPacketCodec)
 
     c2s<PrismaticPearlTransferPacket>(0x3Bu, PrismaticPearlTransferPacketCodec)
@@ -294,7 +296,7 @@ object GameProtocol : Protocol() {
     c2s<InstanceReadyCheckPacket>(0x6Au, InstanceReadyCheckPacketCodec)
 
     c2s<CancelMatchmakingSearchPacket>(0x6Bu, CancelMatchmakingSearchPacketCodec)
-    s2c<ActiveBattleSidePacket>(0x6Bu, ActiveBattleSidePacketCodec)
+    s2c<BattleSidePacket>(0x6Bu, BattleSidePacketCodec)
 
     c2s<MatchmakingLanguagePrefsPacket>(0x6Cu, MatchmakingLanguagePrefsPacketCodec)
     s2c<MountMoveCooldownPacket>(0x6Cu, MountMoveCooldownPacketCodec)
@@ -515,9 +517,9 @@ object GameProtocol : Protocol() {
 
     s2c<FieldMapTilePaletteApplyPacket>(0xC3u, FieldMapTilePaletteApplyPacketCodec)
 
-    s2c<FieldMapBattleSlotTileMapPacket>(0xC4u, FieldMapBattleSlotTileMapPacketCodec)
+    s2c<BattleTileMapPacket>(0xC4u, BattleTileMapPacketCodec)
 
-    s2c<FieldMapBattleSlotMarkerPacket>(0xC5u, FieldMapBattleSlotMarkerPacketCodec)
+    s2c<BattleMarkerPacket>(0xC5u, BattleMarkerPacketCodec)
 
     s2c<WorldObjectInstanceDespawnPacket>(0xC8u, WorldObjectInstanceDespawnPacketCodec)
 
@@ -562,6 +564,7 @@ object GameProtocol : Protocol() {
     c2s<BattleRewardSelectPacket>(0xE3u, BattleRewardSelectPacketCodec)
 
     c2s<BattleChallengeRequestPacket>(0xE4u, BattleChallengeRequestPacketCodec)
+    s2c<EntityCounterPulsePacket>(0xE4u, EntityCounterPulsePacketCodec)
 
     s2c<EntityMovePacket>(0xEAu, EntityMovePacketCodec)
 

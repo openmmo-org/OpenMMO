@@ -10,6 +10,7 @@ import de.fiereu.openmmo.net.game.packets.AddFriendPacket
 import de.fiereu.openmmo.net.game.packets.BlockPlayerPacket
 import de.fiereu.openmmo.net.game.packets.CancelSocialInteractionPacket
 import de.fiereu.openmmo.net.game.packets.ChatMessagePacket
+import de.fiereu.openmmo.net.game.packets.ChatMessageSendPacket
 import de.fiereu.openmmo.net.game.packets.CreateCharacterPacket
 import de.fiereu.openmmo.net.game.packets.DialogChoicePacket
 import de.fiereu.openmmo.net.game.packets.EntityInteractPacket
@@ -26,6 +27,28 @@ import de.fiereu.openmmo.net.game.packets.RequestPlayerPacket
 import de.fiereu.openmmo.net.game.packets.RequestSocialProfilePacket
 import de.fiereu.openmmo.net.game.packets.SelectCharacterPacket
 import de.fiereu.openmmo.net.game.packets.UnblockPlayerPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleActionPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleActionSelectPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleActionSubmitPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleAppearancePacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleCancelRequestPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleChallengeRequestPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleChatMessagePacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleLeavePacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleMoveUsePacket
+import de.fiereu.openmmo.net.game.packets.battle.BattlePartySlotSelectPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattlePartySwitchPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleReadyPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleRewardSelectPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleSequencePacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleSimulationRequestPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleSlotActionPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleSwitchSelectionsPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleTargetPickPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleTeamPreviewConfirmPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleTierSelectPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleTransitionReadyPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleUseItemPacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildActivityLogPageRequestPacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildCreatePacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildDisbandPacket
@@ -36,6 +59,7 @@ import de.fiereu.openmmo.net.game.packets.guild.GuildMemberRankAssignPacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildMotdUpdatePacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildRankLabelUpdatePacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildRankPermissionUpdatePacket
+import de.fiereu.openmmo.server.game.services.BattleService
 import de.fiereu.openmmo.server.game.services.DialogService
 import de.fiereu.openmmo.server.game.services.GuildService
 import de.fiereu.openmmo.server.game.services.InteractionService
@@ -62,6 +86,7 @@ constructor(
     private val multiplayerService: MultiplayerService,
     private val socialService: SocialService,
     private val guildService: GuildService,
+    private val battleService: BattleService,
     private val sessionRegistry: SessionRegistry,
     private val characterStore: CharacterStore,
     scope: CoroutineScope,
@@ -100,8 +125,32 @@ constructor(
     on<GuildRankLabelUpdatePacket> { event -> guildService.onRankLabelUpdate(event) }
     on<GuildActivityLogPageRequestPacket> { event -> guildService.onActivityLogPageRequest(event) }
 
+    on<BattleMoveUsePacket> { event -> battleService.onBattlePacket(event) }
+    on<BattlePartySwitchPacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleActionPacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleActionSelectPacket> { event -> battleService.onBattleAction(event) }
+    on<BattleLeavePacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleSequencePacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleSlotActionPacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleSwitchSelectionsPacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleUseItemPacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleAppearancePacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleCancelRequestPacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleSimulationRequestPacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleReadyPacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleActionSubmitPacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleTierSelectPacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleChatMessagePacket> { event -> battleService.onBattlePacket(event) }
+    on<BattlePartySlotSelectPacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleTargetPickPacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleTransitionReadyPacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleTeamPreviewConfirmPacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleRewardSelectPacket> { event -> battleService.onBattlePacket(event) }
+    on<BattleChallengeRequestPacket> { event -> battleService.onBattlePacket(event) }
+
     on<KeepAlivePacket> { event -> event.session.send(event.packet) }
     on<ChatMessagePacket> { event -> onChatMessage(event) }
+    on<ChatMessageSendPacket> { event -> battleService.onChatSend(event) }
   }
 
   override fun onInactive() {

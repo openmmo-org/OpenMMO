@@ -7,6 +7,8 @@ import de.fiereu.openmmo.net.game.packets.JoinPacket
 import de.fiereu.openmmo.net.game.packets.KeepAlivePacket
 import de.fiereu.openmmo.net.game.packets.MovementPacket
 import de.fiereu.openmmo.net.game.packets.RemoveFriendPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleActionPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleChallengeRequestPacket
 import de.fiereu.openmmo.server.game.config.GameServerConfig
 import de.fiereu.openmmo.server.game.di.DaggerGameServerComponent
 import io.kotest.core.spec.style.FunSpec
@@ -32,5 +34,7 @@ class GameAppHandlerTest :
         handler.isRegistered(AddFriendPacket::class) shouldBe true
         handler.isRegistered(RemoveFriendPacket::class) shouldBe true
         handler.isRegistered(BlockPlayerPacket::class) shouldBe true
+        handler.isRegistered(BattleActionPacket::class) shouldBe true
+        handler.isRegistered(BattleChallengeRequestPacket::class) shouldBe true
       }
     })
