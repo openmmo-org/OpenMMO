@@ -1,5 +1,8 @@
 package de.fiereu.bytecodec
 
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+
 object Bool : Codec<Boolean> {
   override fun read(buf: ReadBuffer): Boolean = buf.readByte() != 0.toByte()
 
@@ -216,6 +219,16 @@ object F64BE : Codec<Double> {
 
   override fun write(buf: WriteBuffer, value: Double) {
     S64BE.write(buf, value.toRawBits())
+  }
+}
+
+/** Unix timestamp as little-endian signed 32-bit seconds, exposed as a UTC [LocalDateTime]. */
+object TimestampLE : Codec<LocalDateTime> {
+  override fun read(buf: ReadBuffer): LocalDateTime =
+      LocalDateTime.ofEpochSecond(S32LE.read(buf).toLong(), 0, ZoneOffset.UTC)
+
+  override fun write(buf: WriteBuffer, value: LocalDateTime) {
+    S32LE.write(buf, value.toEpochSecond(ZoneOffset.UTC).toInt())
   }
 }
 

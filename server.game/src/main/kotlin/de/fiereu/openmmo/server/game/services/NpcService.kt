@@ -58,7 +58,7 @@ constructor(
               NpcEntry(9, 4, 14, 36, 1, 5121, 0, 1, 9),
               NpcEntry(8, 7, 32, 36, 1, 5632, 0, 0, 8),
           )
-      val baseEntityId = 0x1A6BFE24CC88E000L
+      val baseEntityId = 0x000000000001E000L
       for (npc in all16) {
         val entityId = baseEntityId or npc.entityIdx.toLong()
         log.info {

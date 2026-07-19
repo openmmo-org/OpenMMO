@@ -8,6 +8,7 @@ import java.time.LocalDateTime
 
 data class Pokemon(
     val id: Long,
+    val ownerId: Long,
     val container: PokemonContainer,
     val containerSlot: Short,
     val dexId: Int,
@@ -26,9 +27,13 @@ data class Pokemon(
     val isSecret: Boolean,
     val isFatefulEncounter: Boolean,
     val isRaidEncounter: Boolean,
-    val caughtAt: LocalDateTime
+    val caughtAt: LocalDateTime,
+    val isEgg: Boolean = false
 ) {
-  val nature: PokemonNature = PokemonNature.entries[seed % PokemonNature.entries.size]
+  // seed is an unsigned 32-bit value on the wire, so mask before the modulo to avoid a negative
+  // index when the high bit is set.
+  val nature: PokemonNature =
+      PokemonNature.entries[((seed.toLong() and 0xFFFFFFFFL) % PokemonNature.entries.size).toInt()]
 
   init {
     require(moves.size <= 4) { "A Pokemon can't have more than 4 moves" }
