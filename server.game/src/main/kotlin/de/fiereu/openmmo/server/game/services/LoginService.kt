@@ -17,13 +17,23 @@ import de.fiereu.openmmo.net.game.packets.CreateCharacterPacket
 import de.fiereu.openmmo.net.game.packets.JoinPacket
 import de.fiereu.openmmo.net.game.packets.JoinResponsePacket
 import de.fiereu.openmmo.net.game.packets.LoadEntityPacket
+import de.fiereu.openmmo.net.game.packets.LocalPlayerStatePacket
+import de.fiereu.openmmo.net.game.packets.MenuPagePayloadPacket
 import de.fiereu.openmmo.net.game.packets.NewAuthData
+import de.fiereu.openmmo.net.game.packets.ObjectiveProgressBulkPacket
+import de.fiereu.openmmo.net.game.packets.PokedexSpeciesResetPacket
 import de.fiereu.openmmo.net.game.packets.PokemonContainerPacket
 import de.fiereu.openmmo.net.game.packets.RenderScreenPacket
 import de.fiereu.openmmo.net.game.packets.RequestCharactersPacket
 import de.fiereu.openmmo.net.game.packets.RequestPlayerPacket
 import de.fiereu.openmmo.net.game.packets.SelectCharacterPacket
 import de.fiereu.openmmo.net.game.packets.SelectedCharacterPacket
+import de.fiereu.openmmo.net.game.packets.ViewScalePacket
+import de.fiereu.openmmo.net.game.packets.WorldFlagTableResetPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleRatingBulkPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleStateBytePacket
+import de.fiereu.openmmo.net.game.packets.battle.ItemStack
+import de.fiereu.openmmo.net.game.packets.battle.itemStacksPacket
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.session.PlayerState
 import de.fiereu.openmmo.server.game.session.SessionRegistry
@@ -34,6 +44,27 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 private val log = KotlinLogging.logger {}
+
+private fun hexToBytes(hex: String): ByteArray =
+    ByteArray(hex.length / 2) { hex.substring(it * 2, it * 2 + 2).toInt(16).toByte() }
+
+// The world-flag table the client loads on join. Groups one to three are zlib streams that each
+// decompress to a 67-byte flag block, the fourth is empty. The client reads real flag state while
+// building the follower and party, so empty groups leave a lookup null and crash it.
+private val WORLD_FLAG_GROUPS =
+    listOf(
+            "789c637060a00434a8b0320000133900ea",
+            "789c637060a00434303032000012c500c2",
+            "789c637060a00434303032000012c500c2",
+            "",
+        )
+        .map(::hexToBytes)
+
+private const val POKE_BALL_ITEM_ID: Short = 5004
+private const val POKE_BALL_OBJECT_ID = 0x0000000000015000L
+private const val POKE_BALL_QUANTITY: Short = 10
+private val STARTING_BAG =
+    listOf(ItemStack(POKE_BALL_OBJECT_ID, POKE_BALL_ITEM_ID, POKE_BALL_QUANTITY))
 
 @Singleton
 class LoginService
@@ -125,6 +156,11 @@ constructor(
     sessionRegistry.bindCharacter(ctx, charId)
     log.info { "Player selected character '${stored.info.name}' (id=$charId)" }
 
+    // Initialise the client world-flag table before any monster or follower is built. Without it
+    // the table stays null and the client crashes constructing a party monster that reads a flag.
+    ctx.send(WorldFlagTableResetPacket(WORLD_FLAG_GROUPS))
+    ctx.send(buildLocalPlayerState(stored.info, stored.pokemon.map { it.dexId.toShort() }))
+
     val info = stored.info
     val now = LocalDateTime.now()
     val updatedInfo = info.copy(lastLogin = now)
@@ -134,9 +170,9 @@ constructor(
         mapOf(
             PokemonContainer.PARTY to stored.pokemon,
             PokemonContainer.PC to stored.pcStorage,
-            PokemonContainer.BATTLE_BOX_1 to emptyList<Pokemon>(),
-            PokemonContainer.BATTLE_BOX_2 to emptyList<Pokemon>(),
-            PokemonContainer.DAYCARE to emptyList<Pokemon>(),
+            PokemonContainer.BATTLE_BOX_1 to emptyList(),
+            PokemonContainer.BATTLE_BOX_2 to emptyList(),
+            PokemonContainer.DAYCARE to emptyList(),
         )
     for ((container, pokemon) in containers) {
       ctx.send(
@@ -158,7 +194,12 @@ constructor(
           ))
     }
 
+    // The bag item stacks (opcode 0x40). The real server sends these during join, interleaved with
+    // the container packets, so the client has the items before entering the world.
+    ctx.send(itemStacksPacket(STARTING_BAG))
+
     ctx.send(SelectedCharacterPacket(info))
+    sendJoinState(ctx)
     ctx.send(
         ChatMessagePacket(
             ChatType.GAME_NOTIFICATIONS,
@@ -168,6 +209,45 @@ constructor(
         ))
 
     preloadMapAndJoin(ctx, state, info)
+  }
+
+  // The full local-player state snapshot the client loads on login. Missing it leaves player state
+  // uninitialised and the client crashes reading it (for example when opening the battle bag).
+  private fun buildLocalPlayerState(
+      info: CharacterInfo,
+      partyDex: List<Short>
+  ): LocalPlayerStatePacket =
+      LocalPlayerStatePacket(
+          region = info.positionRegionId,
+          mapId = info.positionMapId.toShort(),
+          moveSpeed = 0.05f,
+          x = info.positionX,
+          y = info.positionY,
+          z = 0,
+          money = info.money,
+          gender = 0,
+          skinTone = 0,
+          hairColor = 0,
+          playtime = 0.0,
+          flags = 0,
+          partyDex = partyDex,
+          partyForms = partyDex.map { 0.toByte() },
+          pokedexSeen = emptyList(),
+          pokedexCaught = emptyList(),
+          badges = emptyList(),
+          variables = emptyList(),
+      )
+
+  // Small state packets the real server sends in the join flow. The battle-state byte and menu
+  // payloads initialise state the battle bag reads, so without them opening the bag crashes.
+  private fun sendJoinState(ctx: SessionContext) {
+    ctx.send(ViewScalePacket(viewScale = 5))
+    ctx.send(BattleRatingBulkPacket(emptyList()))
+    ctx.send(BattleStateBytePacket(state = 0x19))
+    ctx.send(PokedexSpeciesResetPacket(emptyList()))
+    ctx.send(ObjectiveProgressBulkPacket(emptyList()))
+    ctx.send(MenuPagePayloadPacket(menuType = 0, page = null))
+    ctx.send(MenuPagePayloadPacket(menuType = 1, page = null))
   }
 
   private fun preloadMapAndJoin(
