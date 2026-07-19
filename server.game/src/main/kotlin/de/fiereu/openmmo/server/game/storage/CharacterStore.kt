@@ -2,11 +2,24 @@ package de.fiereu.openmmo.server.game.storage
 
 import de.fiereu.openmmo.common.CharacterInfo
 import de.fiereu.openmmo.common.Pokemon
+import de.fiereu.openmmo.common.PokemonMove
+import de.fiereu.openmmo.common.enums.EVs
+import de.fiereu.openmmo.common.enums.IVs
+import de.fiereu.openmmo.common.enums.PokemonContainer
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
+
+// A starter party monster for the dev test character. Its uid, species, HP, and moves match the
+// field state emitted by the test battle so the client can resolve the player's monster.
+const val STARTER_SNIVY_UID = 0x000000000001C000L
+const val SNIVY_DEX_ID = 495
+
+// A second party monster so the switch action is selectable in the test battle.
+const val STARTER_PATRAT_UID = 0x000000000002C000L
+const val PATRAT_DEX_ID = 504
 
 data class StoredCharacter(
     val info: CharacterInfo,
@@ -27,7 +40,9 @@ class CharacterStore @Inject constructor() {
 
   private fun ensureTestCharacter() {
     if (characters.isEmpty()) {
-      createCharacter(userId = 1, name = "Test")
+      val test = createCharacter(userId = 1, name = "Test")
+      test.pokemon.add(starterSnivy(test.info.id, test.info.name))
+      test.pokemon.add(starterPatrat(test.info.id, test.info.name))
     }
   }
 
@@ -103,6 +118,68 @@ class CharacterStore @Inject constructor() {
         )
     characters[characterId] = stored.copy(info = newInfo)
   }
+
+  private fun starterSnivy(ownerId: Long, ot: String): Pokemon =
+      Pokemon(
+          id = STARTER_SNIVY_UID,
+          ownerId = ownerId,
+          container = PokemonContainer.PARTY,
+          containerSlot = 0,
+          dexId = SNIVY_DEX_ID,
+          seed = 0,
+          ot = ot,
+          nickname = "",
+          level = 5,
+          hp = 20,
+          xp = 165,
+          eVs = EVs(),
+          iVs = IVs(),
+          moves =
+              listOf(
+                  PokemonMove(33, 35),
+                  PokemonMove(43, 30),
+                  PokemonMove(0, 0),
+                  PokemonMove(0, 0),
+              ),
+          isShiny = false,
+          hasHiddenAbility = false,
+          isAlpha = false,
+          isSecret = false,
+          isFatefulEncounter = false,
+          isRaidEncounter = false,
+          caughtAt = LocalDateTime.now(),
+      )
+
+  private fun starterPatrat(ownerId: Long, ot: String): Pokemon =
+      Pokemon(
+          id = STARTER_PATRAT_UID,
+          ownerId = ownerId,
+          container = PokemonContainer.PARTY,
+          containerSlot = 1,
+          dexId = PATRAT_DEX_ID,
+          seed = 0,
+          ot = ot,
+          nickname = "",
+          level = 3,
+          hp = 12,
+          xp = 27,
+          eVs = EVs(),
+          iVs = IVs(),
+          moves =
+              listOf(
+                  PokemonMove(33, 35),
+                  PokemonMove(0, 0),
+                  PokemonMove(0, 0),
+                  PokemonMove(0, 0),
+              ),
+          isShiny = false,
+          hasHiddenAbility = false,
+          isAlpha = false,
+          isSecret = false,
+          isFatefulEncounter = false,
+          isRaidEncounter = false,
+          caughtAt = LocalDateTime.now(),
+      )
 
   fun addPokemon(characterId: Long, pokemon: Pokemon) {
     characters[characterId]?.pokemon?.add(pokemon)
