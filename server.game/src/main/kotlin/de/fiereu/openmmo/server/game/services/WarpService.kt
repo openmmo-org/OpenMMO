@@ -94,6 +94,7 @@ constructor(
             positionY = offsetY.toShort(),
         )
     characterStore.updateCharacter(newInfo)
+    characterStore.flushCharacterAsync(charId)
 
     if (state != null) {
       state.regionId = warp.targetRegionId.toInt()

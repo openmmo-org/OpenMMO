@@ -6,22 +6,29 @@ import de.fiereu.openmmo.common.PokemonMove
 import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+
+private val log = KotlinLogging.logger {}
 
 // The starter party every new character gets.
 const val SNIVY_DEX_ID = 495
 const val PATRAT_DEX_ID = 504
 
-// Low bits tag an entity id's kind, so character and monster ids never collide.
-private const val CHARACTER_ID_TAG = 0x9000L
-private const val MONSTER_ID_TAG = 0xC000L
-
-// Dev accounts, one character each.
-private val DEV_CHARACTER_NAMES = mapOf(1 to "Test", 2 to "Test2")
+private val FLUSH_TICK = 5.seconds
+private val FLUSH_DEBOUNCE = 10.seconds
 
 data class StoredCharacter(
     val info: CharacterInfo,
@@ -30,29 +37,36 @@ data class StoredCharacter(
     val items: MutableMap<Int, Int>,
 )
 
+/**
+ * Write-through cache over [CharacterRepository]. Memory is the live version and the database
+ * mirrors it. Aggregates enter the database on creation and are written back when marked dirty:
+ * after a debounce by the periodic flusher, or immediately through [flushCharacterAsync] on events
+ * like warps. A disconnect goes through [unloadCharacterAsync], which also evicts the aggregate
+ * from the cache once its last write succeeded, so only connected players stay in memory.
+ */
 @Singleton
-class CharacterStore @Inject constructor() {
+class CharacterStore
+@Inject
+constructor(
+    private val repository: CharacterRepository,
+    private val entityIds: EntityIdService,
+    scope: CoroutineScope,
+) {
+  private val flushJob = SupervisorJob()
+  private val flushScope = CoroutineScope(scope.coroutineContext + flushJob)
+  private var periodicJob: Job? = null
+
   private val characters = ConcurrentHashMap<Long, StoredCharacter>()
-  private val charactersByUser = ConcurrentHashMap<Int, MutableList<Long>>()
-  private val nextEntityId = AtomicLong(1)
-
-  init {
-    ensureDevCharacters()
-  }
-
-  private fun ensureDevCharacters() {
-    if (characters.isNotEmpty()) return
-    for ((userId, name) in DEV_CHARACTER_NAMES) createCharacter(userId, name)
-  }
-
-  private fun generateEntityId(tag: Long): Long = (nextEntityId.getAndIncrement() shl 16) or tag
+  private val charactersByUser = ConcurrentHashMap<Int, CopyOnWriteArrayList<Long>>()
+  private val dirtySince = ConcurrentHashMap<Long, Long>()
+  private val pendingUnload = ConcurrentHashMap.newKeySet<Long>()
 
   /** Create a character with its own entity id and a starter party with its own monster uids. */
-  fun createCharacter(
+  suspend fun createCharacter(
       userId: Int,
       name: String,
   ): StoredCharacter {
-    val id = generateEntityId(CHARACTER_ID_TAG)
+    val id = entityIds.newCharacterId()
     val now = LocalDateTime.now()
     val info =
         CharacterInfo(
@@ -83,20 +97,40 @@ class CharacterStore @Inject constructor() {
     val stored = StoredCharacter(info, mutableListOf(), mutableListOf(), mutableMapOf())
     stored.pokemon.add(starterSnivy(id, name))
     stored.pokemon.add(starterPatrat(id, name))
+    repository.insertAggregate(stored)
     characters[id] = stored
-    charactersByUser.getOrPut(userId) { mutableListOf() }.add(id)
+    charactersByUser.computeIfAbsent(userId) { CopyOnWriteArrayList() }.add(id)
     return stored
   }
 
   fun getCharacter(id: Long): StoredCharacter? = characters[id]
 
-  fun getCharactersByUser(userId: Int): List<StoredCharacter> {
-    return charactersByUser[userId]?.mapNotNull { characters[it] } ?: emptyList()
+  /** Like [getCharacter] but falls back to the database when the cache has no entry. */
+  suspend fun getOrLoadCharacter(id: Long): StoredCharacter? {
+    pendingUnload.remove(id)
+    characters[id]?.let {
+      return it
+    }
+    val loaded = repository.loadById(id) ?: return null
+    return cache(loaded)
+  }
+
+  suspend fun getCharactersByUser(userId: Int): List<StoredCharacter> {
+    val cachedIds: List<Long>? = charactersByUser[userId]
+    if (cachedIds != null) {
+      cachedIds.forEach { pendingUnload.remove(it) }
+      return cachedIds.mapNotNull { characters[it] }
+    }
+    val loaded = repository.loadByUser(userId).map { cache(it) }
+    loaded.forEach { pendingUnload.remove(it.info.id) }
+    charactersByUser.putIfAbsent(userId, CopyOnWriteArrayList(loaded.map { it.info.id }))
+    return loaded
   }
 
   fun updateCharacter(info: CharacterInfo) {
     val stored = characters[info.id] ?: return
     characters[info.id] = stored.copy(info = info)
+    markDirty(info.id)
   }
 
   fun updatePosition(
@@ -116,11 +150,103 @@ class CharacterStore @Inject constructor() {
             positionMapId = mapId ?: oldInfo.positionMapId,
         )
     characters[characterId] = stored.copy(info = newInfo)
+    markDirty(characterId)
+  }
+
+  fun addPokemon(characterId: Long, pokemon: Pokemon) {
+    val stored = characters[characterId] ?: return
+    // Copy instead of mutating in place, so flusher snapshots never see a half-updated list.
+    characters[characterId] = stored.copy(pokemon = (stored.pokemon + pokemon).toMutableList())
+    markDirty(characterId)
+  }
+
+  fun addMoney(characterId: Long, amount: Int) {
+    val stored = characters[characterId] ?: return
+    val newInfo = stored.info.copy(money = stored.info.money + amount)
+    characters[characterId] = stored.copy(info = newInfo)
+    markDirty(characterId)
+  }
+
+  fun startPeriodicFlush() {
+    periodicJob =
+        flushScope.launch {
+          while (isActive) {
+            delay(FLUSH_TICK)
+            flushOlderThan(FLUSH_DEBOUNCE.inWholeMilliseconds)
+          }
+        }
+  }
+
+  /** Flush one character soon, skipping the debounce. Safe to call from Netty threads. */
+  fun flushCharacterAsync(characterId: Long) {
+    flushScope.launch { flush(characterId) }
+  }
+
+  /**
+   * Persist the character and drop it from the cache once the write succeeded. While the save keeps
+   * failing the character stays cached and dirty, and the periodic flusher finishes the eviction on
+   * its next successful write. Loading the character again cancels the unload.
+   */
+  fun unloadCharacterAsync(characterId: Long) {
+    pendingUnload.add(characterId)
+    flushScope.launch { flush(characterId) }
+  }
+
+  suspend fun flushAll() {
+    for (id in dirtySince.keys) flush(id)
+  }
+
+  /** Stop the periodic loop, wait for in-flight flushes, then persist whatever is still dirty. */
+  suspend fun shutdown() {
+    periodicJob?.cancel()
+    flushJob.children.toList().joinAll()
+    flushAll()
+  }
+
+  private fun cache(stored: StoredCharacter): StoredCharacter {
+    val existing = characters.putIfAbsent(stored.info.id, stored)
+    return existing ?: stored
+  }
+
+  private fun markDirty(id: Long) {
+    dirtySince.putIfAbsent(id, System.currentTimeMillis())
+  }
+
+  private suspend fun flushOlderThan(ageMs: Long) {
+    val now = System.currentTimeMillis()
+    for ((id, since) in dirtySince) {
+      if (now - since >= ageMs) flush(id)
+    }
+  }
+
+  private suspend fun flush(id: Long) {
+    val since = dirtySince.remove(id)
+    val stored = characters[id]
+    if (since != null && stored != null) {
+      try {
+        repository.saveAggregate(stored)
+      } catch (e: Exception) {
+        log.warn(e) { "Failed to persist character $id, will retry" }
+        dirtySince.putIfAbsent(id, since)
+        return
+      }
+    }
+    maybeEvict(id)
+  }
+
+  private fun maybeEvict(id: Long) {
+    if (!pendingUnload.remove(id)) return
+    if (dirtySince.containsKey(id)) {
+      pendingUnload.add(id)
+      return
+    }
+    val stored = characters.remove(id) ?: return
+    charactersByUser.remove(stored.info.userId)
   }
 
   private fun starterSnivy(ownerId: Long, ot: String): Pokemon =
       Pokemon(
-          id = generateEntityId(MONSTER_ID_TAG),
+          id = entityIds.newMonsterId(),
           ownerId = ownerId,
           container = PokemonContainer.PARTY,
           containerSlot = 0,
@@ -151,7 +277,7 @@ class CharacterStore @Inject constructor() {
 
   private fun starterPatrat(ownerId: Long, ot: String): Pokemon =
       Pokemon(
-          id = generateEntityId(MONSTER_ID_TAG),
+          id = entityIds.newMonsterId(),
           ownerId = ownerId,
           container = PokemonContainer.PARTY,
           containerSlot = 1,
@@ -179,14 +305,4 @@ class CharacterStore @Inject constructor() {
           isRaidEncounter = false,
           caughtAt = LocalDateTime.now(),
       )
-
-  fun addPokemon(characterId: Long, pokemon: Pokemon) {
-    characters[characterId]?.pokemon?.add(pokemon)
-  }
-
-  fun addMoney(characterId: Long, amount: Int) {
-    val stored = characters[characterId] ?: return
-    val newInfo = stored.info.copy(money = stored.info.money + amount)
-    characters[characterId] = stored.copy(info = newInfo)
-  }
 }

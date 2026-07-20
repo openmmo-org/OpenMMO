@@ -65,5 +65,7 @@ tasks.register("copyKeys") {
 val keyCopyTasks =
     listOf("copyPublicKeyChat", "copyPrivateKeyChat", "copyPublicKeyGame", "copyPrivateKeyGame")
 
-tasks.matching { it.name.startsWith("spotless") || it.name.startsWith("sonarlint") }
+tasks.matching {
+      it.name.startsWith("spotless") || it.name.startsWith("sonarlint") || it.name == "jooqCodegen"
+    }
     .configureEach { mustRunAfter(keyCopyTasks) }
