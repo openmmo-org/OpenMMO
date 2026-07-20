@@ -51,7 +51,7 @@ For deployment,supply a proper `.env` and run `docker compose -f docker-compose.
 
 ## Wiki
 
-The documentation wiki can be found [here](https://forge.fiereu.de/OpenMMO/OpenMMO/wiki).
+The documentation wiki can be found [here](https://openmmo.readthedocs.io/en/latest/).
 Or you can navigate to it via the `docs` folder in this repository.
 
 ## Disclaimer
