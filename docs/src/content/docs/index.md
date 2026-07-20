@@ -8,6 +8,7 @@ project is built and how to work on it.
 
 ## Sections
 
+- [Concepts](concepts/): short explanations of the systems that make up OpenMMO.
 - [Guides](guides/): step-by-step how-tos for common tasks.
 
 More sections will be added over time.
