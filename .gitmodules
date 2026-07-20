@@ -1,20 +1,15 @@
 [submodule "decomp/pokeemerald"]
 	path = decomp/pokeemerald
 	url = https://github.com/pret/pokeemerald.git
-	shallow = true
 [submodule "decomp/pokefirered"]
 	path = decomp/pokefirered
 	url = https://github.com/pret/pokefirered.git
-	shallow = true
 [submodule "decomp/pokeblack"]
 	path = decomp/pokeblack
 	url = https://github.com/pokemodding/pokeblack.git
-	shallow = true
 [submodule "decomp/pokeheartgold"]
 	path = decomp/pokeheartgold
 	url = https://github.com/pret/pokeheartgold.git
-	shallow = true
 [submodule "decomp/pokeplatinum"]
 	path = decomp/pokeplatinum
 	url = https://github.com/pret/pokeplatinum.git
-	shallow = true
