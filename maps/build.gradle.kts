@@ -1,6 +1,3 @@
-import javax.inject.Inject
-import org.gradle.process.ExecOperations
-
 plugins {
   id("buildsrc.convention.kotlin-jvm")
   id("buildsrc.convention.spotless")
@@ -20,80 +17,41 @@ dependencies {
   "generatorImplementation"(libs.kotlinx.serialization.json)
 }
 
-abstract class CloneOrUpdateGitRepoTask : DefaultTask() {
-
-  @get:Input abstract val remote: Property<String>
-
-  @get:Input abstract val ref: Property<String>
-
-  @get:OutputDirectory abstract val target: DirectoryProperty
-
-  @get:Inject abstract val execOps: ExecOperations
-
-  @TaskAction
-  fun run() {
-    val dir = target.get().asFile
-    val refValue = ref.get()
-    if (File(dir, ".git").exists()) {
-      execOps.exec {
-        workingDir = dir
-        commandLine("git", "fetch", "--depth", "1", "origin", refValue)
-      }
-      execOps.exec {
-        workingDir = dir
-        commandLine("git", "checkout", "--detach", "FETCH_HEAD")
-      }
-    } else {
-      if (dir.exists()) dir.deleteRecursively()
-      dir.parentFile.mkdirs()
-      execOps.exec {
-        commandLine(
-            "git",
-            "clone",
-            "--depth",
-            "1",
-            "--branch",
-            refValue,
-            remote.get(),
-            dir.absolutePath,
-        )
-      }
-    }
-  }
-}
-
-val pokeemeraldRef = providers.gradleProperty("pokemmo.pokeemerald.ref").orElse("master")
-
-val clonePokeemerald by
-    tasks.registering(CloneOrUpdateGitRepoTask::class) {
-      group = "openmmo"
-      description = "Clone or fast-forward pret/pokeemerald into build/pokeemerald"
-      remote.set("https://github.com/pret/pokeemerald.git")
-      ref.set(pokeemeraldRef)
-      target.set(layout.buildDirectory.dir("pokeemerald"))
-    }
-
-val pokeemeraldDir = layout.buildDirectory.dir("pokeemerald")
-val generatedSrc = layout.buildDirectory.dir("generated/source/maps/main/kotlin")
+val generatedSrc = layout.buildDirectory.dir("generated/source/maps/kotlin")
 val templatesDir = layout.projectDirectory.dir("src/generator/jte")
 val jteCacheDir = layout.buildDirectory.dir("jte-classes")
 
-val pokeemeraldArg = pokeemeraldDir.get().asFile.absolutePath
+// Region name -> source decomp. Only non-NDS (GBA, 2D) decomps that share the pret
+// map format are listed. The NDS decomps (pokeblack, pokeheartgold, pokeplatinum) use
+// 3D maps and are not parsed here. Region ids live in the per-region constants.
+val regionSources =
+    mapOf(
+        "hoenn" to "pokeemerald",
+        "kanto" to "pokefirered",
+    )
+
 val generatedArg = generatedSrc.get().asFile.absolutePath
 val templatesArg = templatesDir.asFile.absolutePath
 val jteCacheArg = jteCacheDir.get().asFile.absolutePath
 
+val decompDirs = regionSources.values.map { rootProject.layout.projectDirectory.dir("decomp/$it") }
+val regionArgs =
+    regionSources.map { (region, decomp) ->
+      "$region|${rootProject.layout.projectDirectory.dir("decomp/$decomp").asFile.absolutePath}"
+    }
+
 val generateMaps by
     tasks.registering(JavaExec::class) {
       group = "openmmo"
-      description = "Render MapDefaults.kt from pokeemerald data via JTE"
-      dependsOn(clonePokeemerald, tasks.named("${generator.name}Classes"))
-      inputs.dir(pokeemeraldDir)
+      description = "Render the per-map MapDef sources from the GBA decomp data via JTE"
+      dependsOn(tasks.named("${generator.name}Classes"))
+      decompDirs.forEach { inputs.dir(it) }
       inputs.dir(templatesDir)
       outputs.dir(generatedSrc)
       classpath = generator.runtimeClasspath
       mainClass.set("de.fiereu.openmmo.maps.generator.Main")
-      args = listOf(pokeemeraldArg, generatedArg, templatesArg, jteCacheArg)
+      args = listOf(generatedArg, templatesArg, jteCacheArg) + regionArgs
     }
 
+// generated maps aren't committed, regenerated on every build
 sourceSets.main { kotlin.srcDir(generateMaps) }
