@@ -564,9 +564,7 @@ object GameProtocol : Protocol() {
     c2s<BattleRewardSelectPacket>(0xE3u, BattleRewardSelectPacketCodec)
 
     c2s<BattleChallengeRequestPacket>(0xE4u, BattleChallengeRequestPacketCodec)
-    s2c<EntityCounterPulsePacket>(0xE4u, EntityCounterPulsePacketCodec)
-
-    s2c<EntityMovePacket>(0xEAu, EntityMovePacketCodec)
+    s2c<EntityMovePacket>(0xE4u, EntityMovePacketCodec)
 
     s2c<QueuePositionPacket>(0xF0u, QueuePositionPacketCodec)
 
