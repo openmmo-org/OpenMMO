@@ -35,6 +35,4 @@ class SessionRegistry @Inject constructor() {
   fun getByCharacterId(id: Long): SessionContext? = sessionsByCharacter[id]
 
   fun onlineCharacterIds(): Set<Long> = sessionsByCharacter.keys
-
-  fun isOnline(id: Long): Boolean = sessionsByCharacter.containsKey(id)
 }
