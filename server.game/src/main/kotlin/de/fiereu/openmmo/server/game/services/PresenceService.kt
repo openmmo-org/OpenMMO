@@ -41,7 +41,7 @@ constructor(
   }
 
   /** Send a packet to everyone observing the player on its current map (excludes the player). */
-  fun broadcastMove(ctx: SessionContext, packet: Any) {
+  fun broadcastToObservers(ctx: SessionContext, packet: Any) {
     val key = currentMapKey(ctx) ?: mapKeyFor(ctx) ?: return
     for (other in observers(ctx, key)) other.send(packet)
   }

@@ -58,7 +58,7 @@ class PresenceServiceTest :
         listOf(a, b, c).forEach { it.sent.clear() }
 
         val move = EntityMovePacket(entityId = a.id(), x = 1, y = 1, direction = Direction.DOWN)
-        presence.broadcastMove(a, move)
+        presence.broadcastToObservers(a, move)
 
         b.sent shouldBe listOf(move)
         c.sent shouldBe emptyList()
@@ -78,7 +78,7 @@ class PresenceServiceTest :
         a.sent shouldBe listOf(EntityLeavePacket(b.id()))
 
         val move = EntityMovePacket(entityId = a.id(), x = 1, y = 1, direction = Direction.DOWN)
-        presence.broadcastMove(a, move)
+        presence.broadcastToObservers(a, move)
         b.sent shouldBe emptyList() // no longer observing
       }
 

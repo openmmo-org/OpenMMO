@@ -5,6 +5,7 @@ import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.maps.MapDef
 import de.fiereu.openmmo.maps.MapManager
+import de.fiereu.openmmo.net.game.packets.EntityFaceTurnPacket
 import de.fiereu.openmmo.net.game.packets.EntityMovePacket
 import de.fiereu.openmmo.net.game.packets.FaceDirectionPacket
 import de.fiereu.openmmo.net.game.packets.MapData
@@ -12,10 +13,8 @@ import de.fiereu.openmmo.net.game.packets.MovementPacket
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import io.github.oshai.kotlinlogging.KotlinLogging
-import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.math.abs
 
 private val log = KotlinLogging.logger {}
 
@@ -30,157 +29,111 @@ constructor(
     private val mapManager: MapManager,
     private val characterStore: CharacterStore,
 ) {
-  private val sequenceCounter = AtomicInteger(0)
 
+  /** One step. The client sends the tile it left and the direction, the server derives the rest. */
   fun onMovement(event: PacketEvent<MovementPacket>) {
     val ctx = event.session
     val state = ctx.attributes[PLAYER_STATE] ?: return
     val charId = state.characterId ?: return
     val msg = event.packet
-
-    log.info { "Movement: char=$charId, x=${msg.x}, y=${msg.y}, dir=${msg.direction}" }
     state.facingDirection = msg.direction
+    log.debug { "Movement: char=$charId from (${msg.x}, ${msg.y}) dir=${msg.direction}" }
 
-    val prevStored = characterStore.getCharacter(charId)
-    val prevX = prevStored?.info?.positionX?.toInt()
-    val prevY = prevStored?.info?.positionY?.toInt()
-    val isWallBump = prevX == msg.x && prevY == msg.y
+    val stored = characterStore.getCharacter(charId) ?: return
+    val fromX = stored.info.positionX.toInt()
+    val fromY = stored.info.positionY.toInt()
+    val atServerTile = msg.x == fromX && msg.y == fromY
 
-    val stored = characterStore.getCharacter(charId)
-    if (stored != null) {
-      val currentMap =
-          mapManager.getMap(
-              stored.info.positionRegionId,
-              stored.info.positionBankId,
-              stored.info.positionMapId,
-          )
-      if (currentMap != null) {
-        if (state.justWarped) {
-          state.justWarped = false
-        } else {
-          val warp =
-              currentMap.warps.find { w ->
-                w.x == msg.x &&
-                    w.y == msg.y &&
-                    (w.facingDirection == null || w.facingDirection == msg.direction) &&
-                    !isWallBump
-              }
-          if (warp != null) {
-            log.info { "DIRECT WARP at (${msg.x}, ${msg.y}) facing ${msg.direction}" }
-            warpService.executeWarp(ctx, charId, warp)
-            return
-          }
-
-          val adjX =
-              msg.x +
-                  when (msg.direction) {
-                    Direction.RIGHT -> 1
-                    Direction.LEFT -> -1
-                    else -> 0
-                  }
-          val adjY =
-              msg.y +
-                  when (msg.direction) {
-                    Direction.UP -> -1
-                    Direction.DOWN -> 1
-                    else -> 0
-                  }
-          val adjWarp =
-              currentMap.warps.find { w ->
-                w.x == adjX &&
-                    w.y == adjY &&
-                    (w.facingDirection == null || w.facingDirection == msg.direction)
-              }
-          if (adjWarp != null) {
-            log.info { "ADJACENT WARP at (${msg.x}, ${msg.y}) facing ${msg.direction}" }
-            warpService.executeWarp(ctx, charId, adjWarp)
-            return
-          }
-        }
-
-        if (prevX != null && prevY != null && !isWallBump) {
-          val dx = abs(msg.x - prevX)
-          val dy = abs(msg.y - prevY)
-          if (dx > 1 || dy > 1) {
-            val gbaDirection =
-                when {
-                  prevY == 0 -> Direction.UP
-                  prevY == currentMap.height - 1 -> Direction.DOWN
-                  prevX == 0 -> Direction.LEFT
-                  prevX == currentMap.width - 1 -> Direction.RIGHT
-                  else -> null
-                }
-            if (gbaDirection != null) {
-              val connection = currentMap.connections.find { it.direction == gbaDirection }
-              if (connection != null) {
-                val targetMap =
-                    mapManager.getMap(
-                        1,
-                        connection.targetBank.toByte(),
-                        connection.targetMap.toByte(),
-                    )
-                if (targetMap != null) {
-                  val targetX =
-                      when (gbaDirection) {
-                        Direction.LEFT -> targetMap.width - 1
-                        Direction.RIGHT -> 0
-                        else -> (prevX - connection.unknown).coerceIn(0, targetMap.width - 1)
-                      }
-                  val targetY =
-                      when (gbaDirection) {
-                        Direction.DOWN -> 0
-                        Direction.UP -> targetMap.height - 1
-                        else -> (prevY - connection.unknown).coerceIn(0, targetMap.height - 1)
-                      }
-                  edgeTransition(
-                      ctx,
-                      charId,
-                      connection,
-                      targetX.toByte(),
-                      targetY.toByte(),
-                      msg.direction,
-                  )
-                  return
-                }
-              }
-            }
-          }
-        }
-
-        if (!isWallBump && !isWalkable(currentMap, msg.x, msg.y)) {
-          log.debug { "WALL: char=$charId blocked at (${msg.x}, ${msg.y})" }
-          val seq = sequenceCounter.incrementAndGet().toByte()
-          ctx.send(
-              EntityMovePacket(
-                  entityId = charId,
-                  x = stored.info.positionX.toByte(),
-                  y = stored.info.positionY.toByte(),
-                  direction = msg.direction,
-                  seq = seq,
-              ))
-          return
-        }
+    if (state.justWarped) {
+      // Ignore steps until the client reports the warp destination, so a packet still in flight
+      // from the old map is dropped rather than applied against the new one.
+      if (!atServerTile) return
+      state.justWarped = false
+    } else if (!atServerTile) {
+      log.debug {
+        "DESYNC: char=$charId claims (${msg.x}, ${msg.y}), server has ($fromX, $fromY), resetting"
       }
+      sendPositionReset(ctx, charId, fromX, fromY, state.facingDirection)
+      return
     }
 
-    characterStore.updatePosition(charId, msg.x.toShort(), msg.y.toShort())
-    state.x = msg.x.toShort()
-    state.y = msg.y.toShort()
-    if (!isWallBump) {
-      val seq = sequenceCounter.incrementAndGet().toByte()
-      val movePkt =
-          EntityMovePacket(
-              entityId = charId,
-              x = msg.x.toByte(),
-              y = msg.y.toByte(),
-              direction = msg.direction,
-              seq = seq,
-          )
-      ctx.send(movePkt)
-      presenceService.broadcastMove(ctx, movePkt)
+    val currentMap =
+        mapManager.getMap(
+            stored.info.positionRegionId,
+            stored.info.positionBankId,
+            stored.info.positionMapId,
+        ) ?: return
+
+    val toX = fromX + msg.direction.dx
+    val toY = fromY + msg.direction.dy
+
+    // Walking off the edge of a map hands the player to the neighbouring map, if there is one.
+    if (toX !in 0 until currentMap.width || toY !in 0 until currentMap.height) {
+      val connection = currentMap.connections.find { it.direction == msg.direction }
+      val targetMap =
+          connection?.let { mapManager.getMap(1, it.targetBank.toByte(), it.targetMap.toByte()) }
+      if (connection == null || targetMap == null) {
+        sendPositionReset(ctx, charId, fromX, fromY, msg.direction)
+        return
+      }
+      val entryX =
+          when (msg.direction) {
+            Direction.LEFT -> targetMap.width - 1
+            Direction.RIGHT -> 0
+            else -> (fromX - connection.unknown).coerceIn(0, targetMap.width - 1)
+          }
+      val entryY =
+          when (msg.direction) {
+            Direction.UP -> targetMap.height - 1
+            Direction.DOWN -> 0
+            else -> (fromY - connection.unknown).coerceIn(0, targetMap.height - 1)
+          }
+      edgeTransition(ctx, charId, connection, entryX.toByte(), entryY.toByte(), msg.direction)
+      return
     }
+
+    // A warp fires on the tile the player steps onto, not the one it left.
+    val warp =
+        currentMap.warps.find { w ->
+          w.x == toX &&
+              w.y == toY &&
+              (w.facingDirection == null || w.facingDirection == msg.direction)
+        }
+    if (warp != null) {
+      log.info { "WARP at ($toX, $toY) facing ${msg.direction}" }
+      warpService.executeWarp(ctx, charId, warp)
+      return
+    }
+
+    if (!isWalkable(currentMap, toX, toY)) {
+      log.debug { "WALL: char=$charId blocked at ($toX, $toY)" }
+      sendPositionReset(ctx, charId, fromX, fromY, msg.direction)
+      return
+    }
+
+    characterStore.updatePosition(charId, toX.toShort(), toY.toShort())
+    state.x = toX.toShort()
+    state.y = toY.toShort()
+
+    // The client already walked itself there, so only the observers need telling.
+    presenceService.broadcastToObservers(
+        ctx,
+        EntityMovePacket(entityId = charId, x = toX, y = toY, direction = msg.direction),
+    )
   }
 
+  /** Snap the client back to the position the server considers authoritative. */
+  private fun sendPositionReset(
+      ctx: SessionContext,
+      charId: Long,
+      x: Int,
+      y: Int,
+      direction: Direction,
+  ) {
+    ctx.send(EntityMovePacket(entityId = charId, x = x, y = y, direction = direction))
+  }
+
+  /** Turning in place. Only observers need it, the client has already turned itself. */
   fun onFaceDirection(event: PacketEvent<FaceDirectionPacket>) {
     val ctx = event.session
     val state = ctx.attributes[PLAYER_STATE] ?: return
@@ -188,18 +141,10 @@ constructor(
     val msg = event.packet
     state.facingDirection = msg.direction
 
-    val seq = sequenceCounter.incrementAndGet().toByte()
-    val stored = characterStore.getCharacter(charId) ?: return
-    val movePkt =
-        EntityMovePacket(
-            entityId = charId,
-            x = stored.info.positionX.toByte(),
-            y = stored.info.positionY.toByte(),
-            direction = msg.direction,
-            seq = seq,
-        )
-    ctx.send(movePkt)
-    presenceService.broadcastMove(ctx, movePkt)
+    presenceService.broadcastToObservers(
+        ctx,
+        EntityFaceTurnPacket(entityId = charId, facing = msg.direction.ordinal.toByte()),
+    )
   }
 
   private fun isWalkable(map: MapDef, x: Int, y: Int): Boolean {
@@ -239,16 +184,13 @@ constructor(
     mapLoadService.preloadConnectedMaps(ctx, map, depth = 1)
     npcService.spawnNpcsForMap(ctx, targetBank.toInt(), targetMap.toInt())
 
-    val seq = sequenceCounter.incrementAndGet().toByte()
-    val movePkt =
+    ctx.send(
         EntityMovePacket(
             entityId = charId,
-            x = targetX,
-            y = targetY,
+            x = targetX.toInt(),
+            y = targetY.toInt(),
             direction = direction,
-            seq = seq,
-        )
-    ctx.send(movePkt)
+        ))
     log.info { "Player $charId edge-transitioned to bank=$targetBank map=$targetMap" }
   }
 }
