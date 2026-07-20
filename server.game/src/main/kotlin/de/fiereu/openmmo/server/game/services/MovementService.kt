@@ -26,7 +26,7 @@ constructor(
     private val warpService: WarpService,
     private val mapLoadService: MapLoadService,
     private val npcService: NpcService,
-    private val multiplayerService: MultiplayerService,
+    private val presenceService: PresenceService,
     private val mapManager: MapManager,
     private val characterStore: CharacterStore,
 ) {
@@ -177,7 +177,7 @@ constructor(
               seq = seq,
           )
       ctx.send(movePkt)
-      multiplayerService.broadcastExcept(ctx, movePkt)
+      presenceService.broadcastMove(ctx, movePkt)
     }
   }
 
@@ -199,7 +199,7 @@ constructor(
             seq = seq,
         )
     ctx.send(movePkt)
-    multiplayerService.broadcastExcept(ctx, movePkt)
+    presenceService.broadcastMove(ctx, movePkt)
   }
 
   private fun isWalkable(map: MapDef, x: Int, y: Int): Boolean {
@@ -234,6 +234,7 @@ constructor(
         targetBank,
         targetMap,
     )
+    presenceService.refresh(ctx)
 
     mapLoadService.preloadConnectedMaps(ctx, map, depth = 1)
     npcService.spawnNpcsForMap(ctx, targetBank.toInt(), targetMap.toInt())
@@ -248,7 +249,6 @@ constructor(
             seq = seq,
         )
     ctx.send(movePkt)
-    multiplayerService.broadcastExcept(ctx, movePkt)
     log.info { "Player $charId edge-transitioned to bank=$targetBank map=$targetMap" }
   }
 }
