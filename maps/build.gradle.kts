@@ -51,6 +51,15 @@ val generateMaps by
       classpath = generator.runtimeClasspath
       mainClass.set("de.fiereu.openmmo.maps.generator.Main")
       args = listOf(generatedArg, templatesArg, jteCacheArg) + regionArgs
+      doFirst {
+        decompDirs.forEach { dir ->
+          if (!dir.file("data/maps/map_groups.json").asFile.exists()) {
+            throw GradleException(
+                "Decomp submodule '${dir.asFile.name}' is not initialized. " +
+                    "Run: git submodule update --init --recursive")
+          }
+        }
+      }
     }
 
 // Generated maps are not committed; they are regenerated on every build.

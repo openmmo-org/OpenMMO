@@ -4,6 +4,7 @@
 
 ## ToC
 - [Description](#description)
+- [Building](#building)
 - [Configuration](#configuration)
 - [Documentation](#wiki)
 - [License](LICENSE)
@@ -15,6 +16,21 @@
 
 OpenMMO is an open-source implementation of the PokeMMO server.
 The goal is it to provide a free and open-source alternative to the PokeMMO server.
+
+## Building
+
+The map data is generated at build time from the [pret](https://github.com/pret)
+decompilation projects, which are vendored as git submodules under `decomp/`.
+Clone the repository with its submodules:
+
+```bash
+git clone --recurse-submodules <repo-url>
+# or, for an existing clone:
+git submodule update --init --recursive
+```
+
+Without the submodules the `:maps` build fails, because the generator has no
+decomp data to read.
 
 ## Configuration
 
