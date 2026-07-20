@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.maps
 
+import de.fiereu.openmmo.maps.generated.GeneratedMaps
 import de.fiereu.openmmo.net.game.packets.LoadMapPacket
 import de.fiereu.openmmo.net.game.packets.MapData
 import java.util.concurrent.ConcurrentHashMap
@@ -12,7 +13,7 @@ class MapManager @Inject constructor() {
   private val maps = ConcurrentHashMap<Long, MapDef>()
 
   init {
-    MapDefaults.loadInto(this)
+    GeneratedMaps.loadInto(this)
   }
 
   fun register(map: MapDef) {

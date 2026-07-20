@@ -29,7 +29,8 @@ object RenderUtil {
     if (warps.isEmpty()) return EMPTY_LIST
     return warps.joinToString(LIST_SEP, LIST_OPEN, LIST_CLOSE) {
       "WarpTile(x = ${it.x}, y = ${it.y}, elevation = ${it.elevation}," +
-          " targetRegionId = 1, targetBankId = ${it.targetBank}, targetMapId = ${it.targetMap}," +
+          " targetRegionId = ${it.targetRegion}, targetBankId = ${it.targetBank}," +
+          " targetMapId = ${it.targetMap}," +
           " targetX = ${it.targetX}, targetY = ${it.targetY}, targetElevation = ${it.targetElevation})"
     }
   }

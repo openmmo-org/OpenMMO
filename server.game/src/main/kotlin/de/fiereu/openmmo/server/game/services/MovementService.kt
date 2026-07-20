@@ -3,6 +3,7 @@ package de.fiereu.openmmo.server.game.services
 import de.fiereu.network.PacketEvent
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.enums.Direction
+import de.fiereu.openmmo.maps.MapDef
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.packets.EntityMovePacket
 import de.fiereu.openmmo.net.game.packets.FaceDirectionPacket
@@ -14,6 +15,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.concurrent.atomic.AtomicInteger
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.abs
 
 private val log = KotlinLogging.logger {}
 
@@ -97,15 +99,15 @@ constructor(
         }
 
         if (prevX != null && prevY != null && !isWallBump) {
-          val dx = kotlin.math.abs(msg.x - prevX)
-          val dy = kotlin.math.abs(msg.y - prevY)
+          val dx = abs(msg.x - prevX)
+          val dy = abs(msg.y - prevY)
           if (dx > 1 || dy > 1) {
             val gbaDirection =
                 when {
-                  prevY == 0 -> 2
-                  prevY == currentMap.height - 1 -> 1
-                  prevX == 0 -> 3
-                  prevX == currentMap.width - 1 -> 4
+                  prevY == 0 -> Direction.UP
+                  prevY == currentMap.height - 1 -> Direction.DOWN
+                  prevX == 0 -> Direction.LEFT
+                  prevX == currentMap.width - 1 -> Direction.RIGHT
                   else -> null
                 }
             if (gbaDirection != null) {
@@ -120,14 +122,14 @@ constructor(
                 if (targetMap != null) {
                   val targetX =
                       when (gbaDirection) {
-                        3 -> targetMap.width - 1
-                        4 -> 0
+                        Direction.LEFT -> targetMap.width - 1
+                        Direction.RIGHT -> 0
                         else -> (prevX - connection.unknown).coerceIn(0, targetMap.width - 1)
                       }
                   val targetY =
                       when (gbaDirection) {
-                        1 -> 0
-                        2 -> targetMap.height - 1
+                        Direction.DOWN -> 0
+                        Direction.UP -> targetMap.height - 1
                         else -> (prevY - connection.unknown).coerceIn(0, targetMap.height - 1)
                       }
                   edgeTransition(
@@ -143,6 +145,20 @@ constructor(
               }
             }
           }
+        }
+
+        if (!isWallBump && !isWalkable(currentMap, msg.x, msg.y)) {
+          log.debug { "WALL: char=$charId blocked at (${msg.x}, ${msg.y})" }
+          val seq = sequenceCounter.incrementAndGet().toByte()
+          ctx.send(
+              EntityMovePacket(
+                  entityId = charId,
+                  x = stored.info.positionX.toByte(),
+                  y = stored.info.positionY.toByte(),
+                  direction = msg.direction,
+                  seq = seq,
+              ))
+          return
         }
       }
     }
@@ -184,6 +200,12 @@ constructor(
         )
     ctx.send(movePkt)
     multiplayerService.broadcastExcept(ctx, movePkt)
+  }
+
+  private fun isWalkable(map: MapDef, x: Int, y: Int): Boolean {
+    if (x !in 0 until map.width || y !in 0 until map.height) return false
+    val tile = map.tileAt(x, y) ?: return true
+    return !tile.blocksMovement()
   }
 
   private fun edgeTransition(
