@@ -4,18 +4,17 @@
 # Required
 version: 2
 
-# Set the OS, Python version, and other tools you might need
+# Build the Astro Starlight site under docs/ and hand its output to Read the Docs.
 build:
   os: ubuntu-24.04
   tools:
     nodejs: "22"
 
   commands:
-    # Install Docusaurus dependencies
-    - cd docs/ && npm install
-    # Build the site
+    # Install dependencies
+    - cd docs/ && npm ci
+    # Build the site (Astro writes to docs/dist/)
     - cd docs/ && npm run build
     # Copy generated files into Read the Docs directory
     - mkdir --parents $READTHEDOCS_OUTPUT/html/
-    - cp --recursive docs/build/* $READTHEDOCS_OUTPUT/html/
-        
+    - cp --recursive docs/dist/* $READTHEDOCS_OUTPUT/html/

@@ -1,4 +1,7 @@
-# Writing a code generator
+---
+title: Writing a code generator
+description: How to add a new build-time generator that turns pret decomp data into Kotlin game data.
+---
 
 OpenMMO builds most of its game data (maps, moves, species, …) at compile time.
 The `:codegen` module reads the raw data files from the pret decomps under
