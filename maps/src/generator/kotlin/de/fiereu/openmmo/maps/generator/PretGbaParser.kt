@@ -17,6 +17,7 @@ import kotlinx.serialization.json.jsonPrimitive
 class PretGbaParser(
     private val rootDir: File,
     private val region: RegionConstants,
+    private val movementTypes: MovementTypes,
 ) {
 
   private val json = Json { ignoreUnknownKeys = true }
@@ -200,20 +201,19 @@ class PretGbaParser(
       if (!isVisible) return@mapIndexedNotNull null
       val gfxName = npc["graphics_id"]?.jsonPrimitive?.contentOrNull ?: "OBJ_EVENT_GFX_BOY_1"
       val movementName = npc["movement_type"]?.jsonPrimitive?.contentOrNull ?: "MOVEMENT_TYPE_NONE"
-      val movementId = region.movementTypes[movementName] ?: 0
       ParsedNpc(
           entityIdx = idx,
           graphicsId = ctx.gfxIds[gfxName] ?: 0,
           x = npc["x"]?.jsonPrimitive?.intOrNull ?: 0,
           y = npc["y"]?.jsonPrimitive?.intOrNull ?: 0,
           elevation = npc["elevation"]?.jsonPrimitive?.intOrNull ?: 3,
-          movementType = movementTypeRef(movementName, region.movementTypes),
+          movementType = movementTypes.ref(movementName),
           movementRangeX = npc["movement_range_x"]?.jsonPrimitive?.intOrNull ?: 0,
           movementRangeY = npc["movement_range_y"]?.jsonPrimitive?.intOrNull ?: 0,
           trainerType =
               if (npc["trainer_type"]?.jsonPrimitive?.contentOrNull == "TRAINER_TYPE_NONE") 0
               else 1,
-          facing = movementToFacingRef(movementId),
+          facing = movementTypes.facingRef(movementName),
           script = npc["script"]?.jsonPrimitive?.contentOrNull ?: "0x0",
       )
     }
