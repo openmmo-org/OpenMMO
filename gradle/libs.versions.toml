@@ -1,7 +1,7 @@
 [versions]
 kotlin = "2.4.10"
 kotlinx-serialization = "1.9.0"
-kotlinx-coroutines = "1.10.2"
+kotlinx-coroutines = "1.11.0"
 kotlin-logging = "8.0.4" # sl4j wrapper for Kotlin
 logback = "1.5.38"
 slf4j = "2.0.18"
