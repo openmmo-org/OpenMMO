@@ -1,0 +1,23 @@
+name: TODO to Issue
+
+on:
+  push:
+    branches: [ "master" ]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  todo-to-issue:
+    name: TODO to Issue
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Scan TODOs
+        uses: alstr/todo-to-issue-action@v5
+        with:
+          CLOSE_ISSUES: true
+          IDENTIFIERS: '[{"name": "TODO", "labels": []}, {"name": "FIXME", "labels": []}, {"name": "BUG", "labels": []}]'
