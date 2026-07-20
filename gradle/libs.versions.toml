@@ -19,7 +19,7 @@ flyway = "11.10.4"
 netty = "4.2.4.Final"
 typesafe-config = "1.4.4"
 dagger = "2.57"
-ksp = "2.3.8"
+ksp = "2.3.10"
 ineter = "0.3.1"
 dotenv = "4.0.0"
 
