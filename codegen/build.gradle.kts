@@ -22,7 +22,10 @@ val regionSources =
         "kanto" to "pokefirered",
     )
 
-val movesDecompDir = rootProject.layout.projectDirectory.dir("decomp/pokeemerald")
+// Single source-of-truth decomp for the non-region-specific data (moves, species). The two
+// GBA decomps agree on the national dex; where they differ (held items, safari flee rate) this
+// is the canonical pick, same as byRegion is for maps.
+val sourceDecompDir = rootProject.layout.projectDirectory.dir("decomp/pokeemerald")
 
 jteCodegen {
   register("maps") {
@@ -37,7 +40,12 @@ jteCodegen {
   register("moves") {
     mainClass.set("de.fiereu.openmmo.codegen.move.Main")
     templatesSubdir.set("move")
-    inputDirs.from(movesDecompDir)
-    extraArgs.set(listOf(movesDecompDir.asFile.absolutePath))
+    inputDirs.from(sourceDecompDir)
+    extraArgs.set(listOf(sourceDecompDir.asFile.absolutePath))
+  }
+  register("pokemon") {
+    mainClass.set("de.fiereu.openmmo.codegen.pokemon.Main")
+    inputDirs.from(sourceDecompDir)
+    extraArgs.set(listOf(sourceDecompDir.asFile.absolutePath))
   }
 }
