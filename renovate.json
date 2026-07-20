@@ -1,0 +1,45 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":enableVulnerabilityAlertsWithLabel(security)"
+  ],
+  "timezone": "Europe/Berlin",
+  "schedule": ["before 6am on monday"],
+  "labels": ["dependencies"],
+  "packageRules": [
+    {
+      "description": "Automerge non-major updates after a short soak, once checks pass",
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin", "bump"],
+      "automerge": true,
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "Keep the Gradle wrapper current and automerged",
+      "matchManagers": ["gradle-wrapper"],
+      "automerge": true
+    },
+    {
+      "description": "Major updates always wait for manual review",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "addLabels": ["major"]
+    },
+    {
+      "description": "Group Compose Multiplatform artifacts together",
+      "matchPackageNames": ["/^org\\.jetbrains\\.compose/"],
+      "groupName": "compose multiplatform"
+    },
+    {
+      "description": "Group GitHub Actions bumps into one PR",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions"
+    }
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true,
+    "schedule": ["before 6am on monday"]
+  }
+}
