@@ -45,7 +45,7 @@ class GameProtocolTest :
                 0xB4u.toUByte(),
                 0xB9u.toUByte(),
                 0xC2u.toUByte(),
-                0xEAu.toUByte(),
+                0xE4u.toUByte(),
             )
       }
 
@@ -57,9 +57,9 @@ class GameProtocolTest :
             0x01u
       }
 
-      test("0xEA EntityMovePacket is S2C only") {
+      test("0xE4 EntityMovePacket is S2C only") {
         GameProtocol.outgoingRegistration(Side.SERVER, EntityMovePacket::class)?.opcode shouldBe
-            0xEAu
+            0xE4u
         GameProtocol.outgoingRegistration(Side.CLIENT, EntityMovePacket::class) shouldBe null
       }
 

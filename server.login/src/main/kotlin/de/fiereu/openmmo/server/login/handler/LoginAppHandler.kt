@@ -16,6 +16,7 @@ import de.fiereu.openmmo.net.login.packets.PasswordLogin
 import de.fiereu.openmmo.net.login.packets.RequestGameServerListPacket
 import de.fiereu.openmmo.server.login.auth.UserService
 import de.fiereu.openmmo.server.login.catalog.GameServerCatalog
+import de.fiereu.openmmo.server.login.session.AUTHED_USER_ID
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -47,6 +48,9 @@ constructor(
     }
     val result = users.authenticate(packet.username, method.password)
     log.info { "Login attempt for ${packet.username}: ${result.state}" }
+    if (result.state == LoginState.AUTHED && result.userId != null) {
+      event.session.attributes[AUTHED_USER_ID] = result.userId
+    }
     event.session.send(LoginResponsePacket(result.state))
   }
 
@@ -61,11 +65,17 @@ constructor(
       event.session.send(GameServerNodesPacket(LoginState.NO_GS_AVAILABLE))
       return
     }
-    val token = tokenIssuer.issue(userId = ANONYMOUS_USER_ID)
+    val userId = event.session.attributes[AUTHED_USER_ID]
+    if (userId == null) {
+      log.warn { "Join game server without a completed login" }
+      event.session.send(GameServerNodesPacket(LoginState.INVALID_SAVED_CREDENTIALS))
+      return
+    }
+    val token = tokenIssuer.issue(userId = userId.toLong())
     val data =
         GameServerData(
             gameServerId = entry.server.id,
-            userId = ANONYMOUS_USER_ID.toInt(),
+            userId = userId,
             sessionToken = token.bytes,
             localAddress = entry.localAddress,
             localHostname = entry.localHostname,
@@ -78,9 +88,5 @@ constructor(
             nodes = listOf(entry.node),
         ),
     )
-  }
-
-  companion object {
-    private const val ANONYMOUS_USER_ID = 1L
   }
 }

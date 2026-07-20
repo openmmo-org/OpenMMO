@@ -14,7 +14,6 @@ import de.fiereu.openmmo.net.game.packets.ChatMessageSendPacket
 import de.fiereu.openmmo.net.game.packets.CreateCharacterPacket
 import de.fiereu.openmmo.net.game.packets.DialogChoicePacket
 import de.fiereu.openmmo.net.game.packets.EntityInteractPacket
-import de.fiereu.openmmo.net.game.packets.EntityLeavePacket
 import de.fiereu.openmmo.net.game.packets.FaceDirectionPacket
 import de.fiereu.openmmo.net.game.packets.FriendProfileRequestPacket
 import de.fiereu.openmmo.net.game.packets.InteractiveResponsePacket
@@ -66,6 +65,7 @@ import de.fiereu.openmmo.server.game.services.InteractionService
 import de.fiereu.openmmo.server.game.services.LoginService
 import de.fiereu.openmmo.server.game.services.MovementService
 import de.fiereu.openmmo.server.game.services.MultiplayerService
+import de.fiereu.openmmo.server.game.services.PresenceService
 import de.fiereu.openmmo.server.game.services.SocialService
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.session.SessionRegistry
@@ -84,6 +84,7 @@ constructor(
     private val dialogService: DialogService,
     private val interactionService: InteractionService,
     private val multiplayerService: MultiplayerService,
+    private val presenceService: PresenceService,
     private val socialService: SocialService,
     private val guildService: GuildService,
     private val battleService: BattleService,
@@ -158,7 +159,7 @@ constructor(
     log.info { "Player ${state.characterId} disconnected." }
     val charId = state.characterId
     if (charId != null) {
-      multiplayerService.broadcastExcept(session, EntityLeavePacket(charId))
+      presenceService.leave(session)
       sessionRegistry.unbindCharacter(charId)
     }
     multiplayerService.broadcastMessage(

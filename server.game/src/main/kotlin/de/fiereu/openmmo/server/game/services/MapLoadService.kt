@@ -2,6 +2,7 @@ package de.fiereu.openmmo.server.game.services
 
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.CharacterInfo
+import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.EntityStatus
 import de.fiereu.openmmo.maps.MapDef
@@ -23,6 +24,7 @@ constructor(
       info: CharacterInfo,
       facing: Direction = Direction.DOWN,
       z: Int = 0,
+      party: List<Pokemon> = emptyList(),
   ): LoadEntityPacket {
     return LoadEntityPacket(
         entityId = info.id,
@@ -36,8 +38,8 @@ constructor(
         z = z,
         facing = facing,
         status = EntityStatus.NONE,
-        hasFollower = false,
-        followerDexId = 0,
+        hasFollower = party.isNotEmpty(),
+        followerDexId = (party.firstOrNull()?.dexId ?: 0).toShort(),
     )
   }
 

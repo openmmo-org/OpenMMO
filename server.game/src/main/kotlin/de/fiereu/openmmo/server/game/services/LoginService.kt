@@ -3,9 +3,7 @@ package de.fiereu.openmmo.server.game.services
 import de.fiereu.network.PacketEvent
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.CharacterInfo
-import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.enums.ChatType
-import de.fiereu.openmmo.common.enums.EntityStatus
 import de.fiereu.openmmo.common.enums.Language
 import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.maps.MapManager
@@ -16,7 +14,6 @@ import de.fiereu.openmmo.net.game.packets.ChatMessagePacket
 import de.fiereu.openmmo.net.game.packets.CreateCharacterPacket
 import de.fiereu.openmmo.net.game.packets.JoinPacket
 import de.fiereu.openmmo.net.game.packets.JoinResponsePacket
-import de.fiereu.openmmo.net.game.packets.LoadEntityPacket
 import de.fiereu.openmmo.net.game.packets.LocalPlayerStatePacket
 import de.fiereu.openmmo.net.game.packets.MenuPagePayloadPacket
 import de.fiereu.openmmo.net.game.packets.NewAuthData
@@ -77,6 +74,7 @@ constructor(
     private val sessionRegistry: SessionRegistry,
     private val mapManager: MapManager,
     private val characterStore: CharacterStore,
+    private val presenceService: PresenceService,
 ) {
 
   fun onJoinGame(event: PacketEvent<JoinPacket>) {
@@ -301,7 +299,7 @@ constructor(
 
     log.info { "Sending LoadEntity for character '${info.name}'" }
     val facing = state.facingDirection
-    val loadEntity = mapLoadService.createLoadEntity(info, facing)
+    val loadEntity = mapLoadService.createLoadEntity(info, facing, party = stored.pokemon)
     ctx.send(loadEntity)
 
     npcService.spawnNpcsForMap(ctx, info.positionBankId.toInt(), info.positionMapId.toInt())
@@ -315,58 +313,12 @@ constructor(
     state.x = info.positionX
     state.y = info.positionY
 
-    val currentParty = characterStore.getCharacter(charId)?.pokemon ?: emptyList()
-    val hasFollower = currentParty.isNotEmpty()
-    val followerDexId = (currentParty.firstOrNull()?.dexId ?: 0).toShort()
-
-    val others = sessionRegistry.getOthersInMap(charId, regionId, bankId, mapId)
-    for (other in others) {
-      val otherState = other.attributes[PLAYER_STATE] ?: continue
-      val otherCharId = otherState.characterId ?: continue
-      val otherStored = characterStore.getCharacter(otherCharId) ?: continue
-      val otherParty: List<Pokemon> = otherStored.pokemon
-      ctx.send(
-          LoadEntityPacket(
-              entityId = otherCharId,
-              skin = SkinSet(),
-              name = otherStored.info.name,
-              regionId = otherState.regionId,
-              bankId = otherState.bankId,
-              mapId = otherState.mapId,
-              x = otherState.x.toInt(),
-              y = otherState.y.toInt(),
-              z = 0,
-              facing = otherState.facingDirection,
-              status = EntityStatus.NONE,
-              hasFollower = otherParty.isNotEmpty(),
-              followerDexId = (otherParty.firstOrNull()?.dexId ?: 0).toShort(),
-          ))
-    }
-
-    val selfEntity =
-        LoadEntityPacket(
-            entityId = charId,
-            skin = SkinSet(),
-            name = info.name,
-            regionId = regionId,
-            bankId = bankId,
-            mapId = mapId,
-            x = info.positionX.toInt(),
-            y = info.positionY.toInt(),
-            z = 0,
-            facing = facing,
-            status = EntityStatus.NONE,
-            hasFollower = hasFollower,
-            followerDexId = followerDexId,
-        )
-    for (other in others) {
-      other.send(selfEntity)
-    }
+    presenceService.enter(ctx)
 
     ctx.send(RenderScreenPacket(true))
 
     socialService.sendFriendList(ctx)
 
-    log.info { "Player $charId spawned in bank=$bankId map=$mapId; ${others.size} others present" }
+    log.info { "Player $charId spawned in bank=$bankId map=$mapId" }
   }
 }

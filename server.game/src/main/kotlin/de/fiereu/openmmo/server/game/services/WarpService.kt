@@ -4,12 +4,10 @@ import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.maps.WarpTile
-import de.fiereu.openmmo.net.game.packets.EntityLeavePacket
 import de.fiereu.openmmo.net.game.packets.MapTransitionAckPacket
 import de.fiereu.openmmo.net.game.packets.MapTransitionPacket
 import de.fiereu.openmmo.net.game.packets.RenderScreenPacket
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
-import de.fiereu.openmmo.server.game.session.SessionRegistry
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import de.fiereu.openmmo.server.game.world.WarpExitRules
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -25,7 +23,7 @@ constructor(
     private val mapLoadService: MapLoadService,
     private val mapManager: MapManager,
     private val characterStore: CharacterStore,
-    private val sessionRegistry: SessionRegistry,
+    private val presenceService: PresenceService,
 ) {
 
   fun executeWarp(ctx: SessionContext, charId: Long, warp: WarpTile) {
@@ -97,17 +95,6 @@ constructor(
         )
     characterStore.updateCharacter(newInfo)
 
-    val oldRegionId = state?.regionId
-    val oldBankId = state?.bankId
-    val oldMapId = state?.mapId
-    if (oldBankId != null && oldMapId != null) {
-      val oldMapPlayers =
-          sessionRegistry.getOthersInMap(charId, oldRegionId ?: 1, oldBankId, oldMapId)
-      for (other in oldMapPlayers) {
-        other.send(EntityLeavePacket(charId))
-      }
-    }
-
     if (state != null) {
       state.regionId = warp.targetRegionId.toInt()
       state.bankId = warp.targetBankId.toInt()
@@ -129,6 +116,8 @@ constructor(
         "Map not found for warp target ${warp.targetRegionId}:${warp.targetBankId}:${warp.targetMapId}"
       }
     }
+
+    presenceService.refresh(ctx)
 
     log.info { "Player $charId warped to bank=${warp.targetBankId} map=${warp.targetMapId}" }
   }

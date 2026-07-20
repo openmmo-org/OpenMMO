@@ -34,21 +34,5 @@ class SessionRegistry @Inject constructor() {
 
   fun getByCharacterId(id: Long): SessionContext? = sessionsByCharacter[id]
 
-  fun getOthersInMap(
-      excludeCharacterId: Long,
-      regionId: Int,
-      bankId: Int,
-      mapId: Int,
-  ): List<SessionContext> =
-      sessionsByCharacter.values.filter { ctx ->
-        val state = ctx.attributes[PLAYER_STATE] ?: return@filter false
-        state.characterId != excludeCharacterId &&
-            state.regionId == regionId &&
-            state.bankId == bankId &&
-            state.mapId == mapId
-      }
-
   fun onlineCharacterIds(): Set<Long> = sessionsByCharacter.keys
-
-  fun isOnline(id: Long): Boolean = sessionsByCharacter.containsKey(id)
 }
