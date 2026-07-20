@@ -148,18 +148,16 @@ constructor(
         }
 
         if (!isWallBump && !isWalkable(currentMap, msg.x, msg.y)) {
-          log.info { "WALL: char=$charId blocked at (${msg.x}, ${msg.y})" }
-          if (prevX != null && prevY != null) {
-            val seq = sequenceCounter.incrementAndGet().toByte()
-            ctx.send(
-                EntityMovePacket(
-                    entityId = charId,
-                    x = prevX.toByte(),
-                    y = prevY.toByte(),
-                    direction = msg.direction,
-                    seq = seq,
-                ))
-          }
+          log.debug { "WALL: char=$charId blocked at (${msg.x}, ${msg.y})" }
+          val seq = sequenceCounter.incrementAndGet().toByte()
+          ctx.send(
+              EntityMovePacket(
+                  entityId = charId,
+                  x = stored.info.positionX.toByte(),
+                  y = stored.info.positionY.toByte(),
+                  direction = msg.direction,
+                  seq = seq,
+              ))
           return
         }
       }
