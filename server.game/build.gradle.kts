@@ -17,7 +17,7 @@ dependencies {
   api(project(":network"))
   api(project(":protocols.game"))
   api(project(":common"))
-  api(project(":maps"))
+  api(project(":codegen"))
 
   implementation(libs.dagger)
   ksp(libs.dagger.compiler)
