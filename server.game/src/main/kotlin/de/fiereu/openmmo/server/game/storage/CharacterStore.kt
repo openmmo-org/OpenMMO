@@ -12,14 +12,16 @@ import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// A starter party monster for the dev test character. Its uid, species, HP, and moves match the
-// field state emitted by the test battle so the client can resolve the player's monster.
-const val STARTER_SNIVY_UID = 0x000000000001C000L
+// The starter party every new character gets.
 const val SNIVY_DEX_ID = 495
-
-// A second party monster so the switch action is selectable in the test battle.
-const val STARTER_PATRAT_UID = 0x000000000002C000L
 const val PATRAT_DEX_ID = 504
+
+// Low bits tag an entity id's kind, so character and monster ids never collide.
+private const val CHARACTER_ID_TAG = 0x9000L
+private const val MONSTER_ID_TAG = 0xC000L
+
+// Dev accounts, one character each.
+private val DEV_CHARACTER_NAMES = mapOf(1 to "Test", 2 to "Test2")
 
 data class StoredCharacter(
     val info: CharacterInfo,
@@ -32,30 +34,25 @@ data class StoredCharacter(
 class CharacterStore @Inject constructor() {
   private val characters = ConcurrentHashMap<Long, StoredCharacter>()
   private val charactersByUser = ConcurrentHashMap<Int, MutableList<Long>>()
-  private val nextCharId = AtomicLong(1)
+  private val nextEntityId = AtomicLong(1)
 
   init {
-    ensureTestCharacter()
+    ensureDevCharacters()
   }
 
-  private fun ensureTestCharacter() {
-    if (characters.isEmpty()) {
-      val test = createCharacter(userId = 1, name = "Test")
-      test.pokemon.add(starterSnivy(test.info.id, test.info.name))
-      test.pokemon.add(starterPatrat(test.info.id, test.info.name))
-    }
+  private fun ensureDevCharacters() {
+    if (characters.isNotEmpty()) return
+    for ((userId, name) in DEV_CHARACTER_NAMES) createCharacter(userId, name)
   }
 
-  private fun generateEntityId(): Long {
-    val uniqueId = nextCharId.getAndIncrement()
-    return (uniqueId shl 16) or 0x9000L
-  }
+  private fun generateEntityId(tag: Long): Long = (nextEntityId.getAndIncrement() shl 16) or tag
 
+  /** Create a character with its own entity id and a starter party with its own monster uids. */
   fun createCharacter(
       userId: Int,
       name: String,
   ): StoredCharacter {
-    val id = generateEntityId()
+    val id = generateEntityId(CHARACTER_ID_TAG)
     val now = LocalDateTime.now()
     val info =
         CharacterInfo(
@@ -84,6 +81,8 @@ class CharacterStore @Inject constructor() {
             lureItemId = 0,
         )
     val stored = StoredCharacter(info, mutableListOf(), mutableListOf(), mutableMapOf())
+    stored.pokemon.add(starterSnivy(id, name))
+    stored.pokemon.add(starterPatrat(id, name))
     characters[id] = stored
     charactersByUser.getOrPut(userId) { mutableListOf() }.add(id)
     return stored
@@ -121,7 +120,7 @@ class CharacterStore @Inject constructor() {
 
   private fun starterSnivy(ownerId: Long, ot: String): Pokemon =
       Pokemon(
-          id = STARTER_SNIVY_UID,
+          id = generateEntityId(MONSTER_ID_TAG),
           ownerId = ownerId,
           container = PokemonContainer.PARTY,
           containerSlot = 0,
@@ -152,7 +151,7 @@ class CharacterStore @Inject constructor() {
 
   private fun starterPatrat(ownerId: Long, ot: String): Pokemon =
       Pokemon(
-          id = STARTER_PATRAT_UID,
+          id = generateEntityId(MONSTER_ID_TAG),
           ownerId = ownerId,
           container = PokemonContainer.PARTY,
           containerSlot = 1,
