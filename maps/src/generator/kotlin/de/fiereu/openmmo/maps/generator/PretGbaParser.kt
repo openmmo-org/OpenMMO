@@ -51,7 +51,12 @@ class PretGbaParser(
   }
 
   private fun readMapGroups(): MapGroups {
-    val mapGroups = readJson(File(rootDir, "data/maps/map_groups.json")).jsonObject
+    val file = File(rootDir, "data/maps/map_groups.json")
+    require(file.exists()) {
+      "Decomp not initialized at $rootDir (missing ${file.path}). " +
+          "Run: git submodule update --init --recursive"
+    }
+    val mapGroups = readJson(file).jsonObject
     val order =
         (mapGroups["group_order"] ?: error("group_order missing")).jsonArray.map {
           it.jsonPrimitive.content
