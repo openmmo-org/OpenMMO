@@ -6,6 +6,8 @@ import de.fiereu.openmmo.common.auth.SessionTokenVerifier
 import de.fiereu.openmmo.common.io.PemKeyLoader
 import de.fiereu.openmmo.common.io.resource
 import de.fiereu.openmmo.server.game.config.GameServerConfig
+import de.fiereu.openmmo.server.game.world.interest.InterestPolicy
+import de.fiereu.openmmo.server.game.world.interest.PassThroughInterestPolicy
 import io.netty.channel.EventLoopGroup
 import io.netty.channel.MultiThreadIoEventLoopGroup
 import io.netty.channel.nio.NioIoHandler
@@ -42,4 +44,6 @@ object GameServerModule {
   @Provides
   @Singleton
   fun coroutineScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+  @Provides @Singleton fun interestPolicy(impl: PassThroughInterestPolicy): InterestPolicy = impl
 }
