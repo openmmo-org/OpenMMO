@@ -180,6 +180,7 @@ class PretGbaParser(
             x = x,
             y = y,
             elevation = (srcElevation - 1).coerceAtLeast(0),
+            targetRegion = region.regionId,
             targetBank = destAddr.groupIndex + BANK_GROUP_OFFSET,
             targetMap = destAddr.mapIndex,
             targetX = target?.get("x")?.jsonPrimitive?.intOrNull ?: x,

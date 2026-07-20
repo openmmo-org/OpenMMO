@@ -37,6 +37,7 @@ data class ParsedWarp(
     val x: Int,
     val y: Int,
     val elevation: Int,
+    val targetRegion: Int,
     val targetBank: Int,
     val targetMap: Int,
     val targetX: Int,
