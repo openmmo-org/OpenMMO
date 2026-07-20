@@ -62,5 +62,5 @@ val generateMaps by
       }
     }
 
-// Generated maps are not committed; they are regenerated on every build.
+// generated maps aren't committed, regenerated on every build
 sourceSets.main { kotlin.srcDir(generateMaps) }
