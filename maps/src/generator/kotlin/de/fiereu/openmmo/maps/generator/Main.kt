@@ -21,12 +21,11 @@ fun main(args: Array<String>) {
   val templatesDir = File(args[1])
   val classCacheDir = File(args[2])
   val sources = args.drop(3).map(::parseRegionSource)
-  val movementTypes = MovementTypes.build(sources.associate { it.region.name to it.dir })
 
   val maps =
       sources.flatMap { (region, dir) ->
         println("[maps] parsing ${region.name} (region ${region.regionId}) from $dir")
-        PretGbaParser(dir, region, movementTypes.getValue(region.name)).parseAll()
+        PretGbaParser(dir, region, MovementTypes.read(dir)).parseAll()
       }
   println("[maps] parsed ${maps.size} maps. writing to $outputDir")
   MapsRenderer(templatesDir, outputDir, classCacheDir).render(maps)

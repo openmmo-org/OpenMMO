@@ -1,6 +1,7 @@
 package de.fiereu.openmmo.server.game.services
 
 import de.fiereu.network.SessionContext
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.packets.NpcSpawnPacket
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -88,9 +89,10 @@ constructor(
     for (npc in map.npcs) {
       val key = "$bankId:$mapId:${npc.entityIdx}"
       val entityId = npcEntityIds.getOrPut(key) { npcEntityIdCounter.incrementAndGet() }
-      val unk3 = ((npc.movementType.id and 0xFF) shl 8) or 0x02
+      val movementId = npc.movementType.forRegion(Region.HOENN).id
+      val unk3 = ((movementId and 0xFF) shl 8) or 0x02
       val unk4 =
-          if (npc.movementType.id in 1..6 || (npc.movementType.id in 25..52)) {
+          if (movementId in 1..6 || (movementId in 25..52)) {
             ((npc.movementRangeX and 0xFF) shl 8) or (npc.movementRangeY and 0xFF)
           } else {
             0
