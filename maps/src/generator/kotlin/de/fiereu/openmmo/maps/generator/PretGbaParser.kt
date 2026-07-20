@@ -92,8 +92,7 @@ class PretGbaParser(
     return Context(
         layouts = readLayouts(),
         musicIds = readDefineTable(File(rootDir, "include/constants/songs.h"), "MUS_"),
-        gfxIds =
-            readDefineTable(File(rootDir, "include/constants/event_objects.h"), "OBJ_EVENT_GFX_"),
+        gfxIds = readGfxIds(File(rootDir, "include/constants/event_objects.h")),
         mapsecIds = readMapsecIds(),
         tilesetPaletteIds = readTilesetPaletteIds(),
         addresses = addresses,
@@ -254,6 +253,28 @@ class PretGbaParser(
         .readLines()
         .mapNotNull { pattern.find(it.trim()) }
         .associate { it.groupValues[1] to it.groupValues[2].toInt() }
+  }
+
+  private fun readIntDefine(file: File, name: String): Int? {
+    if (!file.exists()) return null
+    val pattern = Regex("""^#define\s+$name\s+(\d+)""")
+    return file.readLines().firstNotNullOfOrNull {
+      pattern.find(it.trim())?.groupValues?.get(1)?.toInt()
+    }
+  }
+
+  private fun readGfxIds(file: File): Map<String, Int> {
+    val gfx = readDefineTable(file, "OBJ_EVENT_GFX_").toMutableMap()
+    val varsBase =
+        gfx["OBJ_EVENT_GFX_VARS"] ?: readIntDefine(file, "NUM_OBJ_EVENT_GFX")?.plus(1) ?: return gfx
+    val varPattern =
+        Regex(
+            """^#define\s+(OBJ_EVENT_GFX_VAR_[0-9A-Fa-f]+)\s+\(OBJ_EVENT_GFX_VARS\s*\+\s*0x([0-9A-Fa-f]+)\)""")
+    file.forEachLine { line ->
+      val m = varPattern.find(line.trim()) ?: return@forEachLine
+      gfx[m.groupValues[1]] = varsBase + m.groupValues[2].toInt(16)
+    }
+    return gfx
   }
 
   private fun readMapsecIds(): Map<String, Int> {
