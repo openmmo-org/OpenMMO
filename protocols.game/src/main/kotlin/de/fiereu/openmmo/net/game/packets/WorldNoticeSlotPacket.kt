@@ -26,7 +26,7 @@ private val WorldNoticeArgCodec: Codec<WorldNoticeArg> =
         var stringValue: String? = null
         var shortValues: List<Short>? = null
         when (type) {
-          28 -> {}
+          28 -> Unit
           30 -> longValue = field(S64LE) { it.longValue!! }
           9,
           10,

@@ -28,19 +28,21 @@ object OverworldWeatherControlPacketCodec : PacketCodec<OverworldWeatherControlP
     var paramC: Float? = null
     var paramD: Float? = null
     var duration: Short? = null
-    if (t == 0) {
-      skyId = field(S16LE) { it.skyId!! }
-      skyVariant = field(S16LE) { it.skyVariant!! }
-    } else if (t == 4) {
-      particleId = field(S16LE) { it.particleId!! }
-      particleVariant = field(S16LE) { it.particleVariant!! }
-      paramA = field(F32LE) { it.paramA!! }
-      paramB = field(F32LE) { it.paramB!! }
-      paramC = field(F32LE) { it.paramC!! }
-      paramD = field(F32LE) { it.paramD!! }
-      duration = field(S16LE) { it.duration!! }
-    } else if (t == 5) {
-      duration = field(S16LE) { it.duration!! }
+    when (t) {
+      0 -> {
+        skyId = field(S16LE) { it.skyId!! }
+        skyVariant = field(S16LE) { it.skyVariant!! }
+      }
+      4 -> {
+        particleId = field(S16LE) { it.particleId!! }
+        particleVariant = field(S16LE) { it.particleVariant!! }
+        paramA = field(F32LE) { it.paramA!! }
+        paramB = field(F32LE) { it.paramB!! }
+        paramC = field(F32LE) { it.paramC!! }
+        paramD = field(F32LE) { it.paramD!! }
+        duration = field(S16LE) { it.duration!! }
+      }
+      5 -> duration = field(S16LE) { it.duration!! }
     }
     return OverworldWeatherControlPacket(
         effectType = effectType,
