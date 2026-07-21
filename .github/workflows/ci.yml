@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ "master" ]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Spotless and check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          # On pull requests check out the branch itself, not the detached merge
+          # commit, so the formatting commit can be pushed back.
+          ref: ${{ github.head_ref || github.sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Apply Spotless and push formatting changes
+        # Only pull request branches from this repository, where the formatting
+        # commit can be pushed back. Everywhere else the spotlessCheck inside
+        # the check task must fail on violations instead of hiding them.
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: |
+          ./gradlew spotlessApply
+          if git diff --quiet; then
+            echo "Nothing to format."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -u
+          git commit -m "chore(style): spotlessApply"
+          git push
+
+      - name: Run checks
+        run: ./gradlew check
