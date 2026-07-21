@@ -51,7 +51,7 @@ class GuildStoreTest :
         byId.getValue(100L).leader shouldBe false
       }
 
-      test("leave unbinds the leaver; disband removes the guild") {
+      test("leave unbinds the leaver and disband removes the guild") {
         val store = GuildStore()
         store.createGuild("Knights", "KNT", leaderId = 100L, leaderName = "Leader")
         store.leaveGuild(100L)

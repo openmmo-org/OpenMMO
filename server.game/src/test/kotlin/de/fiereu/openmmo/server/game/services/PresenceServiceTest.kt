@@ -6,25 +6,35 @@ import de.fiereu.openmmo.net.game.packets.EntityLeavePacket
 import de.fiereu.openmmo.net.game.packets.EntityMovePacket
 import de.fiereu.openmmo.net.game.packets.LoadEntityPacket
 import de.fiereu.openmmo.server.game.storage.CharacterStore
+import de.fiereu.openmmo.server.game.storage.EntityIdService
+import de.fiereu.openmmo.server.game.testsupport.FakeCharacterRepository
 import de.fiereu.openmmo.server.game.testsupport.FakeSession
 import de.fiereu.openmmo.server.game.world.interest.InterestManager
 import de.fiereu.openmmo.server.game.world.interest.PassThroughInterestPolicy
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 class PresenceServiceTest :
     FunSpec({
       val mapManager = MapManager()
 
       fun freshPresence(): Pair<PresenceService, CharacterStore> {
-        val store = CharacterStore()
+        val store =
+            CharacterStore(
+                FakeCharacterRepository(),
+                EntityIdService(),
+                CoroutineScope(SupervisorJob() + Dispatchers.Unconfined),
+            )
         val presence =
             PresenceService(
                 InterestManager(), PassThroughInterestPolicy(), MapLoadService(mapManager), store)
         return presence to store
       }
 
-      fun CharacterStore.session(name: String, mapId: Int = 3): FakeSession {
+      suspend fun CharacterStore.session(name: String, mapId: Int = 3): FakeSession {
         val character = createCharacter(userId = 1, name = name)
         return FakeSession(characterId = character.info.id, mapId = mapId)
       }

@@ -13,6 +13,16 @@ object ConfigLoader {
         checksumSize = config.getInt("server.checksumSize"),
         rootKeyResource = config.getString("server.rootKeyResource"),
         sessionSecret = secret.toByteArray(Charsets.UTF_8),
+        db =
+            DbConfig(
+                host = config.getString("db.host"),
+                port = config.getInt("db.port"),
+                name = config.getString("db.name"),
+                user = config.getString("db.user"),
+                password = config.getString("db.password"),
+                poolSize = config.getInt("db.poolSize"),
+                seedDev = config.getBoolean("db.seedDev"),
+            ),
     )
   }
 }

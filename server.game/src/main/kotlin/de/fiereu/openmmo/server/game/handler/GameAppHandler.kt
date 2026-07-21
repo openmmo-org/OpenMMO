@@ -161,6 +161,7 @@ constructor(
     if (charId != null) {
       presenceService.leave(session)
       sessionRegistry.unbindCharacter(charId)
+      characterStore.unloadCharacterAsync(charId)
     }
     multiplayerService.broadcastMessage(
         ChatMessagePacket(

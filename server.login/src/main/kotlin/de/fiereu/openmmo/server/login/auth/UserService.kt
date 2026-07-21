@@ -10,9 +10,15 @@ import javax.inject.Singleton
 interface UserService {
   data class AuthResult(val state: LoginState, val userId: Int? = null)
 
-  fun authenticate(username: String, password: String): AuthResult
+  suspend fun authenticate(username: String, password: String): AuthResult
 
-  fun getUserId(username: String): Int?
+  suspend fun getUserId(username: String): Int?
+}
+
+@Suppress("kotlin:S4790")
+internal fun sha1Hex(value: String): String {
+  val sha1 = MessageDigest.getInstance("SHA-1").digest(value.toByteArray())
+  return sha1.joinToString("") { "%02x".format(it) }
 }
 
 @Singleton
@@ -28,16 +34,13 @@ class InMemoryUserStore @Inject constructor() : UserService {
     addUser("test", "test")
   }
 
-  @Suppress("kotlin:S4790")
   fun addUser(username: String, password: String): Int {
     val id = nextId.getAndIncrement()
-    val sha1 = MessageDigest.getInstance("SHA-1").digest(password.toByteArray())
-    val hex = sha1.joinToString("") { "%02x".format(it) }
-    users[username.lowercase()] = UserInfo(id, hex, username)
+    users[username.lowercase()] = UserInfo(id, sha1Hex(password), username)
     return id
   }
 
-  override fun authenticate(username: String, password: String): UserService.AuthResult {
+  override suspend fun authenticate(username: String, password: String): UserService.AuthResult {
     val user =
         users[username.lowercase()] ?: return UserService.AuthResult(LoginState.INVALID_PASSWORD)
     if (user.passwordHash != password) {
@@ -46,5 +49,5 @@ class InMemoryUserStore @Inject constructor() : UserService {
     return UserService.AuthResult(LoginState.AUTHED, user.id)
   }
 
-  override fun getUserId(username: String): Int? = users[username.lowercase()]?.id
+  override suspend fun getUserId(username: String): Int? = users[username.lowercase()]?.id
 }

@@ -16,6 +16,8 @@ mockk = "1.14.11"
 jooq = "3.21.6"
 postgresql = "42.7.13"
 flyway = "11.20.3"
+hikaricp = "7.0.2"
+testcontainers = "1.21.3"
 netty = "4.2.16.Final"
 typesafe-config = "1.4.9"
 dagger = "2.60.1"
@@ -25,6 +27,7 @@ dotenv = "4.0.0"
 
 [libraries]
 kotlinGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+jooqCodegenGradlePlugin = { module = "org.jooq:jooq-codegen-gradle", version.ref = "jooq" }
 spotlessGradlePlugin = { module = "com.diffplug.spotless:spotless-plugin-gradle", version.ref = "spotless" }
 sonarlintGradlePlugin = { module = "name.remal.sonarlint:name.remal.sonarlint.gradle.plugin", version.ref = "sonarlint" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
@@ -49,9 +52,13 @@ jooq = { module = "org.jooq:jooq", version.ref = "jooq" }
 jooq-kotlin = { module = "org.jooq:jooq-kotlin", version.ref = "jooq" }
 jooq-meta = { module = "org.jooq:jooq-meta", version.ref = "jooq" }
 jooq-codegen = { module = "org.jooq:jooq-codegen", version.ref = "jooq" }
+jooq-meta-extensions = { module = "org.jooq:jooq-meta-extensions", version.ref = "jooq" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-postgresql = { module = "org.flywaydb:flyway-database-postgresql", version.ref = "flyway" }
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
+testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
 netty = { module = "io.netty:netty-all", version.ref = "netty" }
 typesafe-config = { module = "com.typesafe:config", version.ref = "typesafe-config" }
 dagger = { module = "com.google.dagger:dagger", version.ref = "dagger" }

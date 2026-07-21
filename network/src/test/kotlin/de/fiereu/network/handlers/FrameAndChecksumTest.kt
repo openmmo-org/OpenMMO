@@ -53,7 +53,7 @@ class FrameAndChecksumTest :
         out.readableBytes() shouldBe 4
       }
 
-      test("ChecksumFrameEncoder appends tag; decoder strips it") {
+      test("ChecksumFrameEncoder appends the tag and the decoder strips it") {
         val enc = EmbeddedChannel(ChecksumFrameEncoder(Crc16Checksum()))
         enc.writeOutbound(Unpooled.wrappedBuffer(byteArrayOf(1, 2, 3, 4)))
         val withTag = enc.drainOutbound()

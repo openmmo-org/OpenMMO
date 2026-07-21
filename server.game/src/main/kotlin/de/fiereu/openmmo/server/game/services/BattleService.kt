@@ -28,6 +28,7 @@ import de.fiereu.openmmo.net.game.packets.battle.BattleSwitchInPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleTileMapPacket
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
+import de.fiereu.openmmo.server.game.storage.EntityIdService
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
@@ -43,7 +44,6 @@ private const val CATCH_COMMAND = "/catch"
 
 private const val PATRAT: Short = 504
 private const val WILD_MON_ID = 0x000000000003C000L
-private const val CAUGHT_PATRAT_UID = 0x000000000002C000L
 private const val WILD_PATRAT_HP: Short = 14
 private const val CAUGHT_PATRAT_LEVEL: Byte = 2
 private const val CAUGHT_PATRAT_HP: Short = 8
@@ -71,6 +71,7 @@ class BattleService
 @Inject
 constructor(
     private val characterStore: CharacterStore,
+    private val entityIds: EntityIdService,
 ) {
 
   private val battleTurn = ConcurrentHashMap<Long, Int>()
@@ -148,8 +149,10 @@ constructor(
     battleTurn.remove(charId)
     battleActiveSlot.remove(charId)
     battleSeenActive.remove(charId)
-    val ot = characterStore.getCharacter(charId)?.info?.name ?: ""
-    val patrat = caughtPatrat(charId, ot)
+    val stored = characterStore.getCharacter(charId)
+    val ot = stored?.info?.name ?: ""
+    val nextSlot = ((stored?.pokemon?.maxOfOrNull { it.containerSlot } ?: -1) + 1).toShort()
+    val patrat = caughtPatrat(charId, ot, nextSlot)
     // The caught Patrat is sent as a full 148-byte record on opcode 0x14 before the ball-throw
     // event, so the client can resolve the monster when the throw lands.
     session.send(SocialListEntryAddPacket(patrat))
@@ -186,12 +189,12 @@ constructor(
     )
   }
 
-  private fun caughtPatrat(ownerId: Long, ot: String): Pokemon =
+  private fun caughtPatrat(ownerId: Long, ot: String, slot: Short): Pokemon =
       Pokemon(
-          id = CAUGHT_PATRAT_UID,
+          id = entityIds.newMonsterId(),
           ownerId = ownerId,
           container = PokemonContainer.PARTY,
-          containerSlot = 1,
+          containerSlot = slot,
           dexId = PATRAT.toInt(),
           seed = 0,
           ot = ot,

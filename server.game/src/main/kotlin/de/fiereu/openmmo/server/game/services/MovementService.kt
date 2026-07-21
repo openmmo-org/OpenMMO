@@ -179,6 +179,7 @@ constructor(
         targetBank,
         targetMap,
     )
+    characterStore.flushCharacterAsync(charId)
     presenceService.refresh(ctx)
 
     mapLoadService.preloadConnectedMaps(ctx, map, depth = 1)

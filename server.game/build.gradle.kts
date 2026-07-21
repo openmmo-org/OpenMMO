@@ -4,6 +4,7 @@ plugins {
   id("buildsrc.convention.spotless")
   id("buildsrc.convention.sonarlint")
   id("buildsrc.common.keys")
+  id("buildsrc.convention.jooq-db")
   alias(libs.plugins.ksp)
 }
 
@@ -12,6 +13,8 @@ group = "de.fiereu.openmmo"
 version = "0.1.0"
 
 application { mainClass.set("de.fiereu.openmmo.server.game.MainKt") }
+
+jooqDb { packageName = "de.fiereu.openmmo.db.game" }
 
 dependencies {
   api(project(":network"))
@@ -34,10 +37,12 @@ dependencies {
 tasks.named<JavaExec>("run") {
   listOf(
           "OPENMMO_SESSION_SECRET",
+          "GAME_DB_HOST",
           "GAME_DB_PORT",
           "GAME_DB_NAME",
           "GAME_DB_USER",
-          "GAME_DB_PASSWORD")
+          "GAME_DB_PASSWORD",
+          "GAME_DB_SEED_DEV")
       .forEach { key -> env.fetchOrNull(key)?.let { environment(key, it) } }
 }
 
