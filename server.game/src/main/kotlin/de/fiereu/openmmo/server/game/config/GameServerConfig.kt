@@ -6,6 +6,7 @@ data class GameServerConfig(
     val checksumSize: Int,
     val rootKeyResource: String,
     val sessionSecret: ByteArray,
+    val db: DbConfig = DbConfig(),
 ) {
   override fun equals(other: Any?): Boolean =
       other is GameServerConfig &&
@@ -13,7 +14,8 @@ data class GameServerConfig(
           port == other.port &&
           checksumSize == other.checksumSize &&
           rootKeyResource == other.rootKeyResource &&
-          sessionSecret.contentEquals(other.sessionSecret)
+          sessionSecret.contentEquals(other.sessionSecret) &&
+          db == other.db
 
   override fun hashCode(): Int {
     var h = host.hashCode()
@@ -21,6 +23,7 @@ data class GameServerConfig(
     h = h * 31 + checksumSize
     h = h * 31 + rootKeyResource.hashCode()
     h = h * 31 + sessionSecret.contentHashCode()
+    h = h * 31 + db.hashCode()
     return h
   }
 }

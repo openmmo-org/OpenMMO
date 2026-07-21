@@ -38,7 +38,7 @@ constructor(
     onSuspend<JoinGameServerPacket> { event -> onJoinGameServer(event) }
   }
 
-  private fun onLoginRequest(event: PacketEvent<LoginRequestPacket>) {
+  private suspend fun onLoginRequest(event: PacketEvent<LoginRequestPacket>) {
     val packet = event.packet
     val method = packet.method
     if (method !is PasswordLogin) {

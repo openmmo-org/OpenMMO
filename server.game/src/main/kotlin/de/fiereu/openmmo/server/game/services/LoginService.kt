@@ -98,20 +98,25 @@ constructor(
     ctx.send(JoinResponsePacket.acceptNow(playtime = 1337, rewardPoints = 420, balance = 187))
   }
 
-  fun onCreateCharacter(event: PacketEvent<CreateCharacterPacket>) {
+  suspend fun onCreateCharacter(event: PacketEvent<CreateCharacterPacket>) {
     val ctx = event.session
     val state = ctx.attributes[PLAYER_STATE]
     if (state == null) {
       log.warn { "Create character from unknown session" }
       return
     }
-    val name = event.packet.name
+    val name = event.packet.name.trim()
+    if (name.isEmpty() || name.length > 32) {
+      log.warn { "Rejected character name '${event.packet.name}' for userId=${state.userId}" }
+      ctx.send(buildCharacterList(state.userId))
+      return
+    }
     log.info { "Creating character '$name' for userId=${state.userId}" }
     characterStore.createCharacter(state.userId, name)
     ctx.send(buildCharacterList(state.userId))
   }
 
-  fun onCharacterRequest(event: PacketEvent<RequestCharactersPacket>) {
+  suspend fun onCharacterRequest(event: PacketEvent<RequestCharactersPacket>) {
     val ctx = event.session
     val state = ctx.attributes[PLAYER_STATE]
     if (state != null) {
@@ -122,7 +127,7 @@ constructor(
     }
   }
 
-  private fun buildCharacterList(userId: Int): CharactersListPacket {
+  private suspend fun buildCharacterList(userId: Int): CharactersListPacket {
     val characters = characterStore.getCharactersByUser(userId)
     val entries =
         characters.map { stored ->
@@ -136,10 +141,10 @@ constructor(
     return CharactersListPacket(entries)
   }
 
-  fun onCharacterSelected(event: PacketEvent<SelectCharacterPacket>) {
+  suspend fun onCharacterSelected(event: PacketEvent<SelectCharacterPacket>) {
     val ctx = event.session
     val charId = event.packet.characterId
-    val stored = characterStore.getCharacter(charId)
+    val stored = characterStore.getOrLoadCharacter(charId)
     if (stored == null) {
       log.warn { "Character $charId not found" }
       return
