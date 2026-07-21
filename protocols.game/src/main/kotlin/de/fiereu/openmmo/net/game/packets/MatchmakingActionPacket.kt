@@ -46,7 +46,7 @@ private val MatchmakingActionCodec: Codec<MatchmakingActionKind> =
       override fun write(buf: WriteBuffer, value: MatchmakingActionKind) {
         buf.writeByte(value.actionId)
         when (value) {
-          is TeleportAction -> {}
+          is TeleportAction -> Unit
           is SelectTierAction -> {
             var v = value.tierId
             for (i in 0 until 4) {

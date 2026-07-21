@@ -8,12 +8,7 @@ object NullMessageArg : DialogMessageArg()
 
 data class CreatureDataArg(val value: Int, val args: List<DialogMessageArg>) : DialogMessageArg()
 
-data class CreatureMovesArg(val team: Byte, val moveIds: List<Short>) : DialogMessageArg() {
-  override fun equals(other: Any?): Boolean =
-      other is CreatureMovesArg && team == other.team && moveIds == other.moveIds
-
-  override fun hashCode(): Int = team * 31 + moveIds.hashCode()
-}
+data class CreatureMovesArg(val team: Byte, val moveIds: List<Short>) : DialogMessageArg()
 
 data class MoveAnimationArg(val sourceSlot: Byte, val targetSlot: Byte, val moveId: Short) :
     DialogMessageArg()

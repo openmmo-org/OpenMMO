@@ -21,11 +21,11 @@ data class BattlePartyPokemon(
 private val BattlePartyPokemonCodec: Codec<BattlePartyPokemon> =
     object : PacketCodec<BattlePartyPokemon>() {
       override fun CodecScope<BattlePartyPokemon>.body(): BattlePartyPokemon {
+        // Flag bits 1 and 2 exist in the protocol but are never written. Their fields are
+        // only skipped over when reading.
         val flags =
             field(U8) {
-              (if (false) 1 else 0) or
-                  (if (false) 2 else 0) or
-                  (if (it.slot.toInt() != 0) 4 else 0) or
+              (if (it.slot.toInt() != 0) 4 else 0) or
                   (if (it.partyIndex.toInt() != -1) 8 else 0) or
                   (if (it.statusEffect != null) 16 else 0)
             }

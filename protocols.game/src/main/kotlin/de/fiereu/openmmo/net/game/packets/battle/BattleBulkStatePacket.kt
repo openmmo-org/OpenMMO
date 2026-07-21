@@ -58,7 +58,7 @@ internal val BattleMessageArgCodec: Codec<BattleMessageArg> =
         val t = value.type.toInt()
         when {
           t == 5 -> Utf16LeNullTerminated.write(buf, (value.payload as StringArgPayload).value)
-          t == 28 -> {}
+          t == 28 -> Unit
           t == 30 -> S64LE.write(buf, (value.payload as LongArgPayload).value)
           t == 9 || t == 10 || t == 17 -> S32LE.write(buf, (value.payload as IntArgPayload).value)
           t == 18 -> Utf16LeNullTerminated.write(buf, (value.payload as StringArgPayload).value)

@@ -16,5 +16,6 @@ object SocialActionOutcomePacketCodec : PacketCodec<SocialActionOutcomePacket>()
     return SocialActionOutcomePacket(action, entityId, value)
   }
 
-  private fun resolveKind(action: Int): Int = 0
+  // The action to payload-kind mapping is not reverse engineered yet, so every kind is 0.
+  @Suppress("kotlin:S1172") private fun resolveKind(action: Int): Int = 0
 }

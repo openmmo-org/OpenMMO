@@ -34,7 +34,7 @@ private val ServerMessageArgCodec: Codec<ServerMessageArg> =
         var shortValues: List<Short>? = null
         when {
           type == 5 || type == 18 -> stringValue = field(Utf16LeNullTerminated) { it.stringValue!! }
-          type == 28 -> {}
+          type == 28 -> Unit
           type == 30 -> longValue = field(S64LE) { it.longValue!! }
           type == 9 || type == 10 || type == 17 -> intValue = field(S32LE) { it.intValue!! }
           else -> shortValues = field(S16LE.listPrefixed(U8)) { it.shortValues!! }
