@@ -33,15 +33,21 @@ private fun generateRegion(
 ) {
   val renderer = DialogRenderer(region, templatesDir, outputDir, classCacheDir)
   val rom = RomIndex.find(romsDir, gameCode)
+
+  val texts = TextParser(decompDir).parseAll()
+  println("[dialog] $region: parsed ${texts.size} text labels from $decompDir")
+
+  // Without a ROM we cannot resolve textIds, but the enums must still exist so code that
+  // references them compiles (for example in CI, where ROMs are never present). Emit every
+  // label with a placeholder textId so the build works, just without real dialog ids.
   if (rom == null) {
-    println("[dialog] no $gameCode ROM found in $romsDir, generating empty $region")
-    renderer.render(emptyList())
+    println(
+        "[dialog] no $gameCode ROM found in $romsDir, generating $region labels without textIds")
+    renderer.render(texts.map { DialogLine(it.label, 0, RenderUtil.preview(it.content)) })
     return
   }
 
   val charmap = Charmap.load(File(decompDir, "charmap.txt"))
-  val texts = TextParser(decompDir).parseAll()
-  println("[dialog] $region: parsed ${texts.size} text labels from $decompDir")
 
   var unencodable = 0
   var notFound = 0

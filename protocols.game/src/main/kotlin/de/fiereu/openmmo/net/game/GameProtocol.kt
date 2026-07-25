@@ -113,7 +113,7 @@ object GameProtocol : Protocol() {
 
     bidi<DialogOptionPacket>(0x26u, DialogOptionPacketCodec)
 
-    c2s<PlayerStopMovingPacket>(0x27u, PlayerStopMovingPacketCodec)
+    c2s<TileInteractPacket>(0x27u, TileInteractPacketCodec)
     s2c<PcTogglePacket>(0x27u, PcTogglePacketCodec)
 
     c2s<TypedBinaryDataPacket>(0x28u, TypedBinaryDataPacketCodec)
