@@ -71,3 +71,21 @@ jteCodegen {
         ))
   }
 }
+
+// One shot bootstrap of the overworld script stubs into server.game. Run by hand with
+// `gradlew :codegen:generateScriptStubs`. Deliberately not wired into the build, the emitted files
+// are committed source so hand written ports are never overwritten on a normal build.
+tasks.register<JavaExec>("generateScriptStubs") {
+  group = "codegen"
+  description = "Bootstrap overworld script stubs into server.game (manual, not part of the build)"
+  val fireredDir = rootProject.layout.projectDirectory.dir("decomp/pokefirered")
+  val serverGameSrc = rootProject.layout.projectDirectory.dir("server.game/src/main/kotlin")
+  classpath = sourceSets["generator"].runtimeClasspath
+  mainClass.set("de.fiereu.openmmo.codegen.script.Main")
+  args(
+      serverGameSrc.asFile.absolutePath,
+      romsDir.asFile.absolutePath,
+      "hoenn|BPEE|${sourceDecompDir.asFile.absolutePath}",
+      "kanto|BPRE|${fireredDir.asFile.absolutePath}",
+  )
+}

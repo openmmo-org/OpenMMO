@@ -10,4 +10,6 @@ sonarLint {
     // The todo-to-issue workflow already tracks open tasks, so lint must not flag them too.
     disable("kotlin:S1135")
   }
+  // Generated sources should not be linted.
+  ignoredPaths.add("**/generated/**")
 }

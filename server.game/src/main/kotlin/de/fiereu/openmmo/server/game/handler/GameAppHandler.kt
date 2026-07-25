@@ -24,6 +24,7 @@ import de.fiereu.openmmo.net.game.packets.RequestCharactersPacket
 import de.fiereu.openmmo.net.game.packets.RequestPlayerPacket
 import de.fiereu.openmmo.net.game.packets.RequestSocialProfilePacket
 import de.fiereu.openmmo.net.game.packets.SelectCharacterPacket
+import de.fiereu.openmmo.net.game.packets.TileInteractPacket
 import de.fiereu.openmmo.net.game.packets.UnblockPlayerPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleActionPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleActionSelectPacket
@@ -68,11 +69,13 @@ import de.fiereu.openmmo.server.game.services.MultiplayerService
 import de.fiereu.openmmo.server.game.services.PresenceService
 import de.fiereu.openmmo.server.game.services.SocialService
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
+import de.fiereu.openmmo.server.game.session.SCRIPT_SCOPE
 import de.fiereu.openmmo.server.game.session.SessionRegistry
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 
 private val log = KotlinLogging.logger {}
 
@@ -104,6 +107,7 @@ constructor(
     onSuspend<FaceDirectionPacket> { event -> movementService.onFaceDirection(event) }
 
     onSuspend<EntityInteractPacket> { event -> interactionService.onEntityInteract(event) }
+    onSuspend<TileInteractPacket> { event -> interactionService.onTileInteract(event) }
     onSuspend<DialogActionResponsePacket> { event -> dialogService.onInteractive(event) }
     onSuspend<DialogChoicePacket> { event -> dialogService.onDialogChoice(event) }
 
@@ -155,6 +159,8 @@ constructor(
   }
 
   override fun onInactive() {
+    // Cancel any script coroutine still waiting on a dialog reply from this connection.
+    session.attributes[SCRIPT_SCOPE]?.cancel()
     val state = session.attributes[PLAYER_STATE] ?: return
     log.info { "Player ${state.characterId} disconnected." }
     val charId = state.characterId
