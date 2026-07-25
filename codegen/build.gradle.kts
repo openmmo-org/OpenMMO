@@ -11,6 +11,7 @@ dependencies {
   api(libs.dagger)
   "generatorImplementation"(libs.jte)
   "generatorImplementation"(libs.kotlinx.serialization.json)
+  testImplementation(libs.bundles.kotest)
 }
 
 // Region name -> source decomp. Only non-NDS (GBA, 2D) decomps that share the pret
@@ -45,6 +46,11 @@ jteCodegen {
   }
   register("pokemon") {
     mainClass.set("de.fiereu.openmmo.codegen.pokemon.Main")
+    inputDirs.from(sourceDecompDir)
+    extraArgs.set(listOf(sourceDecompDir.asFile.absolutePath))
+  }
+  register("typechart") {
+    mainClass.set("de.fiereu.openmmo.codegen.typechart.Main")
     inputDirs.from(sourceDecompDir)
     extraArgs.set(listOf(sourceDecompDir.asFile.absolutePath))
   }
