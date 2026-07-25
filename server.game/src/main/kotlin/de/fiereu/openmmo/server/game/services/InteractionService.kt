@@ -3,7 +3,6 @@ package de.fiereu.openmmo.server.game.services
 import de.fiereu.network.PacketEvent
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.maps.MapManager
-import de.fiereu.openmmo.net.game.packets.DialogStatePacket
 import de.fiereu.openmmo.net.game.packets.EntityInteractPacket
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
@@ -18,7 +17,6 @@ class InteractionService
 @Inject
 constructor(
     private val npcService: NpcService,
-    private val dialogService: DialogService,
     private val mapManager: MapManager,
     private val characterStore: CharacterStore,
 ) {
@@ -40,32 +38,9 @@ constructor(
     val bankId = stored.info.positionBankId.toInt()
     val mapId = stored.info.positionMapId.toInt()
     for (npc in currentMap.npcs) {
-      val expectedId = npcService.getNpcEntityId(bankId, mapId, npc.entityIdx)
-      if (expectedId == npcEntityId) {
+      if (npcService.getNpcEntityId(bankId, mapId, npc.entityIdx) == npcEntityId) {
         log.info {
           "Entity interaction: NPC entityIdx=${npc.entityIdx} entityId=$npcEntityId script=${npc.script}"
-        }
-
-        if (npc.script != "0x0") {
-          val params = dialogService.scriptParams(npc.script)
-          if (params != null) {
-            state.inDialog = true
-            state.dialogNpcEntityId = npcEntityId
-            state.dialogPages = params
-            state.dialogPageIndex = 0
-            val seqId = state.dialogSeqId++
-            val page = params[0]
-            ctx.send(DialogStatePacket(true))
-            dialogService.sendInteractive(
-                ctx,
-                seqId,
-                npcEntityId,
-                page.type,
-                page.unk1,
-                page.unk2,
-                page.unk3,
-            )
-          }
         }
         return
       }
@@ -93,25 +68,7 @@ constructor(
     val bgEvent =
         currentMap.bgEvents.find { it.x == facingX && it.y == facingY && facingDirOk(it.facingDir) }
     if (bgEvent != null) {
-      val params = dialogService.scriptParams(bgEvent.script)
-      if (params != null) {
-        state.inDialog = true
-        state.dialogNpcEntityId = npcEntityId
-        state.dialogPages = params
-        state.dialogPageIndex = 0
-        val seqId = state.dialogSeqId++
-        val page = params[0]
-        ctx.send(DialogStatePacket(true))
-        dialogService.sendInteractive(
-            ctx,
-            seqId,
-            npcEntityId,
-            page.type,
-            page.unk1,
-            page.unk2,
-            page.unk3,
-        )
-      }
+      log.info { "Entity interaction: bg event at ($facingX, $facingY) script=${bgEvent.script}" }
       return
     }
 
