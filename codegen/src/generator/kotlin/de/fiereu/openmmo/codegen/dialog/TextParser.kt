@@ -51,10 +51,6 @@ class TextParser(private val decompDir: File) {
           }
           buffer.append(stringLiteral(line))
         }
-        line.isEmpty() -> {
-          flush()
-          pending = null
-        }
         else -> {
           flush()
           pending = null
