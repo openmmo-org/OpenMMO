@@ -114,6 +114,18 @@ class AtomsTest :
         codec.encodeToBytes(Unit) shouldBe byteArrayOf(0x00)
       }
 
+      test("constant byte writes the literal and skips it on read") {
+        val codec = constant(0x2A)
+        codec.encodeToBytes(Unit) shouldBe byteArrayOf(0x2A)
+        codec.decodeBytes(byteArrayOf(0x0A)) shouldBe Unit
+      }
+
+      test("constant segment writes the literal and skips it on read") {
+        val codec = constant(byteArrayOf(0x01, 0x02, 0x03))
+        codec.encodeToBytes(Unit) shouldBe byteArrayOf(0x01, 0x02, 0x03)
+        codec.decodeBytes(byteArrayOf(0x0A, 0x0B, 0x0C)) shouldBe Unit
+      }
+
       test("padding writes fill bytes") {
         val codec = padding(3, fill = 0xAA.toByte())
         codec.encodeToBytes(Unit) shouldBe byteArrayOf(0xAA.toByte(), 0xAA.toByte(), 0xAA.toByte())

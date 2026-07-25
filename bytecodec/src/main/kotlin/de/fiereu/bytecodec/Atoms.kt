@@ -268,6 +268,34 @@ fun reserved(byte: Int, strict: Boolean = false): Codec<Unit> {
   }
 }
 
+/** A fixed protocol byte: writes [byte] verbatim and skips one byte when reading. */
+fun constant(byte: Int): Codec<Unit> {
+  val literal = (byte and 0xFF).toByte()
+  return object : Codec<Unit> {
+    override fun read(buf: ReadBuffer) {
+      buf.skip(1)
+    }
+
+    override fun write(buf: WriteBuffer, value: Unit) {
+      buf.writeByte(literal)
+    }
+  }
+}
+
+/** A fixed protocol segment: writes [bytes] verbatim and skips over them when reading. */
+fun constant(bytes: ByteArray): Codec<Unit> {
+  val literal = bytes.copyOf()
+  return object : Codec<Unit> {
+    override fun read(buf: ReadBuffer) {
+      buf.skip(literal.size)
+    }
+
+    override fun write(buf: WriteBuffer, value: Unit) {
+      buf.writeBytes(literal)
+    }
+  }
+}
+
 fun padding(n: Int, fill: Byte = 0): Codec<Unit> {
   require(n >= 0) { "padding negative size: $n" }
   return object : Codec<Unit> {

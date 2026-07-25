@@ -43,7 +43,7 @@ abstract class PacketCodec<P> : Codec<P> {
   }
 }
 
-fun CodecScope<*>.reserved(byte: Int = 0, strict: Boolean = false) {
+fun CodecScope<*>.reserved(byte: Int, strict: Boolean = false) {
   structural(de.fiereu.bytecodec.reserved(byte = byte, strict = strict))
 }
 
@@ -53,4 +53,12 @@ fun CodecScope<*>.padding(n: Int, fill: Byte = 0) {
 
 fun CodecScope<*>.skip(n: Int) {
   structural(de.fiereu.bytecodec.skip(n = n))
+}
+
+fun CodecScope<*>.constant(byte: Int) {
+  structural(de.fiereu.bytecodec.constant(byte = byte))
+}
+
+fun CodecScope<*>.constant(bytes: ByteArray) {
+  structural(de.fiereu.bytecodec.constant(bytes = bytes))
 }
