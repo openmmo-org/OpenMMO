@@ -159,6 +159,8 @@ constructor(
     log.info { "Player ${state.characterId} disconnected." }
     val charId = state.characterId
     if (charId != null) {
+      // The battle flush must land before the unload evicts the character from the cache.
+      battleService.onDisconnect(session)
       presenceService.leave(session)
       sessionRegistry.unbindCharacter(charId)
       characterStore.unloadCharacterAsync(charId)

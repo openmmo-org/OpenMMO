@@ -2,36 +2,30 @@ package de.fiereu.openmmo.server.game.services
 
 import de.fiereu.network.PacketEvent
 import de.fiereu.network.SessionContext
-import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.PokemonMove
 import de.fiereu.openmmo.common.enums.BattleAction
-import de.fiereu.openmmo.common.enums.EVs
-import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.net.game.packets.ChatMessageSendPacket
-import de.fiereu.openmmo.net.game.packets.EntityMovePpPacket
-import de.fiereu.openmmo.net.game.packets.EntityPresencePacket
-import de.fiereu.openmmo.net.game.packets.PokemonContainerPacket
 import de.fiereu.openmmo.net.game.packets.SocialListEntryAddPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleActionSelectPacket
-import de.fiereu.openmmo.net.game.packets.battle.BattleBulkStatePacket
-import de.fiereu.openmmo.net.game.packets.battle.BattleEntityMoveEventPacket
-import de.fiereu.openmmo.net.game.packets.battle.BattleFieldMon
-import de.fiereu.openmmo.net.game.packets.battle.BattleFieldStatePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleListEventDetail
 import de.fiereu.openmmo.net.game.packets.battle.BattleListEventPacket
-import de.fiereu.openmmo.net.game.packets.battle.BattleQueuedEventPacket
-import de.fiereu.openmmo.net.game.packets.battle.BattleSidePacket
-import de.fiereu.openmmo.net.game.packets.battle.BattleSlotEventEnumPacket
-import de.fiereu.openmmo.net.game.packets.battle.BattleSwitchInMon
-import de.fiereu.openmmo.net.game.packets.battle.BattleSwitchInPacket
-import de.fiereu.openmmo.net.game.packets.battle.BattleTileMapPacket
+import de.fiereu.openmmo.pokemon.SpeciesRegistry
+import de.fiereu.openmmo.server.game.battle.BattleInstance
+import de.fiereu.openmmo.server.game.battle.BattleMonState
+import de.fiereu.openmmo.server.game.battle.BattlePacketEmitter
+import de.fiereu.openmmo.server.game.battle.BattleRegistry
+import de.fiereu.openmmo.server.game.battle.BattleRewards
+import de.fiereu.openmmo.server.game.battle.BattleRng
+import de.fiereu.openmmo.server.game.battle.StatCalculator
+import de.fiereu.openmmo.server.game.battle.TurnEngine
+import de.fiereu.openmmo.server.game.battle.WildMonFactory
+import de.fiereu.openmmo.server.game.battle.notice
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
-import de.fiereu.openmmo.server.game.storage.EntityIdService
+import de.fiereu.openmmo.server.game.world.interest.InterestManager
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDateTime
-import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -42,122 +36,212 @@ private const val TEST_BATTLE_COMMAND = "/testbattle"
 // even though a ball can now be thrown from the UI.
 private const val CATCH_COMMAND = "/catch"
 
-private const val PATRAT: Short = 504
-private const val WILD_MON_ID = 0x000000000003C000L
-private const val WILD_PATRAT_HP: Short = 14
-private const val CAUGHT_PATRAT_LEVEL: Byte = 2
-private const val CAUGHT_PATRAT_HP: Short = 8
-private const val CAUGHT_PATRAT_XP = 8
-private const val PATRAT_TACKLE: Short = 33
-private const val PATRAT_TACKLE_PP: Byte = 35
-private const val ACTION_PROMPT: Byte = -128 // 0x80
+private const val DEFAULT_WILD_DEX = 19
+private const val DEFAULT_WILD_LEVEL = 3
+private const val MIN_WILD_LEVEL = 2
+private const val MAX_WILD_LEVEL = 100
 
-private const val ENEMY_MOVE: Short = 33
-private const val MOVE_EVENT_KIND: Byte = 1
 private const val POKE_BALL_ITEM: Short = 5004
-// Slot-event type shown when the player gets away from a wild battle.
-private const val FLED_EVENT: Byte = 0
 
-// The player's overworld entity is hidden while the battle scene is up and shown again when it
-// ends.
-private const val PRESENCE_IN_BATTLE: Byte = 1
-private const val PRESENCE_OVERWORLD: Byte = 0
-
-// The active battle side reported to the client so the bag knows which monster an item targets.
-private const val PLAYER_SIDE: Byte = 1
-
+/**
+ * Orchestrates wild battles: builds the battle state from the party and a rolled wild monster,
+ * routes client actions through the [TurnEngine], and persists the outcome. Packets go out through
+ * the [BattlePacketEmitter] over the battle's interest key.
+ */
 @Singleton
 class BattleService
 @Inject
 constructor(
     private val characterStore: CharacterStore,
-    private val entityIds: EntityIdService,
+    private val battles: BattleRegistry,
+    private val engine: TurnEngine,
+    private val wildMons: WildMonFactory,
+    private val emitter: BattlePacketEmitter,
+    private val rewards: BattleRewards,
+    private val interestManager: InterestManager,
+    private val speciesRegistry: SpeciesRegistry,
 ) {
-
-  private val battleTurn = ConcurrentHashMap<Long, Int>()
-  // The active party slot per battle, and which slots have been sent out as active. A monster's
-  // first appearance carries its full block, a return only its active detail.
-  private val battleActiveSlot = ConcurrentHashMap<Long, Int>()
-  private val battleSeenActive = ConcurrentHashMap<Long, MutableSet<Int>>()
 
   fun onBattlePacket(event: PacketEvent<*>) {
     log.info { "Battle packet ${event.packet::class.simpleName} received: ${event.packet}" }
   }
 
   fun onBattleAction(event: PacketEvent<BattleActionSelectPacket>) {
-    val session = event.session
-    val charId = session.attributes[PLAYER_STATE]?.characterId ?: return
+    val charId = event.session.attributes[PLAYER_STATE]?.characterId ?: return
+    val battle = battles.byChar(charId) ?: return
     val action = event.packet
     log.info { "Battle action char=$charId: $action" }
+    // While the active mon is fainted the player owes a replacement and may only switch.
+    if (battle.activeMon().fainted && action.action != BattleAction.SWITCH) return
     when (action.action) {
-      BattleAction.MOVE -> {
-        playMoveAnimations(session, charId, action.moveOrItemId)
-        advanceTurn(session, charId)
+      BattleAction.MOVE -> resolveTurn(battle, action.moveOrItemId)
+      BattleAction.ITEM -> catchWild(battle)
+      BattleAction.SWITCH -> switchMon(battle, action.moveOrItemId)
+      BattleAction.RUN -> flee(battle)
+    }
+  }
+
+  fun onChatSend(event: PacketEvent<ChatMessageSendPacket>) {
+    val session = event.session
+    val text = (event.packet.message ?: event.packet.target).trim()
+    val parts = text.split(Regex("\\s+"))
+    when {
+      parts[0].equals(TEST_BATTLE_COMMAND, ignoreCase = true) -> {
+        val dexId = parts.getOrNull(1)?.toIntOrNull() ?: DEFAULT_WILD_DEX
+        val level =
+            (parts.getOrNull(2)?.toIntOrNull() ?: DEFAULT_WILD_LEVEL).coerceIn(
+                MIN_WILD_LEVEL, MAX_WILD_LEVEL)
+        startWildBattle(session, dexId, level)
       }
-      BattleAction.ITEM -> catchWildMon(session, charId)
-      BattleAction.SWITCH -> switchMon(session, charId, action.moveOrItemId)
-      BattleAction.RUN -> fleeBattle(session, charId)
+      text.equals(CATCH_COMMAND, ignoreCase = true) -> {
+        val charId = session.attributes[PLAYER_STATE]?.characterId ?: return
+        battles.byChar(charId)?.let { catchWild(it) }
+      }
     }
   }
 
-  // The client picked a party slot to switch to. The switch-in packet (opcode 0x35) brings the new
-  // monster onto the field: the first time a monster comes out it carries its full block, otherwise
-  // just its active detail. The turn then advances and re-prompts for the next action.
-  private fun switchMon(session: SessionContext, charId: Long, partyIndex: Short) {
+  /** Ends a running battle when the player disconnects, keeping the last hp and pp state. */
+  fun onDisconnect(session: SessionContext) {
+    val charId = session.attributes[PLAYER_STATE]?.characterId ?: return
+    val battle = battles.byChar(charId) ?: return
+    persistParty(battle)
+    finishBattle(battle)
+  }
+
+  private fun startWildBattle(session: SessionContext, dexId: Int, level: Int) {
+    val charId = session.attributes[PLAYER_STATE]?.characterId ?: return
+    if (battles.byChar(charId) != null) {
+      session.send(notice("You are already in a battle."))
+      return
+    }
     val stored = characterStore.getCharacter(charId) ?: return
+    if (stored.pokemon.isEmpty()) {
+      session.send(notice("You need a monster in your party to battle."))
+      return
+    }
+    val party = mutableListOf<BattleMonState>()
+    for ((index, mon) in stored.pokemon.withIndex()) {
+      val def = speciesRegistry.get(mon.dexId)
+      if (def == null) {
+        session.send(notice("Your party has a species the battle data does not cover yet."))
+        return
+      }
+      party += BattleMonState(mon.id, def, index, mon, StatCalculator.computeAll(def, mon))
+    }
+    if (party.all { it.fainted }) {
+      session.send(notice("All of your monsters have fainted."))
+      return
+    }
+    val rng = BattleRng()
+    val wildPokemon = wildMons.create(dexId, level, rng)
+    if (wildPokemon == null) {
+      session.send(notice("Unknown species $dexId."))
+      return
+    }
+    val wildDef = speciesRegistry.get(dexId)!!
+    val wild =
+        BattleMonState(
+            wildPokemon.id,
+            wildDef,
+            null,
+            wildPokemon,
+            StatCalculator.computeAll(wildDef, wildPokemon),
+        )
+    log.info {
+      "Starting wild battle for char=$charId (${stored.info.name}): ${wildDef.name} level $level"
+    }
+    val battle = battles.create(charId, session, party, wild, rng)
+    val firstAlive = party.indexOfFirst { !it.fainted }
+    battle.activeSlot = firstAlive
+    battle.seenActive.clear()
+    battle.seenActive.add(firstAlive)
+    interestManager.join(session, battle.key)
+    emitter.sendStart(battle, stored.info.name)
+  }
+
+  private fun resolveTurn(battle: BattleInstance, moveId: Short) {
+    val events = engine.resolveTurn(battle, moveId)
+    emitter.sendEvents(battle, events)
+    afterTurn(battle)
+  }
+
+  private fun afterTurn(battle: BattleInstance) {
+    when {
+      battle.wild.fainted -> endVictory(battle)
+      battle.party.all { it.fainted } -> endDefeat(battle)
+      // The active mon fainted with a live backup. Open the switch screen instead of the action
+      // prompt. The replacement arrives as a normal SWITCH action.
+      battle.activeMon().fainted -> emitter.sendSwitchPrompt(battle)
+      else -> {
+        battle.turn += 1
+        emitter.sendPrompt(battle)
+      }
+    }
+  }
+
+  private fun switchMon(battle: BattleInstance, partyIndex: Short) {
     val target = partyIndex.toInt()
-    val mon = stored.pokemon.getOrNull(target)
-    if (mon == null) {
-      log.warn { "Switch to invalid party index $partyIndex for char=$charId" }
-      advanceTurn(session, charId)
+    val mon = battle.party.getOrNull(target)
+    val forced = battle.activeMon().fainted
+    if (mon == null || mon.fainted || target == battle.activeSlot) {
+      // Reopen the switch screen on an invalid forced choice, otherwise re-prompt for an action.
+      if (forced) {
+        emitter.sendSwitchPrompt(battle)
+      } else {
+        battle.turn += 1
+        emitter.sendPrompt(battle)
+      }
       return
     }
-    val oldSlot = battleActiveSlot[charId] ?: 0
-    if (target == oldSlot) {
-      advanceTurn(session, charId)
-      return
+    // A forced switch confirms the choice before the switch-in. The captures pair the confirm with
+    // a full block for a new mon and with a return block for a mon that was already active.
+    if (forced) emitter.sendSwitchConfirm(battle)
+    performSwitch(battle, target)
+    if (forced) {
+      // Replacing a fainted mon does not spend a turn, the new mon acts next.
+      battle.turn += 1
+      emitter.sendPrompt(battle)
+    } else {
+      // A voluntary switch spends the turn, so the wild attacks the incoming mon.
+      emitter.sendEvents(battle, engine.resolveSwitchTurn(battle))
+      afterTurn(battle)
     }
-    val seen = battleSeenActive.getOrPut(charId) { mutableSetOf(0) }
-    val fullBlock = target !in seen
-    log.info { "Switch char=$charId slot $oldSlot -> $target (fullBlock=$fullBlock)" }
-    session.send(
-        BattleSwitchInPacket(
-            newSlot = target,
-            oldSlot = oldSlot,
-            mon = BattleSwitchInMon(mon.id, mon.dexId.toShort(), mon.hp),
-            fullBlock = fullBlock,
-        ),
-    )
-    seen.add(target)
-    battleActiveSlot[charId] = target
-    advanceTurn(session, charId)
   }
 
-  // The player fled. The slot event shows the got-away text, the flee end marker closes the battle
-  // scene, and the presence toggle restores the overworld player.
-  private fun fleeBattle(session: SessionContext, charId: Long) {
-    battleTurn.remove(charId)
-    battleActiveSlot.remove(charId)
-    battleSeenActive.remove(charId)
-    session.send(BattleSlotEventEnumPacket(slot = 0, eventType = FLED_EVENT))
-    session.send(BattleBulkStatePacket.fled())
-    session.send(EntityPresencePacket(entityId = charId, status = PRESENCE_OVERWORLD))
+  private fun performSwitch(battle: BattleInstance, target: Int) {
+    val oldSlot = battle.activeSlot
+    val fullBlock = target !in battle.seenActive
+    battle.activeSlot = target
+    battle.seenActive.add(target)
+    log.info { "Switch char=${battle.charId} slot $oldSlot -> $target (fullBlock=$fullBlock)" }
+    emitter.sendSwitchIn(battle, fullBlock)
   }
 
-  private fun catchWildMon(session: SessionContext, charId: Long) {
-    log.info { "Ball thrown, catching wild Patrat for char=$charId" }
-    battleTurn.remove(charId)
-    battleActiveSlot.remove(charId)
-    battleSeenActive.remove(charId)
-    val stored = characterStore.getCharacter(charId)
-    val ot = stored?.info?.name ?: ""
-    val nextSlot = ((stored?.pokemon?.maxOfOrNull { it.containerSlot } ?: -1) + 1).toShort()
-    val patrat = caughtPatrat(charId, ot, nextSlot)
-    // The caught Patrat is sent as a full 148-byte record on opcode 0x14 before the ball-throw
+  private fun flee(battle: BattleInstance) {
+    emitter.sendFled(battle)
+    persistParty(battle)
+    finishBattle(battle)
+  }
+
+  private fun catchWild(battle: BattleInstance) {
+    val stored = characterStore.getCharacter(battle.charId) ?: return
+    val nextSlot = ((stored.pokemon.maxOfOrNull { it.containerSlot } ?: -1) + 1).toShort()
+    val caught =
+        battle.wild.source.copy(
+            ownerId = battle.charId,
+            container = PokemonContainer.PARTY,
+            containerSlot = nextSlot,
+            ot = stored.info.name,
+            hp = battle.wild.currentHp.toShort(),
+            moves = battle.wild.moves.map { PokemonMove(it.id, it.pp) },
+            caughtAt = LocalDateTime.now(),
+        )
+    log.info { "Caught wild ${battle.wild.species.name} for char=${battle.charId}" }
+    // The caught monster is sent as a full 148-byte record on opcode 0x14 before the ball-throw
     // event, so the client can resolve the monster when the throw lands.
-    session.send(SocialListEntryAddPacket(patrat))
+    battle.session.send(SocialListEntryAddPacket(caught))
     // "Player threw a Poke Ball" event.
-    session.send(
+    battle.session.send(
         BattleListEventPacket(
             kind = 0,
             value = POKE_BALL_ITEM,
@@ -165,124 +249,59 @@ constructor(
             detail = BattleListEventDetail(listType = 1, value = 1),
         ),
     )
-    endBattle(session, charId, patrat)
+    characterStore.addPokemon(battle.charId, caught)
+    endBattle(battle)
   }
 
-  // The wild encounter is over. The bulk-state end marker tells the client to leave the battle
-  // scene, the presence toggle shows the overworld player again, and the party is persisted and
-  // resynced so the caught monster stays after the battle.
-  // TODO: the caught monster does not show up in the party after the battle closes.
-  private fun endBattle(session: SessionContext, charId: Long, caught: Pokemon) {
-    val stored = characterStore.getCharacter(charId) ?: return
-    if (stored.pokemon.none { it.id == caught.id }) {
-      characterStore.addPokemon(charId, caught)
-    }
-    session.send(BattleBulkStatePacket.battleEnd())
-    session.send(EntityPresencePacket(entityId = charId, status = PRESENCE_OVERWORLD))
-    session.send(
-        PokemonContainerPacket(
-            container = PokemonContainer.PARTY,
-            hasChange = true,
-            delete = false,
-            pokemon = characterStore.getCharacter(charId)?.pokemon ?: emptyList(),
-        ),
-    )
-  }
-
-  private fun caughtPatrat(ownerId: Long, ot: String, slot: Short): Pokemon =
-      Pokemon(
-          id = entityIds.newMonsterId(),
-          ownerId = ownerId,
-          container = PokemonContainer.PARTY,
-          containerSlot = slot,
-          dexId = PATRAT.toInt(),
-          seed = 0,
-          ot = ot,
-          nickname = "",
-          level = CAUGHT_PATRAT_LEVEL,
-          hp = CAUGHT_PATRAT_HP,
-          xp = CAUGHT_PATRAT_XP,
-          eVs = EVs(),
-          iVs = IVs(),
-          moves =
-              listOf(
-                  PokemonMove(PATRAT_TACKLE, PATRAT_TACKLE_PP),
-                  PokemonMove(0, 0),
-                  PokemonMove(0, 0),
-                  PokemonMove(0, 0),
-              ),
-          isShiny = false,
-          hasHiddenAbility = false,
-          isAlpha = false,
-          isSecret = false,
-          isFatefulEncounter = false,
-          isRaidEncounter = false,
-          caughtAt = LocalDateTime.now(),
-      )
-
-  private fun playMoveAnimations(session: SessionContext, charId: Long, playerMove: Short) {
-    // The move comes from whichever monster is currently on the field, not always the lead.
-    val activeSlot = battleActiveSlot[charId] ?: 0
-    val partyMon = characterStore.getCharacter(charId)?.pokemon?.getOrNull(activeSlot) ?: return
-    // Decrement the used move's PP before the animation, matching the real turn order.
-    val slot = partyMon.moves.indexOfFirst { it.id == playerMove }
-    if (slot >= 0) {
-      val newPp = (partyMon.moves[slot].pp - 1).coerceAtLeast(0).toByte()
-      session.send(EntityMovePpPacket(partyMon.id, slot.toByte(), newPp))
-    }
-    session.send(BattleEntityMoveEventPacket(partyMon.id, playerMove, MOVE_EVENT_KIND, emptyList()))
-    session.send(BattleEntityMoveEventPacket(WILD_MON_ID, ENEMY_MOVE, MOVE_EVENT_KIND, emptyList()))
-  }
-
-  private fun advanceTurn(session: SessionContext, charId: Long) {
-    val turn = battleTurn.merge(charId, 1) { a, b -> a + b } ?: 1
-    session.send(BattleTileMapPacket(groupId = turn.toShort(), slotTiles = null))
-    session.send(BattleQueuedEventPacket(packed = ACTION_PROMPT))
-  }
-
-  fun onChatSend(event: PacketEvent<ChatMessageSendPacket>) {
-    val session = event.session
-    val text = (event.packet.message ?: event.packet.target).trim()
-    when {
-      text.equals(TEST_BATTLE_COMMAND, ignoreCase = true) -> startTestBattle(session)
-      text.equals(CATCH_COMMAND, ignoreCase = true) -> {
-        val charId = session.attributes[PLAYER_STATE]?.characterId ?: return
-        catchWildMon(session, charId)
-      }
-    }
-  }
-
-  private fun startTestBattle(session: SessionContext) {
-    val state = session.attributes[PLAYER_STATE] ?: return
-    val charId = state.characterId ?: return
-    val stored = characterStore.getCharacter(charId) ?: return
-    val partyMon = stored.pokemon.firstOrNull()
-    if (partyMon == null) {
-      log.warn { "Cannot start test battle: char=$charId has no party monster" }
-      return
-    }
+  private fun endVictory(battle: BattleInstance) {
+    val winner = battle.activeMon()
+    val reward = rewards.apply(winner, battle.wild.species, battle.wild.level)
     log.info {
-      "Starting test battle for char=$charId (${stored.info.name}): dex=${partyMon.dexId} vs wild Patrat"
+      "char=${battle.charId} won: +${reward.xpGained} xp, level ${winner.level} -> ${reward.newLevel}"
     }
-    battleTurn[charId] = 1
-    battleActiveSlot[charId] = 0
-    battleSeenActive[charId] = mutableSetOf(0)
-    // Hide the overworld player entity while the battle scene is up, matching the real enter order.
-    session.send(EntityPresencePacket(entityId = charId, status = PRESENCE_IN_BATTLE))
-    // Tell the client which side is local so the battle bag knows which monster an item targets.
-    // Without it, opening the bag crashes. Opcode 0x40 is left alone here, since re-sending it
-    // would
-    // wipe the balls out of the battle bag.
-    session.send(BattleSidePacket(side = PLAYER_SIDE))
-    session.send(
-        BattleFieldStatePacket(
-            playerName = stored.info.name,
-            playerId = charId,
-            playerParty = stored.pokemon.map { BattleFieldMon(it.id, it.dexId.toShort(), it.hp) },
-            wildMon = BattleFieldMon(WILD_MON_ID, PATRAT, WILD_PATRAT_HP),
+    winner.currentHp = reward.newCurrentHp
+    emitter.sendVictoryDelta(battle, winner.entityId, reward)
+    characterStore.updatePokemon(
+        battle.charId,
+        winner.source.copy(
+            level = reward.newLevel.toByte(),
+            xp = reward.newXp,
+            hp = reward.newCurrentHp.toShort(),
+            eVs = reward.newEvs,
+            moves = winner.moves.map { PokemonMove(it.id, it.pp) },
         ),
     )
-    session.send(BattleTileMapPacket(groupId = 1, slotTiles = null))
-    session.send(BattleQueuedEventPacket(packed = ACTION_PROMPT))
+    endBattle(battle, skip = winner.entityId)
+  }
+
+  private fun endDefeat(battle: BattleInstance) {
+    endBattle(battle)
+  }
+
+  // Known issue: the caught monster does not show up in the party until the client reopens it.
+  private fun endBattle(battle: BattleInstance, skip: Long? = null) {
+    persistParty(battle, skip)
+    val party = characterStore.getCharacter(battle.charId)?.pokemon ?: emptyList()
+    emitter.sendBattleEnd(battle, party)
+    finishBattle(battle)
+  }
+
+  /** Write the battle's live hp and pp back into the party and flush the character. */
+  private fun persistParty(battle: BattleInstance, skip: Long? = null) {
+    for (state in battle.party) {
+      if (state.entityId == skip) continue
+      val updated =
+          state.source.copy(
+              hp = state.currentHp.toShort(),
+              moves = state.moves.map { PokemonMove(it.id, it.pp) },
+          )
+      characterStore.updatePokemon(battle.charId, updated)
+    }
+    characterStore.flushCharacterAsync(battle.charId)
+  }
+
+  private fun finishBattle(battle: BattleInstance) {
+    interestManager.leave(battle.session, battle.key)
+    battles.remove(battle.charId)
   }
 }

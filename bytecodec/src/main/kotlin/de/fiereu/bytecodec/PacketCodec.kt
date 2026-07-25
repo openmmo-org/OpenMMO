@@ -3,11 +3,22 @@ package de.fiereu.bytecodec
 interface CodecScope<P> {
   fun <T> field(codec: Codec<T>, get: (P) -> T): T
 
+  /**
+   * A field present only when [present] is true, absent otherwise. [present] must be derivable the
+   * same way on both sides, typically from a flags field decoded just above, so encode and decode
+   * always agree on presence. Returns the decoded value, or the value from [get] on encode, and
+   * null when the field is absent.
+   */
+  fun <T> optionalField(present: Boolean, codec: Codec<T>, get: (P) -> T?): T?
+
   fun structural(codec: Codec<Unit>)
 }
 
 internal class ReadingScope<P>(private val buf: ReadBuffer) : CodecScope<P> {
   override fun <T> field(codec: Codec<T>, get: (P) -> T): T = codec.read(buf)
+
+  override fun <T> optionalField(present: Boolean, codec: Codec<T>, get: (P) -> T?): T? =
+      if (present) codec.read(buf) else null
 
   override fun structural(codec: Codec<Unit>) {
     codec.read(buf)
@@ -21,6 +32,13 @@ internal class WritingScope<P>(
   override fun <T> field(codec: Codec<T>, get: (P) -> T): T {
     val v = get(value)
     codec.write(buf, v)
+    return v
+  }
+
+  override fun <T> optionalField(present: Boolean, codec: Codec<T>, get: (P) -> T?): T? {
+    val v = get(value)
+    if (present)
+        codec.write(buf, requireNotNull(v) { "optional field is present but value is null" })
     return v
   }
 

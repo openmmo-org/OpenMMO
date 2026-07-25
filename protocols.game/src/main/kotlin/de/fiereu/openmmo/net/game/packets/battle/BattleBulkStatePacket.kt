@@ -36,12 +36,14 @@ internal val BattleMessageArgCodec: Codec<BattleMessageArg> =
         }
         val t = type.toInt()
         val payload: BattleMessageArgPayload =
-            when {
-              t == 5 -> StringArgPayload(Utf16LeNullTerminated.read(buf))
-              t == 28 -> EmptyArgPayload
-              t == 30 -> LongArgPayload(S64LE.read(buf))
-              t == 9 || t == 10 || t == 17 -> IntArgPayload(S32LE.read(buf))
-              t == 18 -> StringArgPayload(Utf16LeNullTerminated.read(buf))
+            when (t) {
+              5 -> StringArgPayload(Utf16LeNullTerminated.read(buf))
+              28 -> EmptyArgPayload
+              30 -> LongArgPayload(S64LE.read(buf))
+              9,
+              10,
+              17 -> IntArgPayload(S32LE.read(buf))
+              18 -> StringArgPayload(Utf16LeNullTerminated.read(buf))
               else -> {
                 val n = U8.read(buf)
                 ShortListArgPayload((0 until n).map { S16LE.read(buf) })
@@ -56,12 +58,14 @@ internal val BattleMessageArgCodec: Codec<BattleMessageArg> =
         S8.write(buf, rawType)
         if (value.hasExtra) S8.write(buf, value.extra)
         val t = value.type.toInt()
-        when {
-          t == 5 -> Utf16LeNullTerminated.write(buf, (value.payload as StringArgPayload).value)
-          t == 28 -> Unit
-          t == 30 -> S64LE.write(buf, (value.payload as LongArgPayload).value)
-          t == 9 || t == 10 || t == 17 -> S32LE.write(buf, (value.payload as IntArgPayload).value)
-          t == 18 -> Utf16LeNullTerminated.write(buf, (value.payload as StringArgPayload).value)
+        when (t) {
+          5 -> Utf16LeNullTerminated.write(buf, (value.payload as StringArgPayload).value)
+          28 -> Unit
+          30 -> S64LE.write(buf, (value.payload as LongArgPayload).value)
+          9,
+          10,
+          17 -> S32LE.write(buf, (value.payload as IntArgPayload).value)
+          18 -> Utf16LeNullTerminated.write(buf, (value.payload as StringArgPayload).value)
           else -> {
             val values = (value.payload as ShortListArgPayload).values
             U8.write(buf, values.size)
