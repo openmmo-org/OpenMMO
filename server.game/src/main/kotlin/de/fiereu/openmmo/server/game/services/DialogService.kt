@@ -1,13 +1,10 @@
 package de.fiereu.openmmo.server.game.services
 
 import de.fiereu.network.PacketEvent
-import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.net.game.packets.DialogChoicePacket
 import de.fiereu.openmmo.net.game.packets.DialogStatePacket
-import de.fiereu.openmmo.net.game.packets.dialog.DialogActionPacket
 import de.fiereu.openmmo.net.game.packets.dialog.DialogActionResponsePacket
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
-import de.fiereu.openmmo.server.game.session.ScriptPage
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,85 +14,13 @@ private val log = KotlinLogging.logger {}
 @Singleton
 class DialogService @Inject constructor() {
 
-  fun scriptParams(script: String): List<ScriptPage>? {
-    if (script == "0x0") return null
-    val known =
-        mapOf<String, List<ScriptPage>>(
-            "LittlerootTown_ProfessorBirchsLab_EventScript_Birch" to
-                listOf(ScriptPage(type = 0x04, unk1 = 0xAA74, unk2 = 0x1F10, unk3 = 0x0708)),
-            "LittlerootTown_ProfessorBirchsLab_EventScript_Aide" to
-                listOf(ScriptPage(type = 0x04, unk1 = 0xA6CE, unk2 = 0x1F10, unk3 = 0x04B0)),
-            "PlayersHouse_1F_EventScript_Mom" to
-                listOf(
-                    ScriptPage(type = 0x04, unk1 = 0x087D, unk2 = 0x1F10, unk3 = 0x04B0),
-                    ScriptPage(type = 0x04, unk1 = 0x7D5C, unk2 = 0x1F10, unk3 = 0x02BC),
-                ),
-            "RivalsHouse_1F_EventScript_RivalMom" to
-                listOf(ScriptPage(type = 0x04, unk1 = 0x8CE3, unk2 = 0x1E10, unk3 = 0x02BC)),
-            "RivalsHouse_1F_EventScript_RivalSibling" to
-                listOf(ScriptPage(type = 0x04, unk1 = 0x8B25, unk2 = 0x1E10, unk3 = 0x0708)),
-            "LittlerootTown_EventScript_Twin" to
-                listOf(ScriptPage(type = 0x04, unk1 = 0x6292, unk2 = 0x1F10, unk3 = 0x04B0)),
-            "LittlerootTown_EventScript_Boy" to
-                listOf(ScriptPage(type = 0x04, unk1 = 0x938D, unk2 = 0x1F10, unk3 = 0x04B0)),
-        )
-    return known[script]
-  }
-
-  fun sendInteractive(
-      ctx: SessionContext,
-      id: Int,
-      entityId: Long,
-      type: Int = 0x04,
-      unk1: Int = 0xAA74,
-      unk2: Int = 0x1F10,
-      unk3: Int = 0x0708,
-  ) {
-    ctx.send(
-        DialogActionPacket(
-            flags = id.toByte(),
-            actionType = type.toByte(),
-            // The client reads the text id as one little endian int whose two halves the scripts
-            // carry as unk1 (low) and unk2 (high).
-            textId = unk1 or (unk2 shl 16),
-            entityId = entityId,
-            contextValue = unk3,
-            messageArgs = emptyList(),
-            detail = ByteArray(0),
-        ))
-  }
-
   fun onInteractive(event: PacketEvent<DialogActionResponsePacket>) {
     val ctx = event.session
     val state = ctx.attributes[PLAYER_STATE] ?: return
-    val charId = state.characterId ?: return
-
     if (state.inDialog) {
-      val respId = event.packet.id
-      log.info {
-        "Interactive response: id=$respId for char $charId (page ${state.dialogPageIndex + 1}/${state.dialogPages.size})"
-      }
-      val nextPageIndex = state.dialogPageIndex + 1
-      if (nextPageIndex < state.dialogPages.size) {
-        val seqId = state.dialogSeqId++
-        val page = state.dialogPages[nextPageIndex]
-        state.dialogPageIndex = nextPageIndex
-        sendInteractive(
-            ctx,
-            seqId,
-            state.dialogNpcEntityId,
-            page.type,
-            page.unk1,
-            page.unk2,
-            page.unk3,
-        )
-      } else {
-        ctx.send(DialogStatePacket(false))
-        state.inDialog = false
-        state.dialogNpcEntityId = 0
-        state.dialogPages = emptyList()
-        state.dialogPageIndex = 0
-      }
+      ctx.send(DialogStatePacket(false))
+      state.inDialog = false
+      state.dialogNpcEntityId = 0
     }
   }
 

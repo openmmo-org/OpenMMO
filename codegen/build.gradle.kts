@@ -28,6 +28,9 @@ val regionSources =
 // is the canonical pick, same as byRegion is for maps.
 val sourceDecompDir = rootProject.layout.projectDirectory.dir("decomp/pokeemerald")
 
+// ROMs (gitignored) that dialog codegen reads offsets from
+val romsDir = rootProject.layout.projectDirectory.dir("roms")
+
 jteCodegen {
   register("maps") {
     mainClass.set("de.fiereu.openmmo.codegen.maps.Main")
@@ -53,5 +56,18 @@ jteCodegen {
     mainClass.set("de.fiereu.openmmo.codegen.typechart.Main")
     inputDirs.from(sourceDecompDir)
     extraArgs.set(listOf(sourceDecompDir.asFile.absolutePath))
+  }
+  // Dialog ids are ROM offsets, so the generator reads a ROM from the roms folder,
+  // picking it by its GBA header game code. Each region is "package|gameCode|decompDir".
+  register("dialog") {
+    mainClass.set("de.fiereu.openmmo.codegen.dialog.Main")
+    val fireredDir = rootProject.layout.projectDirectory.dir("decomp/pokefirered")
+    inputDirs.from(sourceDecompDir, fireredDir, romsDir)
+    extraArgs.set(
+        listOf(
+            romsDir.asFile.absolutePath,
+            "hoenn|BPEE|${sourceDecompDir.asFile.absolutePath}",
+            "kanto|BPRE|${fireredDir.asFile.absolutePath}",
+        ))
   }
 }
