@@ -1,6 +1,7 @@
 package de.fiereu.openmmo.server.login.auth
 
 import de.fiereu.openmmo.common.enums.LoginState
+import de.fiereu.openmmo.common.utils.toHex
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -46,7 +47,5 @@ class InMemoryUserStoreTest :
       }
     })
 
-private fun sha1HexOf(input: String): String {
-  val digest = java.security.MessageDigest.getInstance("SHA-1").digest(input.toByteArray())
-  return digest.joinToString("") { "%02x".format(it) }
-}
+private fun sha1HexOf(input: String): String =
+    java.security.MessageDigest.getInstance("SHA-1").digest(input.toByteArray()).toHex()

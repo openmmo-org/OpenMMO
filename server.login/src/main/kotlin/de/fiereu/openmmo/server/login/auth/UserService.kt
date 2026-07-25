@@ -1,6 +1,7 @@
 package de.fiereu.openmmo.server.login.auth
 
 import de.fiereu.openmmo.common.enums.LoginState
+import de.fiereu.openmmo.common.utils.toHex
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -16,10 +17,8 @@ interface UserService {
 }
 
 @Suppress("kotlin:S4790")
-internal fun sha1Hex(value: String): String {
-  val sha1 = MessageDigest.getInstance("SHA-1").digest(value.toByteArray())
-  return sha1.joinToString("") { "%02x".format(it) }
-}
+internal fun sha1Hex(value: String): String =
+    MessageDigest.getInstance("SHA-1").digest(value.toByteArray()).toHex()
 
 @Singleton
 class InMemoryUserStore @Inject constructor() : UserService {

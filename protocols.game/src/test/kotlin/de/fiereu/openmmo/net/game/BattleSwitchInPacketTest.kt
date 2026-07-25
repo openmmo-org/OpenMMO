@@ -2,13 +2,12 @@ package de.fiereu.openmmo.net.game
 
 import de.fiereu.bytecodec.test.decodeBytes
 import de.fiereu.bytecodec.test.encodeToBytes
+import de.fiereu.openmmo.common.utils.toHex
 import de.fiereu.openmmo.net.game.packets.battle.BattleMonBlock
 import de.fiereu.openmmo.net.game.packets.battle.BattleSwitchInPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleSwitchInPacketCodec
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-
-private fun ByteArray.hex(): String = joinToString("") { "%02x".format(it) }
 
 private fun patrat(): BattleMonBlock =
     BattleMonBlock(
@@ -49,7 +48,7 @@ class BattleSwitchInPacketTest :
                 fullBlock = false,
             )
         val bytes = BattleSwitchInPacketCodec.encodeToBytes(packet)
-        bytes.hex() shouldBe "000000010000ef010600000000000003ff0000000066666666"
+        bytes.toHex() shouldBe "000000010000ef010600000000000003ff0000000066666666"
       }
 
       // A benched monster coming out carries its full block then its active detail. The block
