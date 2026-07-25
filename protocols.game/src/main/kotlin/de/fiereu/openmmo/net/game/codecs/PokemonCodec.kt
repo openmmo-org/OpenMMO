@@ -4,13 +4,11 @@ import de.fiereu.bytecodec.*
 import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.PokemonMove
 import de.fiereu.openmmo.common.enums.*
-
-private fun seg(hex: String): ByteArray =
-    ByteArray(hex.length / 2) { hex.substring(it * 2, it * 2 + 2).toInt(16).toByte() }
+import de.fiereu.openmmo.common.utils.hexToBytes
 
 private fun reserved(hex: String): Codec<Unit> =
     object : Codec<Unit> {
-      private val bytes = seg(hex)
+      private val bytes = hex.hexToBytes()
 
       override fun read(buf: ReadBuffer) {
         if (bytes.isNotEmpty()) buf.readBytes(ByteArray(bytes.size))

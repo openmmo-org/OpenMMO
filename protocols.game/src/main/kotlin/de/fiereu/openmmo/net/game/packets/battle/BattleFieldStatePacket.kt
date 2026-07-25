@@ -1,6 +1,7 @@
 package de.fiereu.openmmo.net.game.packets.battle
 
 import de.fiereu.bytecodec.*
+import de.fiereu.openmmo.common.utils.hexToBytes
 
 /**
  * The field state for a wild encounter (opcode 0x30). Each side sends a monster count that sizes
@@ -15,11 +16,8 @@ data class BattleFieldStatePacket(
     val wildParty: List<BattleMonBlock>,
 )
 
-private fun seg(hex: String): ByteArray =
-    ByteArray(hex.length / 2) { hex.substring(it * 2, it * 2 + 2).toInt(16).toByte() }
-
-private val PREAMBLE = seg("02000000000000000000000000ff000000000016000000ff00200006")
-private val APPEARANCE = seg("ff00024c031aac0f00038001a400040000000000")
+private val PREAMBLE = "02000000000000000000000000ff000000000016000000ff00200006".hexToBytes()
+private val APPEARANCE = "ff00024c031aac0f00038001a400040000000000".hexToBytes()
 
 object BattleFieldStatePacketCodec : PacketCodec<BattleFieldStatePacket>() {
   override fun CodecScope<BattleFieldStatePacket>.body(): BattleFieldStatePacket {

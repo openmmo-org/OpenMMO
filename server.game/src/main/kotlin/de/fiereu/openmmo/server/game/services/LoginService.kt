@@ -6,6 +6,7 @@ import de.fiereu.openmmo.common.CharacterInfo
 import de.fiereu.openmmo.common.enums.ChatType
 import de.fiereu.openmmo.common.enums.Language
 import de.fiereu.openmmo.common.enums.PokemonContainer
+import de.fiereu.openmmo.common.utils.hexToBytes
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.codecs.SkinSet
 import de.fiereu.openmmo.net.game.packets.CharacterEntry
@@ -42,9 +43,6 @@ import javax.inject.Singleton
 
 private val log = KotlinLogging.logger {}
 
-private fun hexToBytes(hex: String): ByteArray =
-    ByteArray(hex.length / 2) { hex.substring(it * 2, it * 2 + 2).toInt(16).toByte() }
-
 // The world-flag table the client loads on join. Groups one to three are zlib streams that each
 // decompress to a 67-byte flag block, the fourth is empty. The client reads real flag state while
 // building the follower and party, so empty groups leave a lookup null and crash it.
@@ -55,7 +53,7 @@ private val WORLD_FLAG_GROUPS =
             "789c637060a00434303032000012c500c2",
             "",
         )
-        .map(::hexToBytes)
+        .map(String::hexToBytes)
 
 private const val POKE_BALL_ITEM_ID: Short = 5004
 private const val POKE_BALL_OBJECT_ID = 0x0000000000015000L

@@ -2,15 +2,12 @@ package de.fiereu.openmmo.net.game
 
 import de.fiereu.bytecodec.test.decodeBytes
 import de.fiereu.bytecodec.test.encodeToBytes
+import de.fiereu.openmmo.common.utils.hexToBytes
+import de.fiereu.openmmo.common.utils.toHex
 import de.fiereu.openmmo.net.game.packets.dialog.CreatureDataArg
 import de.fiereu.openmmo.net.game.packets.dialog.DialogActionPacketCodec
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-
-private fun bytes(hex: String): ByteArray =
-    hex.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
-
-private fun ByteArray.hex(): String = joinToString("") { "%02x".format(it) }
 
 class DialogActionPacketTest :
     FunSpec({
@@ -25,15 +22,15 @@ class DialogActionPacketTest :
 
       test("round-trips every captured dialog action byte for byte") {
         captures.forEach { hex ->
-          val packet = DialogActionPacketCodec.decodeBytes(bytes(hex))
-          DialogActionPacketCodec.encodeToBytes(packet).hex() shouldBe hex
+          val packet = DialogActionPacketCodec.decodeBytes(hex.hexToBytes())
+          DialogActionPacketCodec.encodeToBytes(packet).toHex() shouldBe hex
         }
       }
 
       test("decodes the fields of a dialog action carrying a creature arg") {
         val packet =
             DialogActionPacketCodec.decodeBytes(
-                bytes("0d04f80600010ae008bf86c4c01ab004000001000992d00300"))
+                "0d04f80600010ae008bf86c4c01ab004000001000992d00300".hexToBytes())
         packet.flags shouldBe 0x0d.toByte()
         packet.actionType shouldBe 0x04.toByte()
         packet.textId shouldBe 0x010006f8

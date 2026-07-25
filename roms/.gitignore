@@ -1,0 +1,3 @@
+# Retail ROMs for codegen (identified by GBA header, not filename). Never commit them.
+*
+!.gitignore
