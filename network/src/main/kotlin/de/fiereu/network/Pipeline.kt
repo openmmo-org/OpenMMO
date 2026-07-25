@@ -69,6 +69,9 @@ fun installPipeline(
   pipeline.addLast(PipelineNames.CHECKSUM_ENCODER, ChecksumFrameEncoder(NoOpChecksum))
   pipeline.addLast(PipelineNames.CIPHER_DECODER, CipherDecoder(NoOpSessionCipher))
   pipeline.addLast(PipelineNames.CIPHER_ENCODER, CipherEncoder(NoOpSessionCipher))
+  // TODO: the compression codec is inserted between this logger and the protocol handler, so this
+  // logs compressed frames. Reposition it next to the protocol handler to log raw packets, before
+  // compression on the way out and after decompression on the way in.
   if (options.frameLogging) {
     pipeline.addLast(PipelineNames.PROTOCOL_LOGGER, LoggingHandler(LogLevel.TRACE))
   }
