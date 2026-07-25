@@ -113,7 +113,7 @@ object GameProtocol : Protocol() {
     bidi<DialogOptionPacket>(0x26u, DialogOptionPacketCodec)
 
     c2s<PlayerStopMovingPacket>(0x27u, PlayerStopMovingPacketCodec)
-    s2c<BattlePromptSwitchPacket>(0x27u, BattlePromptSwitchPacketCodec)
+    s2c<PcTogglePacket>(0x27u, PcTogglePacketCodec)
 
     c2s<TypedBinaryDataPacket>(0x28u, TypedBinaryDataPacketCodec)
     s2c<EntityInteractionFlagPacket>(0x28u, EntityInteractionFlagPacketCodec)
@@ -407,7 +407,7 @@ object GameProtocol : Protocol() {
     s2c<EntityAppearanceSyncPacket>(0x94u, EntityAppearanceSyncPacketCodec)
 
     c2s<MailComposeSendPacket>(0x95u, MailComposeSendPacketCodec)
-    s2c<BattleSwitchPromptTogglePacket>(0x95u, BattleSwitchPromptTogglePacketCodec)
+    s2c<MailTogglePacket>(0x95u, MailTogglePacketCodec)
 
     c2s<TeamPreviewRevealPickPacket>(0x96u, TeamPreviewRevealPickPacketCodec)
     s2c<BattleEndDisconnectPacket>(0x96u, BattleEndDisconnectPacketCodec)

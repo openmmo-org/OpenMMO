@@ -2,14 +2,14 @@ package de.fiereu.openmmo.net.game
 
 import de.fiereu.bytecodec.test.decodeBytes
 import de.fiereu.bytecodec.test.encodeToBytes
+import de.fiereu.openmmo.net.game.packets.battle.BattleFieldStatePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleFieldStatePacketCodec
+import de.fiereu.openmmo.net.game.packets.battle.BattleMonBlock
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.util.Base64
 
-// A two-monster party wild encounter (Snivy active, Patrat benched), scrubbed of capture data. The
-// player side carries a per-species stat and move block and a per-slot trailer, all reproduced by
-// the codec.
+// A two-monster party wild encounter (Snivy active, Patrat benched), scrubbed of capture data.
 private const val CAPTURED_TWO_PARTY =
     "AgAAAAAAAAAAAAAAAP8AAAAAABYAAAD/ACAABlQAZQBzAHQAAAAAAJABAAAAAAD/AAJMAxqsDwADgAGkAAQAAAAAAAECAAABAMABAAAAAADvAQYAAAAAAAAWABYAAAAA/wMBQQAhACsAAAAAAAABAQDAAgAAAAAA+AECAAABAAAADgAOAAAAAP8DATIAIQAAAAAAAAABAADvAQYAAAAAAAAD/wAAAABmZmZmAQYAAAAAAAEBAAABAMADAAAAAAD4AQIAAAEAAAAOAA4AAAAA/wMAAQAA+AECAAAAAAEAA/8AAAAAZmZmZgAAAAA="
 
@@ -20,9 +20,79 @@ class BattleFieldStatePacketTest :
         val decoded = BattleFieldStatePacketCodec.decodeBytes(bytes)
         decoded.playerName shouldBe "Test"
         decoded.playerParty.size shouldBe 2
-        decoded.playerParty[0].species shouldBe 495.toShort()
-        decoded.playerParty[1].species shouldBe 504.toShort()
-        decoded.wildMon.species shouldBe 504.toShort()
+        decoded.activeSlot shouldBe 0
         BattleFieldStatePacketCodec.encodeToBytes(decoded) shouldBe bytes
+      }
+
+      test("decodes the structured mon fields from the capture") {
+        val bytes = Base64.getDecoder().decode(CAPTURED_TWO_PARTY)
+        val decoded = BattleFieldStatePacketCodec.decodeBytes(bytes)
+
+        val snivy = decoded.playerParty[0]
+        snivy.slot shouldBe 0
+        snivy.species shouldBe 495.toShort()
+        snivy.level shouldBe 6.toByte()
+        snivy.gender shouldBe 0.toByte()
+        snivy.abilityId shouldBe 65.toShort()
+        snivy.maxHp shouldBe 22.toShort()
+        snivy.currentHp shouldBe 22.toShort()
+        snivy.movesPresent shouldBe true
+        snivy.moveIds shouldBe listOf<Short>(33, 43, 0, 0)
+
+        val patrat = decoded.playerParty[1]
+        patrat.slot shouldBe 1
+        patrat.species shouldBe 504.toShort()
+        patrat.level shouldBe 2.toByte()
+        patrat.gender shouldBe 1.toByte()
+        patrat.abilityId shouldBe 50.toShort()
+        patrat.moveIds shouldBe listOf<Short>(33, 0, 0, 0)
+
+        val wild = decoded.wildParty.single()
+        wild.species shouldBe 504.toShort()
+        wild.level shouldBe 2.toByte()
+        wild.maxHp shouldBe 14.toShort()
+        wild.currentHp shouldBe 14.toShort()
+        wild.movesPresent shouldBe false
+      }
+
+      test("round-trips a synthetic field state for a species without a capture") {
+        val rattata =
+            BattleMonBlock(
+                slot = 0,
+                entityId = 0x123C000L,
+                species = 19,
+                level = 7,
+                gender = 1,
+                abilityId = 50,
+                maxHp = 21,
+                currentHp = 17,
+                movesPresent = true,
+                moveIds = listOf(33, 39, 45, 98),
+            )
+        val wild =
+            BattleMonBlock(
+                slot = 0,
+                entityId = 0x456C000L,
+                species = 74,
+                level = 9,
+                gender = 0,
+                abilityId = 0,
+                maxHp = 26,
+                currentHp = 26,
+                movesPresent = false,
+                moveIds = listOf(0, 0, 0, 0),
+            )
+        val packet =
+            BattleFieldStatePacket(
+                playerName = "Ash",
+                playerId = 0x19000L,
+                playerParty = listOf(rattata),
+                activeSlot = 0,
+                wildParty = listOf(wild),
+            )
+        val decoded =
+            BattleFieldStatePacketCodec.decodeBytes(
+                BattleFieldStatePacketCodec.encodeToBytes(packet))
+        decoded shouldBe packet
       }
     })
