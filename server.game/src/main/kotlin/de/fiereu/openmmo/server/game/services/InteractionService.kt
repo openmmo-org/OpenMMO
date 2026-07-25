@@ -4,6 +4,7 @@ import de.fiereu.network.PacketEvent
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.packets.EntityInteractPacket
+import de.fiereu.openmmo.server.game.script.NpcScripts
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -19,6 +20,7 @@ constructor(
     private val npcService: NpcService,
     private val mapManager: MapManager,
     private val characterStore: CharacterStore,
+    private val dialogService: DialogService,
 ) {
 
   fun onEntityInteract(event: PacketEvent<EntityInteractPacket>) {
@@ -39,8 +41,11 @@ constructor(
     val mapId = stored.info.positionMapId.toInt()
     for (npc in currentMap.npcs) {
       if (npcService.getNpcEntityId(bankId, mapId, npc.entityIdx) == npcEntityId) {
-        log.info {
-          "Entity interaction: NPC entityIdx=${npc.entityIdx} entityId=$npcEntityId script=${npc.script}"
+        val script = NpcScripts.forScript(npc.script)
+        if (script != null) {
+          dialogService.openDialog(ctx, state, script.textId, script.msgbox.actionType, npcEntityId)
+        } else {
+          log.info { "NPC entityIdx=${npc.entityIdx} script=${npc.script} has no wired dialog" }
         }
         return
       }
@@ -68,7 +73,12 @@ constructor(
     val bgEvent =
         currentMap.bgEvents.find { it.x == facingX && it.y == facingY && facingDirOk(it.facingDir) }
     if (bgEvent != null) {
-      log.info { "Entity interaction: bg event at ($facingX, $facingY) script=${bgEvent.script}" }
+      val script = NpcScripts.forScript(bgEvent.script)
+      if (script != null) {
+        dialogService.openDialog(ctx, state, script.textId, script.msgbox.actionType, -1)
+      } else {
+        log.info { "Bg event at ($facingX, $facingY) script=${bgEvent.script} has no wired dialog" }
+      }
       return
     }
 
