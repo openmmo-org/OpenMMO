@@ -4,8 +4,8 @@ import de.fiereu.network.PacketEvent
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.net.game.packets.DialogChoicePacket
 import de.fiereu.openmmo.net.game.packets.DialogStatePacket
-import de.fiereu.openmmo.net.game.packets.InteractivePacket
-import de.fiereu.openmmo.net.game.packets.InteractiveResponsePacket
+import de.fiereu.openmmo.net.game.packets.dialog.DialogActionPacket
+import de.fiereu.openmmo.net.game.packets.dialog.DialogActionResponsePacket
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.session.ScriptPage
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -52,18 +52,20 @@ class DialogService @Inject constructor() {
       unk3: Int = 0x0708,
   ) {
     ctx.send(
-        InteractivePacket(
-            id = id,
-            type = type,
-            unk1 = unk1,
-            unk2 = unk2,
-            targetEntityId = entityId,
-            unk3 = unk3,
-            unk4 = 0,
+        DialogActionPacket(
+            flags = id.toByte(),
+            actionType = type.toByte(),
+            // The client reads the text id as one little endian int whose two halves the scripts
+            // carry as unk1 (low) and unk2 (high).
+            textId = unk1 or (unk2 shl 16),
+            entityId = entityId,
+            contextValue = unk3,
+            messageArgs = emptyList(),
+            detail = ByteArray(0),
         ))
   }
 
-  fun onInteractive(event: PacketEvent<InteractiveResponsePacket>) {
+  fun onInteractive(event: PacketEvent<DialogActionResponsePacket>) {
     val ctx = event.session
     val state = ctx.attributes[PLAYER_STATE] ?: return
     val charId = state.characterId ?: return

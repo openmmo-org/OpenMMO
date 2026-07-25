@@ -1,4 +1,4 @@
-package de.fiereu.openmmo.net.game.packets
+package de.fiereu.openmmo.net.game.packets.dialog
 
 import de.fiereu.bytecodec.*
 
