@@ -20,7 +20,8 @@ fun main(args: Array<String>) {
   val mapValues = mutableListOf<String>()
   for (spec in args.drop(2)) {
     val (region, gameCode, decomp) = spec.split("|")
-    mapValues += ScriptGenerator(region, outputDir).generate(File(decomp), romsDir, gameCode, assigned)
+    mapValues +=
+        ScriptGenerator(region, outputDir).generate(File(decomp), romsDir, gameCode, assigned)
   }
 
   writeRegistry(outputDir, mapValues)
@@ -34,8 +35,10 @@ private fun writeRegistry(outputDir: File, mapValues: List<String>) {
   sb.append("package ").append(pkg).append("\n\n")
   sb.append("import de.fiereu.openmmo.server.game.script.Script\n\n")
   sb.append("/**\n")
-  sb.append(" * Every ported script keyed by its decomp label. Bootstrapped once from the decomp then\n")
-  sb.append(" * edited by hand, so this file is committed source and is not regenerated on build.\n")
+  sb.append(
+      " * Every ported script keyed by its decomp label. Bootstrapped once from the decomp then\n")
+  sb.append(
+      " * edited by hand, so this file is committed source and is not regenerated on build.\n")
   sb.append(" */\n")
   sb.append("internal object GeneratedScripts {\n")
   sb.append("  val byLabel: Map<String, Script> =\n")

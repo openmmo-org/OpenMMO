@@ -33,10 +33,7 @@ class ScriptGenerator(
     var simple = 0
     var todo = 0
     for ((mapName, labels) in events.byMap) {
-      val stubs =
-          labels
-              .filter { assigned.add(it) }
-              .map { toStub(it, scripts, dialogRefs) }
+      val stubs = labels.filter { assigned.add(it) }.map { toStub(it, scripts, dialogRefs) }
       if (stubs.isEmpty()) continue
       File(packageDir, "$mapName.kt").writeText(renderMapFile(mapName, stubs))
       mapValues.add("$basePackage.${mapName}Scripts")
@@ -55,8 +52,7 @@ class ScriptGenerator(
     val commands =
         scripts.commandsFor(label)
             ?: return ScriptStub(label, ScriptKind.TODO, null, listOf("script body not found"))
-    val msgbox =
-        singleMsgbox(commands) ?: return ScriptStub(label, ScriptKind.TODO, null, commands)
+    val msgbox = singleMsgbox(commands) ?: return ScriptStub(label, ScriptKind.TODO, null, commands)
     val ref =
         dialogRefs[msgbox.textLabel] ?: return ScriptStub(label, ScriptKind.TODO, null, commands)
     val kind = if (msgbox.type == "MSGBOX_SIGN") ScriptKind.SIGN else ScriptKind.SAY
@@ -78,7 +74,8 @@ class ScriptGenerator(
     return Msgbox(textLabel, type)
   }
 
-  private fun opcode(command: String): String = command.substringBefore(' ').substringBefore('\t').trim()
+  private fun opcode(command: String): String =
+      command.substringBefore(' ').substringBefore('\t').trim()
 
   private fun renderMapFile(mapName: String, stubs: List<ScriptStub>): String {
     val imports = sortedSetOf<String>()

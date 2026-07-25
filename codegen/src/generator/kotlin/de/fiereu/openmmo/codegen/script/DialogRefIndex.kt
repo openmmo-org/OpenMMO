@@ -23,14 +23,16 @@ object DialogRefIndex {
         }
 
     val refs = HashMap<String, DialogRef>()
-    resolved.groupBy { RenderUtil.location(it) }.forEach { (location, labels) ->
-      val className = RenderUtil.className(location).trim('`')
-      val takenNames = HashSet<String>()
-      for (label in labels) {
-        val entry = RenderUtil.entryName(label)
-        if (takenNames.add(entry)) refs[label] = DialogRef(className, entry)
-      }
-    }
+    resolved
+        .groupBy { RenderUtil.location(it) }
+        .forEach { (location, labels) ->
+          val className = RenderUtil.className(location).trim('`')
+          val takenNames = HashSet<String>()
+          for (label in labels) {
+            val entry = RenderUtil.entryName(label)
+            if (takenNames.add(entry)) refs[label] = DialogRef(className, entry)
+          }
+        }
     return refs
   }
 }

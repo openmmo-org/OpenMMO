@@ -4,8 +4,9 @@ import java.io.File
 
 /**
  * Every executable script in the decomp keyed by its label, with the command lines that make up its
- * body. Scripts live in the map scripts and in the shared script files. A label ending in `::` opens
- * a script, a label ending in a single `:` opens data such as text and ends the current script.
+ * body. Scripts live in the map scripts and in the shared script files. A label ending in `::`
+ * opens a script, a label ending in a single `:` opens data such as text and ends the current
+ * script.
  */
 class ScriptIndex private constructor(private val commands: Map<String, List<String>>) {
 
