@@ -172,6 +172,6 @@ class CharacterRepositoryIT :
       test("the seed migration provides the dev characters with their starters") {
         val seeded = repository.loadByUser(1)
         seeded.map { it.info.name } shouldBe listOf("Test")
-        seeded.single().pokemon.map { it.dexId } shouldBe listOf(495, 504)
+        seeded.single().pokemon.map { it.dexId } shouldBe listOf(1, 19)
       }
     })

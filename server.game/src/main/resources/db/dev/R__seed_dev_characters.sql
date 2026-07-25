@@ -1,4 +1,5 @@
--- One character per dev account, each with the Snivy and Patrat starter party.
+-- One character per dev account, each with a Bulbasaur and Rattata party. The species
+-- registry only covers Gen 1 to 3, so the party must stay inside that range.
 -- Only applied when db.seedDev is enabled, never in production.
 -- Ids are fixed low values with the kind tag in the low 16 bits. Runtime ids from
 -- EntityIdService carry a timestamp head, so they can never collide with these.
@@ -20,8 +21,8 @@ INSERT INTO pokemon (
   move1_id, move1_pp, move2_id, move2_pp, caught_at
 )
 VALUES
-  (180224, 102400, 'PARTY', 0, 495, 0, 'Test', 5, 20, 165, 33, 35, 43, 30, CURRENT_TIMESTAMP),
-  (311296, 102400, 'PARTY', 1, 504, 0, 'Test', 3, 12, 27, 33, 35, 0, 0, CURRENT_TIMESTAMP),
-  (442368, 364544, 'PARTY', 0, 495, 0, 'Test2', 5, 20, 165, 33, 35, 43, 30, CURRENT_TIMESTAMP),
-  (507904, 364544, 'PARTY', 1, 504, 0, 'Test2', 3, 12, 27, 33, 35, 0, 0, CURRENT_TIMESTAMP)
+  (180224, 102400, 'PARTY', 0, 1, 0, 'Test', 5, 19, 135, 33, 35, 45, 40, CURRENT_TIMESTAMP),
+  (311296, 102400, 'PARTY', 1, 19, 0, 'Test', 3, 14, 27, 33, 35, 39, 30, CURRENT_TIMESTAMP),
+  (442368, 364544, 'PARTY', 0, 1, 0, 'Test2', 5, 19, 135, 33, 35, 45, 40, CURRENT_TIMESTAMP),
+  (507904, 364544, 'PARTY', 1, 19, 0, 'Test2', 3, 14, 27, 33, 35, 39, 30, CURRENT_TIMESTAMP)
 ON CONFLICT (id) DO NOTHING;

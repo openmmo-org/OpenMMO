@@ -2,10 +2,6 @@ package de.fiereu.openmmo.server.game.storage
 
 import de.fiereu.openmmo.common.CharacterInfo
 import de.fiereu.openmmo.common.Pokemon
-import de.fiereu.openmmo.common.PokemonMove
-import de.fiereu.openmmo.common.enums.EVs
-import de.fiereu.openmmo.common.enums.IVs
-import de.fiereu.openmmo.common.enums.PokemonContainer
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
@@ -22,10 +18,6 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 
 private val log = KotlinLogging.logger {}
-
-// The starter party every new character gets.
-const val SNIVY_DEX_ID = 495
-const val PATRAT_DEX_ID = 504
 
 private val FLUSH_TICK = 5.seconds
 private val FLUSH_DEBOUNCE = 10.seconds
@@ -61,7 +53,7 @@ constructor(
   private val dirtySince = ConcurrentHashMap<Long, Long>()
   private val pendingUnload = ConcurrentHashMap.newKeySet<Long>()
 
-  /** Create a character with its own entity id and a starter party with its own monster uids. */
+  /** Create a character with its own entity id and an empty party. */
   suspend fun createCharacter(
       userId: Int,
       name: String,
@@ -95,8 +87,6 @@ constructor(
             lureItemId = 0,
         )
     val stored = StoredCharacter(info, mutableListOf(), mutableListOf(), mutableMapOf())
-    stored.pokemon.add(starterSnivy(id, name))
-    stored.pokemon.add(starterPatrat(id, name))
     repository.insertAggregate(stored)
     characters[id] = stored
     charactersByUser.computeIfAbsent(userId) { CopyOnWriteArrayList() }.add(id)
@@ -157,6 +147,14 @@ constructor(
     val stored = characters[characterId] ?: return
     // Copy instead of mutating in place, so flusher snapshots never see a half-updated list.
     characters[characterId] = stored.copy(pokemon = (stored.pokemon + pokemon).toMutableList())
+    markDirty(characterId)
+  }
+
+  /** Replace one party monster by id, for example after a battle changed hp, xp, or level. */
+  fun updatePokemon(characterId: Long, updated: Pokemon) {
+    val stored = characters[characterId] ?: return
+    val party = stored.pokemon.map { if (it.id == updated.id) updated else it }
+    characters[characterId] = stored.copy(pokemon = party.toMutableList())
     markDirty(characterId)
   }
 
@@ -243,66 +241,4 @@ constructor(
     val stored = characters.remove(id) ?: return
     charactersByUser.remove(stored.info.userId)
   }
-
-  private fun starterSnivy(ownerId: Long, ot: String): Pokemon =
-      Pokemon(
-          id = entityIds.newMonsterId(),
-          ownerId = ownerId,
-          container = PokemonContainer.PARTY,
-          containerSlot = 0,
-          dexId = SNIVY_DEX_ID,
-          seed = 0,
-          ot = ot,
-          nickname = "",
-          level = 5,
-          hp = 20,
-          xp = 165,
-          eVs = EVs(),
-          iVs = IVs(),
-          moves =
-              listOf(
-                  PokemonMove(33, 35),
-                  PokemonMove(43, 30),
-                  PokemonMove(0, 0),
-                  PokemonMove(0, 0),
-              ),
-          isShiny = false,
-          hasHiddenAbility = false,
-          isAlpha = false,
-          isSecret = false,
-          isFatefulEncounter = false,
-          isRaidEncounter = false,
-          caughtAt = LocalDateTime.now(),
-      )
-
-  private fun starterPatrat(ownerId: Long, ot: String): Pokemon =
-      Pokemon(
-          id = entityIds.newMonsterId(),
-          ownerId = ownerId,
-          container = PokemonContainer.PARTY,
-          containerSlot = 1,
-          dexId = PATRAT_DEX_ID,
-          seed = 0,
-          ot = ot,
-          nickname = "",
-          level = 3,
-          hp = 12,
-          xp = 27,
-          eVs = EVs(),
-          iVs = IVs(),
-          moves =
-              listOf(
-                  PokemonMove(33, 35),
-                  PokemonMove(0, 0),
-                  PokemonMove(0, 0),
-                  PokemonMove(0, 0),
-              ),
-          isShiny = false,
-          hasHiddenAbility = false,
-          isAlpha = false,
-          isSecret = false,
-          isFatefulEncounter = false,
-          isRaidEncounter = false,
-          caughtAt = LocalDateTime.now(),
-      )
 }
