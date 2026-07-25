@@ -39,30 +39,20 @@ private fun packRarity(p: Pokemon): Int =
         (if (p.isFatefulEncounter) PokemonRarityFlag.FATEFUL_ENCOUNTER.mask else 0) or
         (if (p.isRaidEncounter) PokemonRarityFlag.RAID_ENCOUNTER.mask else 0)
 
-// EVs are six raw bytes in wire order hp, atk, def, spd, spAtk, spDef. Bypasses the checked stat
-// setters, which reject a zero value.
+// EVs are six raw bytes in wire order hp, atk, def, spd, spAtk, spDef.
 private fun evsFromWire(hp: Int, atk: Int, def: Int, spd: Int, spAtk: Int, spDef: Int): EVs =
     EVs().apply {
-      put(PokemonStat.HP, hp.toByte())
-      put(PokemonStat.ATTACK, atk.toByte())
-      put(PokemonStat.DEFENSE, def.toByte())
-      put(PokemonStat.SPEED, spd.toByte())
-      put(PokemonStat.SP_ATTACK, spAtk.toByte())
-      put(PokemonStat.SP_DEFENSE, spDef.toByte())
+      this.hp = hp
+      this.atk = atk
+      this.def = def
+      this.spd = spd
+      this.spAtk = spAtk
+      this.spDef = spDef
     }
 
 // IVs are a packed 30-bit word (six 5-bit stats). The top two bits carry unidentified flags and are
-// dropped on write, so they stay zero for constructed monsters. Bypasses the checked IV setters,
-// which reject a zero roll.
-private fun ivsFromBits(bits: Int): IVs =
-    IVs().apply {
-      put(PokemonStat.HP, ((bits shr 0) and 31).toByte())
-      put(PokemonStat.ATTACK, ((bits shr 5) and 31).toByte())
-      put(PokemonStat.DEFENSE, ((bits shr 10) and 31).toByte())
-      put(PokemonStat.SP_ATTACK, ((bits shr 15) and 31).toByte())
-      put(PokemonStat.SP_DEFENSE, ((bits shr 20) and 31).toByte())
-      put(PokemonStat.SPEED, ((bits shr 25) and 31).toByte())
-    }
+// dropped on write, so they stay zero for constructed monsters.
+private fun ivsFromBits(bits: Int): IVs = decompressIVs(bits)
 
 /**
  * The 148-byte party/PC monster record. The named fields are decoded from real captures. The
