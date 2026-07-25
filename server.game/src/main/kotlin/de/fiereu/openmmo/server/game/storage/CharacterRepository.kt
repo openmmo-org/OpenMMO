@@ -6,7 +6,6 @@ import de.fiereu.openmmo.common.PokemonMove
 import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
-import de.fiereu.openmmo.common.enums.PokemonStats
 import de.fiereu.openmmo.db.game.tables.records.CharactersRecord
 import de.fiereu.openmmo.db.game.tables.records.PokemonRecord
 import de.fiereu.openmmo.db.game.tables.references.CHARACTERS
@@ -236,26 +235,23 @@ constructor(
           caughtAt = caughtAt,
       )
 
-  // The stat setters reject zero, so only set stats that are above it.
-  private fun PokemonStats.setPositive(
-      hp: Short?,
-      atk: Short?,
-      def: Short?,
-      spAtk: Short?,
-      spDef: Short?,
-      spd: Short?,
-  ) {
-    hp?.toInt()?.let { if (it > 0) this.hp = it }
-    atk?.toInt()?.let { if (it > 0) this.atk = it }
-    def?.toInt()?.let { if (it > 0) this.def = it }
-    spAtk?.toInt()?.let { if (it > 0) this.spAtk = it }
-    spDef?.toInt()?.let { if (it > 0) this.spDef = it }
-    spd?.toInt()?.let { if (it > 0) this.spd = it }
-  }
-
   private fun PokemonRecord.hydrateEvs(): EVs =
-      EVs().also { it.setPositive(evHp, evAtk, evDef, evSpAtk, evSpDef, evSpd) }
+      EVs().also {
+        it.hp = (evHp ?: 0).toInt()
+        it.atk = (evAtk ?: 0).toInt()
+        it.def = (evDef ?: 0).toInt()
+        it.spAtk = (evSpAtk ?: 0).toInt()
+        it.spDef = (evSpDef ?: 0).toInt()
+        it.spd = (evSpd ?: 0).toInt()
+      }
 
   private fun PokemonRecord.hydrateIvs(): IVs =
-      IVs().also { it.setPositive(ivHp, ivAtk, ivDef, ivSpAtk, ivSpDef, ivSpd) }
+      IVs().also {
+        it.hp = (ivHp ?: 0).toInt()
+        it.atk = (ivAtk ?: 0).toInt()
+        it.def = (ivDef ?: 0).toInt()
+        it.spAtk = (ivSpAtk ?: 0).toInt()
+        it.spDef = (ivSpDef ?: 0).toInt()
+        it.spd = (ivSpd ?: 0).toInt()
+      }
 }

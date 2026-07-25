@@ -17,41 +17,42 @@ open class PokemonStats(private val individualCap: Int, private val totalCap: In
   val total
     get() = hp + atk + def + spAtk + spDef + spd
 
-  private fun cr(value: Int): Byte {
-    if (value <= 0) error("Value can't be <= 0")
+  private fun checkedSet(stat: PokemonStat, value: Int) {
+    if (value < 0) error("Value can't be negative")
     if (value > individualCap) error("Value exceeds individual capacity")
-    if (total > totalCap) error("Total value exceeds capacity")
-    return value.toByte()
+    if (total - (get(stat)!!.toInt() and 0xFF) + value > totalCap)
+        error("Total value exceeds capacity")
+    set(stat, value.toByte())
   }
 
   var hp
-    get() = get(PokemonStat.HP)!!.toInt()
-    set(value) = set(PokemonStat.HP, cr(value))
+    get() = get(PokemonStat.HP)!!.toInt() and 0xFF
+    set(value) = checkedSet(PokemonStat.HP, value)
 
   var atk
-    get() = get(PokemonStat.ATTACK)!!.toInt()
-    set(value) = set(PokemonStat.ATTACK, cr(value))
+    get() = get(PokemonStat.ATTACK)!!.toInt() and 0xFF
+    set(value) = checkedSet(PokemonStat.ATTACK, value)
 
   var def
-    get() = get(PokemonStat.DEFENSE)!!.toInt()
-    set(value) = set(PokemonStat.DEFENSE, cr(value))
+    get() = get(PokemonStat.DEFENSE)!!.toInt() and 0xFF
+    set(value) = checkedSet(PokemonStat.DEFENSE, value)
 
   var spAtk
-    get() = get(PokemonStat.SP_ATTACK)!!.toInt()
-    set(value) = set(PokemonStat.SP_ATTACK, cr(value))
+    get() = get(PokemonStat.SP_ATTACK)!!.toInt() and 0xFF
+    set(value) = checkedSet(PokemonStat.SP_ATTACK, value)
 
   var spDef
-    get() = get(PokemonStat.SP_DEFENSE)!!.toInt()
-    set(value) = set(PokemonStat.SP_DEFENSE, cr(value))
+    get() = get(PokemonStat.SP_DEFENSE)!!.toInt() and 0xFF
+    set(value) = checkedSet(PokemonStat.SP_DEFENSE, value)
 
   var spd
-    get() = get(PokemonStat.SPEED)!!.toInt()
-    set(value) = set(PokemonStat.SPEED, cr(value))
+    get() = get(PokemonStat.SPEED)!!.toInt() and 0xFF
+    set(value) = checkedSet(PokemonStat.SPEED, value)
 }
 
 class EVs : PokemonStats(252, 510)
 
-class IVs : PokemonStats(31, 155)
+class IVs : PokemonStats(31, 186)
 
 fun IVs.compress(): Int =
     (((hp and 31) shl 0) or
@@ -70,69 +71,3 @@ fun decompressIVs(value: Int): IVs =
       spDef = (value shr 20) and 31
       spd = (value shr 25) and 31
     }
-
-enum class PokemonBattleStat {
-  HP,
-  ATTACK,
-  DEFENSE,
-  SP_ATTACK,
-  SP_DEFENSE,
-  SPEED,
-  ACCURACY,
-  EVASION
-}
-
-// Not sure if this is correct just copying from EVs here
-class PokemonBattleStats :
-    EnumMap<PokemonBattleStat, Byte>(PokemonBattleStat.entries.associateWith { 0.toByte() }) {
-  private val individualCap: Int = 252
-  private val totalCap: Int = 510
-
-  val total
-    get() = hp + atk + def + spAtk + spDef + spd + acc + evs
-
-  private fun cr(value: Int): Byte {
-    if (value <= 0) error("Value can't be <= 0")
-    if (value > individualCap) error("Value exceeds individual capacity")
-    if (total > totalCap) error("Total value exceeds capacity")
-    return value.toByte()
-  }
-
-  var hp
-    get() = get(PokemonBattleStat.HP)!!.toInt()
-    set(value) = set(PokemonBattleStat.HP, cr(value))
-
-  var atk
-    get() = get(PokemonBattleStat.ATTACK)!!.toInt()
-    set(value) = set(PokemonBattleStat.ATTACK, cr(value))
-
-  var def
-    get() = get(PokemonBattleStat.DEFENSE)!!.toInt()
-    set(value) = set(PokemonBattleStat.DEFENSE, cr(value))
-
-  var spAtk
-    get() = get(PokemonBattleStat.SP_ATTACK)!!.toInt()
-    set(value) = set(PokemonBattleStat.SP_ATTACK, cr(value))
-
-  var spDef
-    get() = get(PokemonBattleStat.SP_DEFENSE)!!.toInt()
-    set(value) = set(PokemonBattleStat.SP_DEFENSE, cr(value))
-
-  var spd
-    get() = get(PokemonBattleStat.SPEED)!!.toInt()
-    set(value) = set(PokemonBattleStat.SPEED, cr(value))
-
-  var acc
-    get() = get(PokemonBattleStat.ACCURACY)!!.toInt()
-    set(value) = set(PokemonBattleStat.SPEED, value.toByte())
-
-  var evs
-    get() = get(PokemonBattleStat.EVASION)!!.toInt()
-    set(value) = set(PokemonBattleStat.EVASION, value.toByte())
-
-  init {
-    // just guessing that "252 / 2" => 100%
-    acc = 252 / 2
-    evs = 252 / 2
-  }
-}
