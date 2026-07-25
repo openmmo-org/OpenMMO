@@ -6,6 +6,7 @@ import de.fiereu.network.c2s
 import de.fiereu.network.s2c
 import de.fiereu.openmmo.net.game.packets.*
 import de.fiereu.openmmo.net.game.packets.battle.*
+import de.fiereu.openmmo.net.game.packets.dialog.*
 import de.fiereu.openmmo.net.game.packets.guild.*
 
 object GameProtocol : Protocol() {
@@ -97,7 +98,7 @@ object GameProtocol : Protocol() {
     c2s<NullPacket>(0x20u, NullPacketCodec)
     s2c<TokenPayloadPacket>(0x20u, TokenPayloadPacketCodec)
 
-    c2s<WarpTileInteractPacket>(0x21u, WarpTileInteractPacketCodec)
+    c2s<DialogActionResponsePacket>(0x21u, DialogActionResponsePacketCodec)
     s2c<DialogActionPacket>(0x21u, DialogActionPacketCodec)
 
     bidi<EntityInteractPacket>(0x22u, EntityInteractPacketCodec)

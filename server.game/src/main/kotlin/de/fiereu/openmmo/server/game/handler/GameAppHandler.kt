@@ -16,7 +16,6 @@ import de.fiereu.openmmo.net.game.packets.DialogChoicePacket
 import de.fiereu.openmmo.net.game.packets.EntityInteractPacket
 import de.fiereu.openmmo.net.game.packets.FaceDirectionPacket
 import de.fiereu.openmmo.net.game.packets.FriendProfileRequestPacket
-import de.fiereu.openmmo.net.game.packets.InteractiveResponsePacket
 import de.fiereu.openmmo.net.game.packets.JoinPacket
 import de.fiereu.openmmo.net.game.packets.KeepAlivePacket
 import de.fiereu.openmmo.net.game.packets.MovementPacket
@@ -48,6 +47,7 @@ import de.fiereu.openmmo.net.game.packets.battle.BattleTeamPreviewConfirmPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleTierSelectPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleTransitionReadyPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleUseItemPacket
+import de.fiereu.openmmo.net.game.packets.dialog.DialogActionResponsePacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildActivityLogPageRequestPacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildCreatePacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildDisbandPacket
@@ -104,7 +104,7 @@ constructor(
     onSuspend<FaceDirectionPacket> { event -> movementService.onFaceDirection(event) }
 
     onSuspend<EntityInteractPacket> { event -> interactionService.onEntityInteract(event) }
-    onSuspend<InteractiveResponsePacket> { event -> dialogService.onInteractive(event) }
+    onSuspend<DialogActionResponsePacket> { event -> dialogService.onInteractive(event) }
     onSuspend<DialogChoicePacket> { event -> dialogService.onDialogChoice(event) }
 
     on<AddFriendPacket> { event -> socialService.onAddFriend(event) }
