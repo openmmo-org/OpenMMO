@@ -1,0 +1,5 @@
+# Retail ROMs live here for codegen (identified by GBA header game code + version, not filename).
+# They are copyrighted and must never be committed. This .gitignore keeps the folder tracked
+# while ignoring everything else in it.
+*
+!.gitignore
