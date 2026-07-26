@@ -52,6 +52,15 @@ internal val COMMON_ENCOUNTER_MAP =
         "MAP_TYPE_SECRET_BASE" to ENCOUNTER_UNKNOWN_0X03,
     )
 
+// wild_encounters.json method keys mapped to their EncounterMethod ref, in a stable order.
+internal val ENCOUNTER_METHODS =
+    listOf(
+        "land_mons" to "EncounterMethod.LAND",
+        "water_mons" to "EncounterMethod.WATER",
+        "rock_smash_mons" to "EncounterMethod.ROCK_SMASH",
+        "fishing_mons" to "EncounterMethod.FISHING",
+    )
+
 private val FACING_REFS =
     listOf("Direction.DOWN", "Direction.UP", "Direction.LEFT", "Direction.RIGHT")
 

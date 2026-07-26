@@ -1,6 +1,12 @@
 package de.fiereu.openmmo.common
 
-data class Tile2D(val material: Short, val collision: Byte) {
+import de.fiereu.openmmo.common.enums.TileBehavior
+
+data class Tile2D(
+    val material: Short,
+    val collision: Byte,
+    val behavior: TileBehavior = TileBehavior.NORMAL,
+) {
 
   val movementCollision: Int
     get() = collision.toInt() and 0x03

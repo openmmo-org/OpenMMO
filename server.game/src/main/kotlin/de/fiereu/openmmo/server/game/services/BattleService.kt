@@ -108,7 +108,10 @@ constructor(
     finishBattle(battle)
   }
 
-  private fun startWildBattle(session: SessionContext, dexId: Int, level: Int) {
+  /** True while the character has a battle running, so callers can skip starting another. */
+  fun inBattle(charId: Long): Boolean = battles.byChar(charId) != null
+
+  fun startWildBattle(session: SessionContext, dexId: Int, level: Int) {
     val charId = session.attributes[PLAYER_STATE]?.characterId ?: return
     if (battles.byChar(charId) != null) {
       session.send(notice("You are already in a battle."))

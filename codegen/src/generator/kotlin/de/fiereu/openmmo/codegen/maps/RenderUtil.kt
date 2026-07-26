@@ -54,6 +54,19 @@ object RenderUtil {
     }
   }
 
+  fun encounters(tables: List<ParsedEncounterTable>): String {
+    if (tables.isEmpty()) return EMPTY_LIST
+    return tables.joinToString(LIST_SEP, LIST_OPEN, LIST_CLOSE) { table ->
+      val slots =
+          table.slots.joinToString(", ", "listOf(", ")") {
+            "WildEncounterSlot(speciesId = ${it.speciesId}, minLevel = ${it.minLevel}," +
+                " maxLevel = ${it.maxLevel}, weight = ${it.weight})"
+          }
+      "WildEncounterTable(method = ${table.method}," +
+          " encounterRate = ${table.encounterRate}, slots = $slots)"
+    }
+  }
+
   private fun escapeString(s: String): String =
       "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
 }

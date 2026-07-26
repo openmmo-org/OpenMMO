@@ -28,6 +28,7 @@ constructor(
     private val presenceService: PresenceService,
     private val mapManager: MapManager,
     private val characterStore: CharacterStore,
+    private val encounterService: EncounterService,
 ) {
 
   /** One step. The client sends the tile it left and the direction, the server derives the rest. */
@@ -120,6 +121,8 @@ constructor(
         ctx,
         EntityMovePacket(entityId = charId, x = toX, y = toY, direction = msg.direction),
     )
+
+    encounterService.onStep(ctx, charId, currentMap, toX, toY)
   }
 
   /** Snap the client back to the position the server considers authoritative. */
