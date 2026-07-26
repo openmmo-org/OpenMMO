@@ -39,8 +39,6 @@ object LoadEntityPacketCodec : PacketCodec<LoadEntityPacket>() {
     val facing = Direction.entries[field(U8) { it.facing.ordinal }]
     val transportation = field(U8, LoadEntityPacket::transportation)
     val entityNameplateType = field(U8, LoadEntityPacket::entityNameplateType)
-    // Flags is a single byte. Writing two bytes pushed the follower dex id one byte over, so dex 1
-    // arrived as 0x0100 (256) and the client drew the wrong follower.
     val flags = field(U8) { if (it.hasFollower) 0x04 else 0 }
     if (flags and 0x01 != 0) field(S8) { 0 }
     if (flags and 0x02 != 0) {
