@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.codegen.maps
 
+import de.fiereu.openmmo.codegen.pokemon.NationalDex
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -18,6 +19,7 @@ class PretGbaParser(
     private val rootDir: File,
     private val region: RegionConstants,
     private val movementTypes: MovementTypes,
+    private val metatileBehaviors: MetatileBehaviors,
 ) {
 
   private val json = Json { ignoreUnknownKeys = true }
@@ -25,6 +27,12 @@ class PretGbaParser(
   private data class Address(val groupIndex: Int, val mapIndex: Int, val mapName: String)
 
   private class MapGroups(val order: List<String>, val entries: Map<String, List<String>>)
+
+  // The wild tables keyed by map constant, plus the shared per-slot weights for each method.
+  private class EncounterData(
+      val weightsByType: Map<String, List<Int>>,
+      val byMap: Map<String, JsonObject>,
+  )
 
   private class Context(
       val layouts: Map<String, JsonObject>,
@@ -34,6 +42,9 @@ class PretGbaParser(
       val tilesetPaletteIds: Map<String, Int>,
       val addresses: Map<String, Address>,
       val mapJsons: Map<String, JsonObject>,
+      val speciesIds: Map<String, Int>,
+      val nationalDex: Map<Int, Int>,
+      val encounters: EncounterData,
   )
 
   fun parseAll(): List<ParsedMap> {
@@ -103,7 +114,37 @@ class PretGbaParser(
         tilesetPaletteIds = readTilesetPaletteIds(),
         addresses = addresses,
         mapJsons = mapJsons,
+        speciesIds = readDefineTable(File(rootDir, "include/constants/species.h"), "SPECIES_"),
+        nationalDex = NationalDex.read(rootDir),
+        encounters = readEncounters(),
     )
+  }
+
+  private fun readEncounters(): EncounterData {
+    val file = File(rootDir, "src/data/wild_encounters.json")
+    if (!file.exists()) return EncounterData(emptyMap(), emptyMap())
+    val group =
+        readJson(file)
+            .jsonObject["wild_encounter_groups"]
+            ?.jsonArrayOrNull()
+            ?.firstOrNull()
+            ?.jsonObject ?: return EncounterData(emptyMap(), emptyMap())
+    val weights =
+        group["fields"]?.jsonArrayOrNull().orEmpty().mapNotNull { field ->
+          val obj = field.jsonObject
+          val type = obj["type"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+          val rates =
+              obj["encounter_rates"]?.jsonArrayOrNull()?.mapNotNull { it.jsonPrimitive.intOrNull }
+                  ?: return@mapNotNull null
+          type to rates
+        }
+    val byMap =
+        group["encounters"]?.jsonArrayOrNull().orEmpty().mapNotNull { entry ->
+          val obj = entry.jsonObject
+          val mapId = obj["map"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+          mapId to obj
+        }
+    return EncounterData(weights.toMap(), byMap.toMap())
   }
 
   private fun parseMap(
@@ -139,6 +180,8 @@ class PretGbaParser(
         mapsecId = ctx.mapsecIds[mapsecName] ?: 0,
         borderTiles = parseBorderTiles(layout),
         blockData = parseBlockData(layout),
+        behaviorData = parseBehaviorData(layout),
+        encounters = parseEncounters(mapJson, ctx),
         lighting = "Lighting.REGULAR",
         weather =
             region.weatherMap[mapJson["weather"]?.jsonPrimitive?.contentOrNull]
@@ -247,6 +290,43 @@ class PretGbaParser(
     val file = File(rootDir, path)
     if (!file.exists()) return ""
     return Base64.getEncoder().encodeToString(file.readBytes())
+  }
+
+  // One behavior byte per tile, resolved from the layout's tilesets. Empty when there is no block
+  // data to align with.
+  private fun parseBehaviorData(layout: JsonObject): String {
+    val path = layout["blockdata_filepath"]?.jsonPrimitive?.contentOrNull ?: return ""
+    val file = File(rootDir, path)
+    if (!file.exists()) return ""
+    val primary = layout["primary_tileset"]?.jsonPrimitive?.contentOrNull
+    val secondary = layout["secondary_tileset"]?.jsonPrimitive?.contentOrNull
+    return metatileBehaviors.behaviorData(primary, secondary, file.readBytes())
+  }
+
+  private fun parseEncounters(mapJson: JsonObject, ctx: Context): List<ParsedEncounterTable> {
+    val mapId = mapJson["id"]?.jsonPrimitive?.contentOrNull ?: return emptyList()
+    val entry = ctx.encounters.byMap[mapId] ?: return emptyList()
+    return ENCOUNTER_METHODS.mapNotNull { (jsonKey, methodRef) ->
+      val table = (entry[jsonKey] as? JsonObject) ?: return@mapNotNull null
+      val rate = table["encounter_rate"]?.jsonPrimitive?.intOrNull ?: 0
+      val weights = ctx.encounters.weightsByType[jsonKey].orEmpty()
+      val slots =
+          table["mons"]?.jsonArrayOrNull().orEmpty().mapIndexedNotNull { i, mon ->
+            val obj = mon.jsonObject
+            val speciesName =
+                obj["species"]?.jsonPrimitive?.contentOrNull ?: return@mapIndexedNotNull null
+            val internalId = ctx.speciesIds[speciesName] ?: return@mapIndexedNotNull null
+            val speciesId = ctx.nationalDex[internalId] ?: return@mapIndexedNotNull null
+            ParsedEncounterSlot(
+                speciesId = speciesId,
+                minLevel = obj["min_level"]?.jsonPrimitive?.intOrNull ?: 1,
+                maxLevel = obj["max_level"]?.jsonPrimitive?.intOrNull ?: 1,
+                weight = weights.getOrElse(i) { 1 },
+            )
+          }
+      if (slots.isEmpty()) null
+      else ParsedEncounterTable(method = methodRef, encounterRate = rate, slots = slots)
+    }
   }
 
   private fun readJson(file: File): JsonElement = json.parseToJsonElement(file.readText())

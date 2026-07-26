@@ -16,6 +16,8 @@ data class ParsedMap(
     val mapsecId: Int,
     val borderTiles: List<Int>,
     val blockData: String,
+    val behaviorData: String,
+    val encounters: List<ParsedEncounterTable>,
     val lighting: String,
     val weather: String,
     val mapType: String,
@@ -64,4 +66,17 @@ data class ParsedBgEvent(
     val y: Int,
     val facingDir: String,
     val script: String,
+)
+
+data class ParsedEncounterTable(
+    val method: String,
+    val encounterRate: Int,
+    val slots: List<ParsedEncounterSlot>,
+)
+
+data class ParsedEncounterSlot(
+    val speciesId: Int,
+    val minLevel: Int,
+    val maxLevel: Int,
+    val weight: Int,
 )

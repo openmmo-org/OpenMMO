@@ -25,7 +25,7 @@ fun main(args: Array<String>) {
   val maps =
       sources.flatMap { (region, dir) ->
         println("[maps] parsing ${region.name} (region ${region.regionId}) from $dir")
-        PretGbaParser(dir, region, MovementTypes.read(dir)).parseAll()
+        PretGbaParser(dir, region, MovementTypes.read(dir), MetatileBehaviors.read(dir)).parseAll()
       }
   println("[maps] parsed ${maps.size} maps. writing to $outputDir")
   MapsRenderer(templatesDir, outputDir, classCacheDir).render(maps)

@@ -8,6 +8,7 @@ package ${packageName}
 
 import de.fiereu.openmmo.common.Tile2D
 import de.fiereu.openmmo.common.enums.Direction
+import de.fiereu.openmmo.common.enums.EncounterMethod
 import de.fiereu.openmmo.common.enums.EncounterType
 import de.fiereu.openmmo.common.enums.Lighting
 import de.fiereu.openmmo.common.enums.MapType
@@ -17,6 +18,8 @@ import de.fiereu.openmmo.maps.BgEventDef
 import de.fiereu.openmmo.maps.MapDef
 import de.fiereu.openmmo.maps.NpcDef
 import de.fiereu.openmmo.maps.WarpTile
+import de.fiereu.openmmo.maps.WildEncounterSlot
+import de.fiereu.openmmo.maps.WildEncounterTable
 import de.fiereu.openmmo.net.game.packets.MapData
 
 internal val ${objectName}: MapDef =
@@ -32,6 +35,8 @@ internal val ${objectName}: MapDef =
         unknownByte = ${map.getMapsecId()},
         borderTiles = ${RenderUtil.INSTANCE.borderTiles(map.getBorderTiles())},
         blockData = "${map.getBlockData()}",
+        behaviorData = "${map.getBehaviorData()}",
+        wildEncounters = ${RenderUtil.INSTANCE.encounters(map.getEncounters())},
         lighting = ${map.getLighting()},
         weather = ${map.getWeather()},
         mapType = ${map.getMapType()},
