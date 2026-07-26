@@ -34,6 +34,7 @@ constructor(
     private val characterStore: CharacterStore,
     private val dialogService: DialogService,
     private val scriptRegistry: ScriptRegistry,
+    private val storyService: StoryService,
 ) {
 
   /** The player pressed the action button on a specific entity, that is an npc. */
@@ -134,7 +135,7 @@ constructor(
         session.attributes.getOrPut(SCRIPT_SCOPE) {
           CoroutineScope(SupervisorJob() + Dispatchers.Default)
         }
-    val ctx = ScriptContext(session, state, entityId, dialogService)
+    val ctx = ScriptContext(session, state, entityId, dialogService, storyService)
     scope.launch {
       try {
         script.run(ctx)

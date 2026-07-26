@@ -213,6 +213,15 @@ constructor(
     preloadMapAndJoin(ctx, state, info)
   }
 
+  // TODO Sync persisted story flags and vars to the client
+  //  The server now owns per character story flags and vars (see StoryService), but the client
+  // still
+  //  gets the hardcoded WORLD_FLAG_GROUPS blob and empty badges/variables below. Map the stored
+  //  flags into the world-flag table and the stored vars into LocalPlayerStatePacket.variables so
+  // the
+  //  overworld (hidden or shown npcs, map states, badges) reflects real progress. This needs the
+  // GBA
+  //  numeric flag/var ids, so extend the story codegen to also emit the name to id map per region.
   // The full local-player state snapshot the client loads on login. Missing it leaves player state
   // uninitialised and the client crashes reading it (for example when opening the battle bag).
   private fun buildLocalPlayerState(

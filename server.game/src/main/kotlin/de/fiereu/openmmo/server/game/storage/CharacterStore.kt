@@ -27,6 +27,10 @@ data class StoredCharacter(
     val pokemon: MutableList<Pokemon>,
     val pcStorage: MutableList<Pokemon>,
     val items: MutableMap<Int, Int>,
+    // Story progression. Flags are set/unset booleans, vars are named integers that default to 0.
+    // Keys are opaque strings supplied by the content layer, so the store stays game agnostic.
+    val storyFlags: MutableSet<String> = mutableSetOf(),
+    val storyVars: MutableMap<String, Int> = mutableMapOf(),
 )
 
 /**
@@ -162,6 +166,31 @@ constructor(
     val stored = characters[characterId] ?: return
     val newInfo = stored.info.copy(money = stored.info.money + amount)
     characters[characterId] = stored.copy(info = newInfo)
+    markDirty(characterId)
+  }
+
+  /** Set a story flag. Copies the set so flusher snapshots never see a half-updated collection. */
+  fun setStoryFlag(characterId: Long, flag: String) {
+    val stored = characters[characterId] ?: return
+    if (flag in stored.storyFlags) return
+    characters[characterId] = stored.copy(storyFlags = (stored.storyFlags + flag).toMutableSet())
+    markDirty(characterId)
+  }
+
+  fun clearStoryFlag(characterId: Long, flag: String) {
+    val stored = characters[characterId] ?: return
+    if (flag !in stored.storyFlags) return
+    characters[characterId] = stored.copy(storyFlags = (stored.storyFlags - flag).toMutableSet())
+    markDirty(characterId)
+  }
+
+  /** Set a story var. A value of 0 is the default, so it drops the row instead of storing it. */
+  fun setStoryVar(characterId: Long, key: String, value: Int) {
+    val stored = characters[characterId] ?: return
+    val newVars = stored.storyVars.toMutableMap()
+    if (value == 0) newVars.remove(key) else newVars[key] = value
+    if (newVars == stored.storyVars) return
+    characters[characterId] = stored.copy(storyVars = newVars)
     markDirty(characterId)
   }
 

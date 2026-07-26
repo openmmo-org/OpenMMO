@@ -9,7 +9,9 @@ import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.db.game.tables.records.CharactersRecord
 import de.fiereu.openmmo.db.game.tables.records.PokemonRecord
 import de.fiereu.openmmo.db.game.tables.references.CHARACTERS
+import de.fiereu.openmmo.db.game.tables.references.CHARACTER_FLAGS
 import de.fiereu.openmmo.db.game.tables.references.CHARACTER_ITEMS
+import de.fiereu.openmmo.db.game.tables.references.CHARACTER_VARS
 import de.fiereu.openmmo.db.game.tables.references.POKEMON
 import javax.inject.Inject
 import javax.inject.Named
@@ -75,6 +77,19 @@ constructor(
           .set(CHARACTER_ITEMS.QUANTITY, quantity)
           .execute()
     }
+    for (flag in stored.storyFlags) {
+      tx.insertInto(CHARACTER_FLAGS)
+          .set(CHARACTER_FLAGS.CHARACTER_ID, stored.info.id)
+          .set(CHARACTER_FLAGS.FLAG_KEY, flag)
+          .execute()
+    }
+    for ((key, value) in stored.storyVars) {
+      tx.insertInto(CHARACTER_VARS)
+          .set(CHARACTER_VARS.CHARACTER_ID, stored.info.id)
+          .set(CHARACTER_VARS.VAR_KEY, key)
+          .set(CHARACTER_VARS.VAR_VALUE, value)
+          .execute()
+    }
   }
 
   /** Loads pokemon and items for all rows in one query each instead of per character. */
@@ -94,6 +109,18 @@ constructor(
             .fetch()
             .groupBy({ it.characterId }, { it.itemId to it.quantity })
             .mapValues { (_, pairs) -> pairs.toMap() }
+    val flagsByOwner: Map<Long, Set<String>> =
+        dsl.selectFrom(CHARACTER_FLAGS)
+            .where(CHARACTER_FLAGS.CHARACTER_ID.`in`(ids))
+            .fetch()
+            .groupBy({ it.characterId }, { it.flagKey })
+            .mapValues { (_, keys) -> keys.toSet() }
+    val varsByOwner: Map<Long, Map<String, Int>> =
+        dsl.selectFrom(CHARACTER_VARS)
+            .where(CHARACTER_VARS.CHARACTER_ID.`in`(ids))
+            .fetch()
+            .groupBy({ it.characterId }, { it.varKey to it.varValue })
+            .mapValues { (_, pairs) -> pairs.toMap() }
     return rows.map { row ->
       val monsters = monstersByOwner[row.id].orEmpty()
       val (party, pc) = monsters.partition { it.container == PokemonContainer.PARTY }
@@ -102,6 +129,8 @@ constructor(
           pokemon = party.toMutableList(),
           pcStorage = pc.toMutableList(),
           items = itemsByOwner[row.id].orEmpty().toMutableMap(),
+          storyFlags = flagsByOwner[row.id].orEmpty().toMutableSet(),
+          storyVars = varsByOwner[row.id].orEmpty().toMutableMap(),
       )
     }
   }
