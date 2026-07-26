@@ -193,6 +193,7 @@ class PretGbaParser(
         visibleNpcs = parseNpcs(mapJson, mapDirName, ctx),
         bgEvents = parseBgEvents(mapJson),
         onTransitionScript = parseOnTransitionScript(mapDirName),
+        onFrameScripts = parseOnFrameScripts(mapDirName),
     )
   }
 
@@ -225,9 +226,25 @@ class PretGbaParser(
       mapJson["warp_events"]?.jsonArrayOrNull()?.mapNotNull { warp ->
         val obj = warp.jsonObject
         val destName = obj["dest_map"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
-        val destAddr = ctx.addresses[destName] ?: return@mapNotNull null
         val x = obj["x"]?.jsonPrimitive?.intOrNull ?: 0
         val y = obj["y"]?.jsonPrimitive?.intOrNull ?: 0
+        // A MAP_DYNAMIC warp has no static destination, the runtime resolves it from the player's
+        // dynamic warp (setdynamicwarp). Emit the tile so it still triggers, with dynamic = true.
+        if (destName == "MAP_DYNAMIC") {
+          return@mapNotNull ParsedWarp(
+              x = x,
+              y = y,
+              elevation = ((obj["elevation"]?.jsonPrimitive?.intOrNull ?: 0) - 1).coerceAtLeast(0),
+              targetRegion = 0,
+              targetBank = 0,
+              targetMap = 0,
+              targetX = 0,
+              targetY = 0,
+              targetElevation = 0,
+              dynamic = true,
+          )
+        }
+        val destAddr = ctx.addresses[destName] ?: return@mapNotNull null
         val srcElevation = (obj["elevation"]?.jsonPrimitive?.intOrNull ?: 0)
         val destWarpId =
             obj["dest_warp_id"]?.jsonPrimitive?.let { it.intOrNull ?: it.content.toIntOrNull() }
@@ -249,15 +266,14 @@ class PretGbaParser(
         )
       } ?: emptyList()
 
+  // Every object event is emitted. A npc hidden by a story flag keeps the flag in hideFlag so the
+  // server can skip it at spawn and a script can show it later, the always-visible ones get "".
   private fun parseNpcs(mapJson: JsonObject, mapDirName: String, ctx: Context): List<ParsedNpc> {
     val visibleOverride = region.defaultVisibleNpcs[mapDirName]
-    return mapJson["object_events"]?.jsonArrayOrNull().orEmpty().mapIndexedNotNull { idx, npcElement
-      ->
+    return mapJson["object_events"]?.jsonArrayOrNull().orEmpty().mapIndexed { idx, npcElement ->
       val npc = npcElement.jsonObject
-      val isVisible =
-          if (visibleOverride != null) idx in visibleOverride
-          else npc["flag"]?.jsonPrimitive?.contentOrNull == "0"
-      if (!isVisible) return@mapIndexedNotNull null
+      val flag = npc["flag"]?.jsonPrimitive?.contentOrNull ?: "0"
+      val shownByDefault = if (visibleOverride != null) idx in visibleOverride else flag == "0"
       val gfxName = npc["graphics_id"]?.jsonPrimitive?.contentOrNull ?: "OBJ_EVENT_GFX_BOY_1"
       val movementName = npc["movement_type"]?.jsonPrimitive?.contentOrNull ?: "MOVEMENT_TYPE_NONE"
       ParsedNpc(
@@ -274,8 +290,39 @@ class PretGbaParser(
               else 1,
           facing = movementTypes.facingRef(movementName),
           script = npc["script"]?.jsonPrimitive?.contentOrNull ?: "0x0",
+          hideFlag = if (shownByDefault) "" else "${region.name}/$flag",
       )
     }
+  }
+
+  // Parses the map's ON_FRAME table: each map_script_2 runs its script once the var equals the
+  // value
+  // when the player enters the map. Values that are not plain integers (rare) are skipped.
+  private fun parseOnFrameScripts(mapDirName: String): List<ParsedFrameScript> {
+    val file = File(rootDir, "data/maps/$mapDirName/scripts.inc")
+    if (!file.exists()) return emptyList()
+    val text = file.readText()
+    val tableLabel =
+        Regex("""map_script\s+MAP_SCRIPT_ON_FRAME_TABLE\s*,\s*(\w+)""")
+            .find(text)
+            ?.groupValues
+            ?.get(1) ?: return emptyList()
+    val block =
+        Regex("""(?m)^$tableLabel:\s*\n(.*?)(?=\n\s*\.2byte)""", RegexOption.DOT_MATCHES_ALL)
+            .find(text)
+            ?.groupValues
+            ?.get(1) ?: return emptyList()
+    val entry = Regex("""map_script_2\s+(\w+)\s*,\s*(\d+)\s*,\s*(\w+)""")
+    return entry
+        .findAll(block)
+        .map {
+          ParsedFrameScript(
+              varKey = "${region.name}/${it.groupValues[1]}",
+              value = it.groupValues[2].toInt(),
+              script = it.groupValues[3],
+          )
+        }
+        .toList()
   }
 
   private fun parseBgEvents(mapJson: JsonObject): List<ParsedBgEvent> =

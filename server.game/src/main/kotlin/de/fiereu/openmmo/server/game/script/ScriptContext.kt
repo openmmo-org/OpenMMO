@@ -1,7 +1,9 @@
 package de.fiereu.openmmo.server.game.script
 
 import de.fiereu.network.SessionContext
+import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.dialog.DialogLine
+import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.server.game.services.DialogService
 import de.fiereu.openmmo.server.game.services.ScriptMovementService
 import de.fiereu.openmmo.server.game.services.StoryService
@@ -55,6 +57,16 @@ internal constructor(
   /** Walk the player's own avatar through [steps] and wait for it to finish. */
   suspend fun moveSelf(vararg steps: MovementStep) =
       movement.moveSelf(session, state, steps.toList())
+
+  /** Show a normally hidden map npc (its decomp local id) to this player, the decomp addobject. */
+  fun showNpc(localId: Int) = movement.showNpc(session, state, localId)
+
+  /** Set where a MAP_DYNAMIC warp sends this player (the decomp setdynamicwarp). */
+  fun setDynamicWarp(regionId: Int, bankId: Int, mapId: Int, x: Int, y: Int, facing: Direction) =
+      movement.setDynamicWarp(
+          state,
+          DynamicWarp(
+              regionId.toByte(), bankId.toByte(), mapId.toByte(), x.toShort(), y.toShort(), facing))
 
   private companion object {
     // Sign boxes have no speaker, npc boxes point at the entity.

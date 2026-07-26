@@ -28,6 +28,14 @@ data class ParsedMap(
     val bgEvents: List<ParsedBgEvent>,
     // Decomp label of the map's ON_TRANSITION script, or "" when the map has none.
     val onTransitionScript: String,
+    // The map's ON_FRAME table: run the script once its var equals the value, on map entry.
+    val onFrameScripts: List<ParsedFrameScript>,
+)
+
+data class ParsedFrameScript(
+    val varKey: String,
+    val value: Int,
+    val script: String,
 )
 
 data class ParsedConnection(
@@ -47,6 +55,7 @@ data class ParsedWarp(
     val targetX: Int,
     val targetY: Int,
     val targetElevation: Int,
+    val dynamic: Boolean = false,
 )
 
 data class ParsedNpc(
@@ -61,6 +70,8 @@ data class ParsedNpc(
     val trainerType: Int,
     val facing: String,
     val script: String,
+    // Namespaced story flag that hides this npc by default, or "" when it is always shown.
+    val hideFlag: String,
 )
 
 data class ParsedBgEvent(

@@ -31,7 +31,20 @@ constructor(
     private val storyService: StoryService,
     private val movementService: ScriptMovementService,
 ) {
-  fun run(session: SessionContext, state: PlayerState, script: Script, entityId: Long) {
+  fun run(session: SessionContext, state: PlayerState, script: Script, entityId: Long) =
+      runAll(session, state, listOf(script), entityId)
+
+  /**
+   * Runs [scripts] in order on one coroutine so they share the dialog lock, for example a map's
+   * on-transition script followed by its matching on-frame cutscene.
+   */
+  fun runAll(
+      session: SessionContext,
+      state: PlayerState,
+      scripts: List<Script>,
+      entityId: Long,
+  ) {
+    if (scripts.isEmpty()) return
     state.inDialog = true
     val scope =
         session.attributes.getOrPut(SCRIPT_SCOPE) {
@@ -40,7 +53,7 @@ constructor(
     val ctx = ScriptContext(session, state, entityId, dialogService, storyService, movementService)
     scope.launch {
       try {
-        script.run(ctx)
+        for (script in scripts) script.run(ctx)
       } catch (e: CancellationException) {
         throw e
       } catch (e: NotImplementedError) {

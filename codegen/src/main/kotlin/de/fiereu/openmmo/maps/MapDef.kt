@@ -34,6 +34,8 @@ class MapDef(
     val bgEvents: List<BgEventDef> = emptyList(),
     /** Decomp label of the script that runs when a player enters this map, or "" if none. */
     val onTransitionScript: String = "",
+    /** Conditional entry scripts: run [MapFrameScript.script] when its var equals its value. */
+    val onFrameScripts: List<MapFrameScript> = emptyList(),
     private val blockData: String = "",
     private val behaviorData: String = "",
 ) {
@@ -47,6 +49,13 @@ class MapDef(
   fun encounterTable(method: EncounterMethod): WildEncounterTable? =
       wildEncounters.firstOrNull { it.method == method }
 }
+
+/** One ON_FRAME entry: run [script] when the story var [varKey] currently equals [value]. */
+data class MapFrameScript(
+    val varKey: String,
+    val value: Int,
+    val script: String,
+)
 
 private fun decodeBlockData(blockData: String, behaviorData: String): List<Tile2D> {
   if (blockData.isEmpty()) return emptyList()

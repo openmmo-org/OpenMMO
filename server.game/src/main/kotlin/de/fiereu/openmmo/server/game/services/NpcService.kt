@@ -3,6 +3,7 @@ package de.fiereu.openmmo.server.game.services
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.maps.MapManager
+import de.fiereu.openmmo.maps.NpcDef
 import de.fiereu.openmmo.net.game.packets.NpcSpawnPacket
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.concurrent.atomic.AtomicLong
@@ -87,33 +88,54 @@ constructor(
     }
 
     for (npc in map.npcs) {
-      val key = "$bankId:$mapId:${npc.entityIdx}"
-      val entityId = npcEntityIds.getOrPut(key) { npcEntityIdCounter.incrementAndGet() }
-      val movementId = npc.movementType.forRegion(Region.HOENN).id
-      val unk3 = ((movementId and 0xFF) shl 8) or 0x02
-      val unk4 =
-          if (movementId in 1..6 || (movementId in 25..52)) {
-            ((npc.movementRangeX and 0xFF) shl 8) or (npc.movementRangeY and 0xFF)
-          } else {
-            0
-          }
-      val spawnPacket =
-          NpcSpawnPacket(
-              entityId = entityId,
-              unk1 = 1,
-              unk2 = npc.graphicsId,
-              unk3 = unk3,
-              unk4 = unk4,
-              regionId = 1,
-              bankId = bankId,
-              mapId = mapId,
-              x = npc.x,
-              y = npc.y,
-              facing = npc.facing.ordinal,
-              unk5 = 2,
-              unk6 = 8,
-          )
-      ctx.send(spawnPacket)
+      // Npcs hidden by a story flag stay out of the world until a script shows them.
+      if (npc.hideFlag.isNotEmpty()) continue
+      ctx.send(buildSpawnPacket(npc, entityIdFor(bankId, mapId, npc.entityIdx), bankId, mapId))
     }
+  }
+
+  /** Allocate (or return) the stable entity id for a map npc by its decomp local id. */
+  fun entityIdFor(bankId: Int, mapId: Int, entityIdx: Int): Long =
+      npcEntityIds.getOrPut("$bankId:$mapId:$entityIdx") { npcEntityIdCounter.incrementAndGet() }
+
+  /** Spawn a single npc (including a normally hidden one) for one player, for cutscenes. */
+  fun spawnNpc(ctx: SessionContext, bankId: Int, mapId: Int, localId: Int) {
+    val npc = mapManager.getMap(1, bankId, mapId)?.npcs?.firstOrNull { it.entityIdx == localId }
+    if (npc == null) {
+      log.warn { "spawnNpc: npc $localId not found on $bankId:$mapId" }
+      return
+    }
+    ctx.send(buildSpawnPacket(npc, entityIdFor(bankId, mapId, localId), bankId, mapId))
+  }
+
+  private fun buildSpawnPacket(
+      npc: NpcDef,
+      entityId: Long,
+      bankId: Int,
+      mapId: Int,
+  ): NpcSpawnPacket {
+    val movementId = npc.movementType.forRegion(Region.HOENN).id
+    val unk3 = ((movementId and 0xFF) shl 8) or 0x02
+    val unk4 =
+        if (movementId in 1..6 || (movementId in 25..52)) {
+          ((npc.movementRangeX and 0xFF) shl 8) or (npc.movementRangeY and 0xFF)
+        } else {
+          0
+        }
+    return NpcSpawnPacket(
+        entityId = entityId,
+        unk1 = 1,
+        unk2 = npc.graphicsId,
+        unk3 = unk3,
+        unk4 = unk4,
+        regionId = 1,
+        bankId = bankId,
+        mapId = mapId,
+        x = npc.x,
+        y = npc.y,
+        facing = npc.facing.ordinal,
+        unk5 = 2,
+        unk6 = 8,
+    )
   }
 }

@@ -2,8 +2,7 @@ package de.fiereu.openmmo.server.game.services
 
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.maps.MapManager
-import de.fiereu.openmmo.net.game.packets.EntityFaceTurnPacket
-import de.fiereu.openmmo.net.game.packets.EntityMovePacket
+import de.fiereu.openmmo.net.game.packets.DialogDataPacket
 import de.fiereu.openmmo.server.game.script.MovementStep
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import de.fiereu.openmmo.server.game.storage.EntityIdService
@@ -40,12 +39,8 @@ class ScriptMovementServiceTest :
                   )
 
           end shouldBe ScriptMovementService.Pose(4, 3, Direction.LEFT)
-          session.sent shouldBe
-              listOf(
-                  EntityMovePacket(42L, 5, 4, Direction.UP),
-                  EntityMovePacket(42L, 5, 3, Direction.UP),
-                  EntityMovePacket(42L, 4, 3, Direction.LEFT),
-              )
+          // One movement packet carrying walk_up, walk_up, walk_left (0x11, 0x11, 0x12).
+          session.sent shouldBe listOf(DialogDataPacket(42L, 0, 3, byteArrayOf(0x11, 0x11, 0x12)))
         }
       }
 
@@ -58,7 +53,8 @@ class ScriptMovementServiceTest :
           val end = service(store).drive(session, 7L, start, listOf(MovementStep.FACE_RIGHT))
 
           end shouldBe ScriptMovementService.Pose(8, 2, Direction.RIGHT)
-          session.sent shouldBe listOf(EntityFaceTurnPacket(7L, Direction.RIGHT.ordinal.toByte()))
+          // One movement packet carrying face_right (0x03).
+          session.sent shouldBe listOf(DialogDataPacket(7L, 0, 1, byteArrayOf(0x03)))
         }
       }
 

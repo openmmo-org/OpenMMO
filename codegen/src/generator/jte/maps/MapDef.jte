@@ -16,6 +16,7 @@ import de.fiereu.openmmo.common.enums.MovementType
 import de.fiereu.openmmo.common.enums.Weather
 import de.fiereu.openmmo.maps.BgEventDef
 import de.fiereu.openmmo.maps.MapDef
+import de.fiereu.openmmo.maps.MapFrameScript
 import de.fiereu.openmmo.maps.NpcDef
 import de.fiereu.openmmo.maps.WarpTile
 import de.fiereu.openmmo.maps.WildEncounterSlot
@@ -46,4 +47,5 @@ internal val ${objectName}: MapDef =
         npcs = ${RenderUtil.INSTANCE.npcs(map.getVisibleNpcs())},
         bgEvents = ${RenderUtil.INSTANCE.bgEvents(map.getBgEvents())},
         onTransitionScript = "${map.getOnTransitionScript()}",
+        onFrameScripts = ${RenderUtil.INSTANCE.frameScripts(map.getOnFrameScripts())},
     )

@@ -41,7 +41,8 @@ constructor(
         WarpExitRules.getKnownOverride(sourceMap, destMap, warp.targetX, warp.targetY)
 
     val warpFacing =
-        knownOverride?.facing
+        warp.exitFacing
+            ?: knownOverride?.facing
             ?: WarpExitRules.inferExitFacing(
                 destTileBehavior = null,
                 destMap = destMap,

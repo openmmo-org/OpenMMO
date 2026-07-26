@@ -25,5 +25,7 @@ data class CharacterInfo(
     val repelLeft: Short,
     val repelItemId: Short,
     val lureLeft: Short,
-    val lureItemId: Short
+    val lureItemId: Short,
+    /** Runtime warp destination for MAP_DYNAMIC warps (setdynamicwarp), or null if none is set. */
+    val dynamicWarp: DynamicWarp? = null,
 )

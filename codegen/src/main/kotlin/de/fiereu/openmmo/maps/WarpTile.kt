@@ -13,4 +13,12 @@ data class WarpTile(
     val targetY: Int,
     val targetElevation: Int = 0,
     val facingDirection: Direction? = null,
+    /** Direction the player faces after this warp, or null to infer it. */
+    val exitFacing: Direction? = null,
+    /**
+     * A MAP_DYNAMIC warp whose destination is not baked in but set at runtime (the decomp
+     * setdynamicwarp). The target fields are placeholders, the real destination comes from the
+     * player's stored dynamic warp when they step on it.
+     */
+    val dynamic: Boolean = false,
 )

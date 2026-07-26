@@ -4,16 +4,19 @@ import de.fiereu.openmmo.common.enums.Direction
 
 /**
  * One step of an applymovement sequence: either a walk one tile in [direction] or a turn in place
- * to face [direction]. This is the small, game agnostic vocabulary scripts use, decomp movement
- * templates are ported into lists of these.
+ * to face [direction]. [action] is the client movement-action byte (from packet captures: face
+ * 0x00-0x03, walk 0x10-0x13); a whole sequence of these is sent in one movement packet. This is the
+ * small game agnostic vocabulary scripts use.
  */
-enum class MovementStep(val direction: Direction, val walks: Boolean) {
-  WALK_UP(Direction.UP, true),
-  WALK_DOWN(Direction.DOWN, true),
-  WALK_LEFT(Direction.LEFT, true),
-  WALK_RIGHT(Direction.RIGHT, true),
-  FACE_UP(Direction.UP, false),
-  FACE_DOWN(Direction.DOWN, false),
-  FACE_LEFT(Direction.LEFT, false),
-  FACE_RIGHT(Direction.RIGHT, false),
+enum class MovementStep(val direction: Direction, val walks: Boolean, val action: Int) {
+  FACE_DOWN(Direction.DOWN, false, 0x00),
+  FACE_UP(Direction.UP, false, 0x01),
+  FACE_LEFT(Direction.LEFT, false, 0x02),
+  FACE_RIGHT(Direction.RIGHT, false, 0x03),
+  WALK_DOWN(Direction.DOWN, true, 0x10),
+  WALK_UP(Direction.UP, true, 0x11),
+  WALK_LEFT(Direction.LEFT, true, 0x12),
+  WALK_RIGHT(Direction.RIGHT, true, 0x13),
+  // Hides the entity in place, used at the end of a walk into a door (decomp set_invisible).
+  SET_INVISIBLE(Direction.DOWN, false, 0x60),
 }

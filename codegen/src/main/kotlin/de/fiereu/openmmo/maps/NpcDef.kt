@@ -15,4 +15,6 @@ data class NpcDef(
     val trainerType: Int,
     val facing: Direction,
     val script: String = "0x0",
+    /** Story flag that hides this npc by default, or "" when it is always shown. */
+    val hideFlag: String = "",
 )

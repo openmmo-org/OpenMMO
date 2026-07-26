@@ -1,7 +1,10 @@
 package de.fiereu.openmmo.server.game.storage
 
 import de.fiereu.openmmo.common.CharacterInfo
+import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.Pokemon
+import de.fiereu.openmmo.common.enums.Direction
+import de.fiereu.openmmo.story.generated.hoenn.HoennVars
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
@@ -80,17 +83,30 @@ constructor(
             pcExtraSlots = 0,
             battleBoxExtraSlots = 0,
             templateAmount = 0,
+            // New characters start inside the moving truck (InsideOfTruck, bank 75 map 40). Walking
+            // out warps to Littleroot, where the intro var below drives the mom cutscene.
             positionRegionId = 1,
-            positionBankId = 51,
-            positionMapId = 3,
-            positionX = 4,
-            positionY = 4,
+            positionBankId = 75,
+            positionMapId = 40,
+            positionX = 2,
+            positionY = 2,
             repelLeft = 0,
             repelItemId = 0,
             lureLeft = 0,
             lureItemId = 0,
+            // The truck's exit is a MAP_DYNAMIC warp. Point it at Littleroot Town for the intro,
+            // the
+            // same thing the decomp setdynamicwarp does at new game. Facing right off the truck.
+            dynamicWarp = DynamicWarp(1, 50, 9, 3, 10, Direction.RIGHT),
         )
-    val stored = StoredCharacter(info, mutableListOf(), mutableListOf(), mutableMapOf())
+    // Male intro path. Gender selection is not implemented yet, so everyone takes the male branch.
+    // TODO Support the female intro path
+    //  Add character gender (checkplayergender) so new characters can take the female Littleroot
+    //  intro (VAR_LITTLEROOT_INTRO_STATE = 2, May's house at 12,10) instead of always the male one.
+    val storyVars = mutableMapOf(HoennVars.VAR_LITTLEROOT_INTRO_STATE to 1)
+    val stored =
+        StoredCharacter(
+            info, mutableListOf(), mutableListOf(), mutableMapOf(), storyVars = storyVars)
     repository.insertAggregate(stored)
     characters[id] = stored
     charactersByUser.computeIfAbsent(userId) { CopyOnWriteArrayList() }.add(id)
@@ -166,6 +182,13 @@ constructor(
     val stored = characters[characterId] ?: return
     val newInfo = stored.info.copy(money = stored.info.money + amount)
     characters[characterId] = stored.copy(info = newInfo)
+    markDirty(characterId)
+  }
+
+  /** Set (or clear with null) the runtime destination for MAP_DYNAMIC warps (setdynamicwarp). */
+  fun setDynamicWarp(characterId: Long, warp: DynamicWarp?) {
+    val stored = characters[characterId] ?: return
+    characters[characterId] = stored.copy(info = stored.info.copy(dynamicWarp = warp))
     markDirty(characterId)
   }
 

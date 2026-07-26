@@ -31,7 +31,8 @@ object RenderUtil {
       "WarpTile(x = ${it.x}, y = ${it.y}, elevation = ${it.elevation}," +
           " targetRegionId = ${it.targetRegion}, targetBankId = ${it.targetBank}," +
           " targetMapId = ${it.targetMap}," +
-          " targetX = ${it.targetX}, targetY = ${it.targetY}, targetElevation = ${it.targetElevation})"
+          " targetX = ${it.targetX}, targetY = ${it.targetY}, targetElevation = ${it.targetElevation}," +
+          " dynamic = ${it.dynamic})"
     }
   }
 
@@ -42,7 +43,16 @@ object RenderUtil {
           " x = ${it.x}, y = ${it.y}, elevation = ${it.elevation}," +
           " movementType = ${it.movementType}, movementRangeX = ${it.movementRangeX}," +
           " movementRangeY = ${it.movementRangeY}, trainerType = ${it.trainerType}," +
-          " facing = ${it.facing}, script = ${escapeString(it.script)})"
+          " facing = ${it.facing}, script = ${escapeString(it.script)}," +
+          " hideFlag = ${escapeString(it.hideFlag)})"
+    }
+  }
+
+  fun frameScripts(scripts: List<ParsedFrameScript>): String {
+    if (scripts.isEmpty()) return EMPTY_LIST
+    return scripts.joinToString(LIST_SEP, LIST_OPEN, LIST_CLOSE) {
+      "MapFrameScript(varKey = ${escapeString(it.varKey)}, value = ${it.value}," +
+          " script = ${escapeString(it.script)})"
     }
   }
 

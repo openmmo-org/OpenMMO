@@ -67,7 +67,8 @@ class StoryServiceTest :
           store.flushAll()
 
           repo.saved[id]!!.storyFlags shouldBe setOf("hoenn/FLAG_ADVENTURE_STARTED")
-          repo.saved[id]!!.storyVars shouldBe mapOf("hoenn/VAR_LITTLEROOT_TOWN_STATE" to 4)
+          // New characters are seeded with the intro var, so check the entry rather than the map.
+          repo.saved[id]!!.storyVars["hoenn/VAR_LITTLEROOT_TOWN_STATE"] shouldBe 4
         }
       }
     })

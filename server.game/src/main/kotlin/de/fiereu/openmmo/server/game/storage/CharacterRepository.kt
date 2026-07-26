@@ -1,8 +1,10 @@
 package de.fiereu.openmmo.server.game.storage
 
 import de.fiereu.openmmo.common.CharacterInfo
+import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.PokemonMove
+import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
@@ -160,6 +162,12 @@ constructor(
           repelItemId = repelItemId,
           lureLeft = lureLeft,
           lureItemId = lureItemId,
+          dynamicWarpRegion = dynamicWarp?.regionId?.toShort(),
+          dynamicWarpBank = dynamicWarp?.bankId?.toShort(),
+          dynamicWarpMap = dynamicWarp?.mapId?.toShort(),
+          dynamicWarpX = dynamicWarp?.x,
+          dynamicWarpY = dynamicWarp?.y,
+          dynamicWarpFacing = dynamicWarp?.facing?.ordinal?.toShort(),
       )
 
   private fun CharactersRecord.toInfo(): CharacterInfo =
@@ -187,7 +195,25 @@ constructor(
           repelItemId = repelItemId,
           lureLeft = lureLeft,
           lureItemId = lureItemId,
+          dynamicWarp = toDynamicWarp(),
       )
+
+  private fun CharactersRecord.toDynamicWarp(): DynamicWarp? {
+    val region = dynamicWarpRegion ?: return null
+    val bank = dynamicWarpBank ?: return null
+    val map = dynamicWarpMap ?: return null
+    val x = dynamicWarpX ?: return null
+    val y = dynamicWarpY ?: return null
+    val facing = dynamicWarpFacing ?: return null
+    return DynamicWarp(
+        regionId = region.toByte(),
+        bankId = bank.toByte(),
+        mapId = map.toByte(),
+        x = x,
+        y = y,
+        facing = Direction.entries[facing.toInt()],
+    )
+  }
 
   private fun Pokemon.toRecord(): PokemonRecord =
       PokemonRecord(
