@@ -133,7 +133,8 @@ constructor(
               characterInfo = stored.info,
               skinSet = SkinSet(),
               guildId = null,
-              pokemon = stored.pokemon.take(1),
+              // Show the whole party. A party over 6 is an illegal state and CharacterEntry rejects it.
+              pokemon = stored.pokemon,
           )
         }
     return CharactersListPacket(entries)
