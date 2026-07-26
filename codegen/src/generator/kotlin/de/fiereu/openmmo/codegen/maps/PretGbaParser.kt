@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.codegen.maps
 
+import de.fiereu.openmmo.codegen.pokemon.NationalDex
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -42,6 +43,7 @@ class PretGbaParser(
       val addresses: Map<String, Address>,
       val mapJsons: Map<String, JsonObject>,
       val speciesIds: Map<String, Int>,
+      val nationalDex: Map<Int, Int>,
       val encounters: EncounterData,
   )
 
@@ -113,6 +115,7 @@ class PretGbaParser(
         addresses = addresses,
         mapJsons = mapJsons,
         speciesIds = readDefineTable(File(rootDir, "include/constants/species.h"), "SPECIES_"),
+        nationalDex = NationalDex.read(rootDir),
         encounters = readEncounters(),
     )
   }
@@ -312,7 +315,8 @@ class PretGbaParser(
             val obj = mon.jsonObject
             val speciesName =
                 obj["species"]?.jsonPrimitive?.contentOrNull ?: return@mapIndexedNotNull null
-            val speciesId = ctx.speciesIds[speciesName] ?: return@mapIndexedNotNull null
+            val internalId = ctx.speciesIds[speciesName] ?: return@mapIndexedNotNull null
+            val speciesId = ctx.nationalDex[internalId] ?: return@mapIndexedNotNull null
             ParsedEncounterSlot(
                 speciesId = speciesId,
                 minLevel = obj["min_level"]?.jsonPrimitive?.intOrNull ?: 1,

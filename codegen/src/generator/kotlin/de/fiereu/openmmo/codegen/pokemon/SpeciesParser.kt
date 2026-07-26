@@ -6,13 +6,15 @@ class SpeciesParser(private val rootDir: File) {
 
   fun parseAll(): List<ParsedSpecies> {
     val ids = readDefineTable("include/constants/species.h", "SPECIES_")
+    val nationalDex = NationalDex.read(rootDir)
     val names = readSpeciesNames()
     val items = readDefineTable("include/constants/items.h", "ITEM_")
     val entries = readSpeciesInfo()
 
     return entries
         .mapNotNull { (constant, f) ->
-          val id = ids[constant] ?: return@mapNotNull null
+          // The client keys species by national dex, so that is the id we store.
+          val id = ids[constant]?.let { nationalDex[it] } ?: return@mapNotNull null
           if (!f.containsKey("baseHP")) return@mapNotNull null
           val types = braceList(f.getValue("types"))
           val eggGroups = braceList(f.getValue("eggGroups"))

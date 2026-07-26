@@ -105,17 +105,19 @@ private constructor(
       var inEnum = false
       for (raw in file.readLines()) {
         val line = raw.trim()
-        when {
-          line.startsWith("enum") -> inEnum = true
-          !inEnum -> {}
-          line.startsWith("}") -> inEnum = false
-          else -> {
-            val m = entryRe.find(line) ?: continue
-            val id = m.groupValues[2].takeIf { it.isNotEmpty() }?.let { parseInt(it) } ?: next
-            out.putIfAbsent(m.groupValues[1], id)
-            next = id + 1
-          }
+        if (line.startsWith("enum")) {
+          inEnum = true
+          continue
         }
+        if (!inEnum) continue
+        if (line.startsWith("}")) {
+          inEnum = false
+          continue
+        }
+        val m = entryRe.find(line) ?: continue
+        val id = m.groupValues[2].takeIf { it.isNotEmpty() }?.let { parseInt(it) } ?: next
+        out.putIfAbsent(m.groupValues[1], id)
+        next = id + 1
       }
       return out
     }
