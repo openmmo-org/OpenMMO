@@ -3,6 +3,7 @@ package de.fiereu.openmmo.server.game.script
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.dialog.DialogLine
 import de.fiereu.openmmo.server.game.services.DialogService
+import de.fiereu.openmmo.server.game.services.ScriptMovementService
 import de.fiereu.openmmo.server.game.services.StoryService
 import de.fiereu.openmmo.server.game.session.PlayerState
 
@@ -15,6 +16,7 @@ internal constructor(
     val entityId: Long,
     private val dialog: DialogService,
     private val story: StoryService,
+    private val movement: ScriptMovementService,
 ) {
   private val characterId: Long?
     get() = state.characterId
@@ -42,6 +44,17 @@ internal constructor(
   fun setVar(key: String, value: Int) {
     characterId?.let { story.setVar(it, key, value) }
   }
+
+  /**
+   * Walk the map npc with decomp local id [localId] (its entityIdx) through [steps] and wait for
+   * the whole path to finish. This is applymovement plus waitmovement for an npc.
+   */
+  suspend fun moveNpc(localId: Int, vararg steps: MovementStep) =
+      movement.moveNpc(session, state, localId, steps.toList())
+
+  /** Walk the player's own avatar through [steps] and wait for it to finish. */
+  suspend fun moveSelf(vararg steps: MovementStep) =
+      movement.moveSelf(session, state, steps.toList())
 
   private companion object {
     // Sign boxes have no speaker, npc boxes point at the entity.

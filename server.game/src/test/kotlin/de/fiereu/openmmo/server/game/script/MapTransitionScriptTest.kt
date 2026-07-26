@@ -1,7 +1,10 @@
 package de.fiereu.openmmo.server.game.script
 
+import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.server.game.script.generated.hoenn.LittlerootTown_OnTransition
 import de.fiereu.openmmo.server.game.services.DialogService
+import de.fiereu.openmmo.server.game.services.NpcService
+import de.fiereu.openmmo.server.game.services.ScriptMovementService
 import de.fiereu.openmmo.server.game.services.StoryService
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
@@ -25,7 +28,9 @@ class MapTransitionScriptTest :
 
           val session = FakeSession(characterId = charId)
           val state = session.attributes[PLAYER_STATE]!!
-          val ctx = ScriptContext(session, state, entityId = -1, DialogService(), story)
+          val mapManager = MapManager()
+          val movement = ScriptMovementService(mapManager, NpcService(mapManager), store)
+          val ctx = ScriptContext(session, state, entityId = -1, DialogService(), story, movement)
 
           LittlerootTown_OnTransition.run(ctx)
 

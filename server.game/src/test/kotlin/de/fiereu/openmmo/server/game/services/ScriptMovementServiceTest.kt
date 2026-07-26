@@ -1,0 +1,82 @@
+package de.fiereu.openmmo.server.game.services
+
+import de.fiereu.openmmo.common.enums.Direction
+import de.fiereu.openmmo.maps.MapManager
+import de.fiereu.openmmo.net.game.packets.EntityFaceTurnPacket
+import de.fiereu.openmmo.net.game.packets.EntityMovePacket
+import de.fiereu.openmmo.server.game.script.MovementStep
+import de.fiereu.openmmo.server.game.storage.CharacterStore
+import de.fiereu.openmmo.server.game.storage.EntityIdService
+import de.fiereu.openmmo.server.game.testsupport.FakeCharacterRepository
+import de.fiereu.openmmo.server.game.testsupport.FakeSession
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class ScriptMovementServiceTest :
+    FunSpec({
+      fun service(store: CharacterStore): ScriptMovementService {
+        val mapManager = MapManager()
+        return ScriptMovementService(mapManager, NpcService(mapManager), store)
+      }
+
+      test("drive walks one tile per step and returns the final pose") {
+        runTest {
+          val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
+          val session = FakeSession()
+          val start = ScriptMovementService.Pose(5, 5, Direction.DOWN)
+
+          val end =
+              service(store)
+                  .drive(
+                      session,
+                      entityId = 42L,
+                      start = start,
+                      steps =
+                          listOf(
+                              MovementStep.WALK_UP, MovementStep.WALK_UP, MovementStep.WALK_LEFT),
+                  )
+
+          end shouldBe ScriptMovementService.Pose(4, 3, Direction.LEFT)
+          session.sent shouldBe
+              listOf(
+                  EntityMovePacket(42L, 5, 4, Direction.UP),
+                  EntityMovePacket(42L, 5, 3, Direction.UP),
+                  EntityMovePacket(42L, 4, 3, Direction.LEFT),
+              )
+        }
+      }
+
+      test("a face step turns in place without moving") {
+        runTest {
+          val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
+          val session = FakeSession()
+          val start = ScriptMovementService.Pose(8, 2, Direction.DOWN)
+
+          val end = service(store).drive(session, 7L, start, listOf(MovementStep.FACE_RIGHT))
+
+          end shouldBe ScriptMovementService.Pose(8, 2, Direction.RIGHT)
+          session.sent shouldBe listOf(EntityFaceTurnPacket(7L, Direction.RIGHT.ordinal.toByte()))
+        }
+      }
+
+      test("moveSelf commits the final tile to the character store") {
+        runTest {
+          val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
+          val created = store.createCharacter(1, "Ash")
+          val charId = created.info.id
+          val session = FakeSession(characterId = charId)
+          val state = session.attributes[de.fiereu.openmmo.server.game.session.PLAYER_STATE]!!
+          val startX = created.info.positionX.toInt()
+          val startY = created.info.positionY.toInt()
+
+          service(store)
+              .moveSelf(session, state, listOf(MovementStep.WALK_DOWN, MovementStep.WALK_DOWN))
+
+          store.getCharacter(charId)!!.info.positionY.toInt() shouldBe startY + 2
+          store.getCharacter(charId)!!.info.positionX.toInt() shouldBe startX
+        }
+      }
+    })

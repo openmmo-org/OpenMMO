@@ -2,6 +2,7 @@ package de.fiereu.openmmo.server.game.script
 
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.server.game.services.DialogService
+import de.fiereu.openmmo.server.game.services.ScriptMovementService
 import de.fiereu.openmmo.server.game.services.StoryService
 import de.fiereu.openmmo.server.game.session.PlayerState
 import de.fiereu.openmmo.server.game.session.SCRIPT_SCOPE
@@ -28,6 +29,7 @@ class ScriptRunner
 constructor(
     private val dialogService: DialogService,
     private val storyService: StoryService,
+    private val movementService: ScriptMovementService,
 ) {
   fun run(session: SessionContext, state: PlayerState, script: Script, entityId: Long) {
     state.inDialog = true
@@ -35,7 +37,7 @@ constructor(
         session.attributes.getOrPut(SCRIPT_SCOPE) {
           CoroutineScope(SupervisorJob() + Dispatchers.Default)
         }
-    val ctx = ScriptContext(session, state, entityId, dialogService, storyService)
+    val ctx = ScriptContext(session, state, entityId, dialogService, storyService, movementService)
     scope.launch {
       try {
         script.run(ctx)
