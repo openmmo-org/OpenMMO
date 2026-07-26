@@ -26,6 +26,8 @@ data class ParsedMap(
     val warps: List<ParsedWarp>,
     val visibleNpcs: List<ParsedNpc>,
     val bgEvents: List<ParsedBgEvent>,
+    // Decomp label of the map's ON_TRANSITION script, or "" when the map has none.
+    val onTransitionScript: String,
 )
 
 data class ParsedConnection(

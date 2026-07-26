@@ -73,6 +73,7 @@ constructor(
     private val mapManager: MapManager,
     private val characterStore: CharacterStore,
     private val presenceService: PresenceService,
+    private val mapScriptService: MapScriptService,
 ) {
 
   fun onJoinGame(event: PacketEvent<JoinPacket>) {
@@ -329,6 +330,10 @@ constructor(
     presenceService.enter(ctx)
 
     ctx.send(RenderScreenPacket(true))
+
+    mapManager.getMap(info.positionRegionId, info.positionBankId, info.positionMapId)?.let { map ->
+      mapScriptService.onMapEnter(ctx, state, map)
+    }
 
     socialService.sendFriendList(ctx)
 

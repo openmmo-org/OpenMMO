@@ -29,6 +29,7 @@ constructor(
     private val mapManager: MapManager,
     private val characterStore: CharacterStore,
     private val encounterService: EncounterService,
+    private val mapScriptService: MapScriptService,
 ) {
 
   /** One step. The client sends the tile it left and the direction, the server derives the rest. */
@@ -195,6 +196,9 @@ constructor(
             y = targetY.toInt(),
             direction = direction,
         ))
+
+    if (state != null) mapScriptService.onMapEnter(ctx, state, map)
+
     log.info { "Player $charId edge-transitioned to bank=$targetBank map=$targetMap" }
   }
 }

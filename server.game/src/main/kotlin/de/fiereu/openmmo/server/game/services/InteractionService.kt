@@ -7,21 +7,15 @@ import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.packets.EntityInteractPacket
 import de.fiereu.openmmo.net.game.packets.TileInteractPacket
 import de.fiereu.openmmo.server.game.script.Script
-import de.fiereu.openmmo.server.game.script.ScriptContext
 import de.fiereu.openmmo.server.game.script.ScriptRegistry
+import de.fiereu.openmmo.server.game.script.ScriptRunner
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.session.PlayerState
-import de.fiereu.openmmo.server.game.session.SCRIPT_SCOPE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import de.fiereu.openmmo.server.game.storage.StoredCharacter
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 
 private val log = KotlinLogging.logger {}
 
@@ -32,9 +26,8 @@ constructor(
     private val npcService: NpcService,
     private val mapManager: MapManager,
     private val characterStore: CharacterStore,
-    private val dialogService: DialogService,
     private val scriptRegistry: ScriptRegistry,
-    private val storyService: StoryService,
+    private val scriptRunner: ScriptRunner,
 ) {
 
   /** The player pressed the action button on a specific entity, that is an npc. */
@@ -122,32 +115,10 @@ constructor(
           (eventDir == "BG_EVENT_PLAYER_FACING_WEST" && facing == Direction.LEFT) ||
           (eventDir == "BG_EVENT_PLAYER_FACING_EAST" && facing == Direction.RIGHT)
 
-  /** Runs [script] on the connection scope so it can wait on a dialog without blocking packets. */
   private fun runScript(
       session: SessionContext,
       state: PlayerState,
       script: Script,
       entityId: Long,
-  ) {
-    // Claim the dialog now so a second interaction cannot launch a parallel script.
-    state.inDialog = true
-    val scope =
-        session.attributes.getOrPut(SCRIPT_SCOPE) {
-          CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        }
-    val ctx = ScriptContext(session, state, entityId, dialogService, storyService)
-    scope.launch {
-      try {
-        script.run(ctx)
-      } catch (e: CancellationException) {
-        throw e
-      } catch (e: NotImplementedError) {
-        log.info { "Script not ported yet for entity $entityId" }
-      } catch (e: Exception) {
-        log.error(e) { "Script failed for entity $entityId" }
-      } finally {
-        dialogService.close(session, state)
-      }
-    }
-  }
+  ) = scriptRunner.run(session, state, script, entityId)
 }

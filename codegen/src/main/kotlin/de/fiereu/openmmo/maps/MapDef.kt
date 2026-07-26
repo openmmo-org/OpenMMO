@@ -32,6 +32,8 @@ class MapDef(
     val warps: List<WarpTile> = emptyList(),
     val npcs: List<NpcDef> = emptyList(),
     val bgEvents: List<BgEventDef> = emptyList(),
+    /** Decomp label of the script that runs when a player enters this map, or "" if none. */
+    val onTransitionScript: String = "",
     private val blockData: String = "",
     private val behaviorData: String = "",
 ) {

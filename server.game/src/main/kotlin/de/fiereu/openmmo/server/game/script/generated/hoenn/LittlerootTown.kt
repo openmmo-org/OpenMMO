@@ -3,6 +3,7 @@ package de.fiereu.openmmo.server.game.script.generated.hoenn
 import de.fiereu.openmmo.dialog.generated.hoenn.LittlerootTown
 import de.fiereu.openmmo.server.game.script.Script
 import de.fiereu.openmmo.server.game.script.ScriptContext
+import de.fiereu.openmmo.story.generated.hoenn.HoennFlags
 
 /**
  * Not ported yet. Decomp body:
@@ -19,6 +20,23 @@ import de.fiereu.openmmo.server.game.script.ScriptContext
  */
 internal object LittlerootTown_EventScript_Twin : Script {
   override suspend fun run(ctx: ScriptContext) = TODO("port LittlerootTown_EventScript_Twin")
+}
+
+/**
+ * Runs whenever the player enters Littleroot Town. Decomp body:
+ * ```
+ * setflag FLAG_VISITED_LITTLEROOT_TOWN
+ * call Common_EventScript_SetupRivalGfxId
+ * call_if_eq VAR_LITTLEROOT_INTRO_STATE, 2, LittlerootTown_EventScript_MoveMomToMaysDoor
+ * ```
+ *
+ * The two calls set the rival's sprite and move mom for the intro, which need object and movement
+ * scripting that does not exist yet, so only the flag is ported for now.
+ */
+internal object LittlerootTown_OnTransition : Script {
+  override suspend fun run(ctx: ScriptContext) {
+    ctx.setFlag(HoennFlags.FLAG_VISITED_LITTLEROOT_TOWN)
+  }
 }
 
 internal object LittlerootTown_EventScript_FatMan : Script {
@@ -97,6 +115,7 @@ internal object LittlerootTown_EventScript_MaysHouseSign : Script {
 
 internal val LittlerootTownScripts: Map<String, Script> =
     mapOf(
+        "LittlerootTown_OnTransition" to LittlerootTown_OnTransition,
         "LittlerootTown_EventScript_Twin" to LittlerootTown_EventScript_Twin,
         "LittlerootTown_EventScript_FatMan" to LittlerootTown_EventScript_FatMan,
         "LittlerootTown_EventScript_Boy" to LittlerootTown_EventScript_Boy,

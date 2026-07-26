@@ -45,4 +45,5 @@ internal val ${objectName}: MapDef =
         warps = ${RenderUtil.INSTANCE.warps(map.getWarps())},
         npcs = ${RenderUtil.INSTANCE.npcs(map.getVisibleNpcs())},
         bgEvents = ${RenderUtil.INSTANCE.bgEvents(map.getBgEvents())},
+        onTransitionScript = "${map.getOnTransitionScript()}",
     )

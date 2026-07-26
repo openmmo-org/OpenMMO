@@ -24,6 +24,7 @@ constructor(
     private val mapManager: MapManager,
     private val characterStore: CharacterStore,
     private val presenceService: PresenceService,
+    private val mapScriptService: MapScriptService,
 ) {
 
   fun executeWarp(ctx: SessionContext, charId: Long, warp: WarpTile) {
@@ -119,6 +120,8 @@ constructor(
     }
 
     presenceService.refresh(ctx)
+
+    if (state != null && destMap != null) mapScriptService.onMapEnter(ctx, state, destMap)
 
     log.info { "Player $charId warped to bank=${warp.targetBankId} map=${warp.targetMapId}" }
   }
