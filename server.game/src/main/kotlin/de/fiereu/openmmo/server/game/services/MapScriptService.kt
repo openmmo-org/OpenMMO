@@ -13,9 +13,10 @@ import javax.inject.Singleton
 private val log = KotlinLogging.logger {}
 
 /**
- * Runs a map's scripts when a player enters it. Today that is the decomp ON_TRANSITION script,
- * which fires on every entry however the player got there (login, a warp, or walking across a map
- * connection). The conditional ON_FRAME and ON_WARP tables are a later addition.
+ * Runs a map's scripts when a player enters it. The decomp ON_TRANSITION script fires on every
+ * entry however the player got there (login, a warp, or walking across a map connection), followed
+ * by the first ON_FRAME entry whose story var matches. The conditional ON_WARP table is a later
+ * addition.
  */
 @Singleton
 class MapScriptService
