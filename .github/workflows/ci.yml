@@ -39,7 +39,10 @@ jobs:
         # Only pull request branches from this repository, where the formatting
         # commit can be pushed back. Everywhere else the spotlessCheck inside
         # the check task must fail on violations instead of hiding them.
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        if: >-
+          github.event_name == 'pull_request' && 
+          github.event.pull_request.head.repo.full_name == github.repository && 
+          github.event.pull_request.user.login != 'renovate[bot]'
         run: |
           ./gradlew spotlessApply
           if git diff --quiet; then
