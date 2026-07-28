@@ -36,13 +36,15 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Apply Spotless and push formatting changes
-        # Only pull request branches from this repository, where the formatting
-        # commit can be pushed back. Everywhere else the spotlessCheck inside
-        # the check task must fail on violations instead of hiding them.
+        # Only pull request branches from this repository and on master, 
+        # where the formatting commit can be pushed back. 
+        # Everywhere else the spotlessCheck inside the check task must 
+        # fail on violations instead of hiding them.
         if: >-
-          github.event_name == 'pull_request' && 
-          github.event.pull_request.head.repo.full_name == github.repository && 
-          github.event.pull_request.user.login != 'renovate[bot]'
+          (github.event_name == 'push' && github.ref_name == github.event.repository.default_branch)
+          || (github.event_name == 'pull_request'
+              && github.event.pull_request.head.repo.full_name == github.repository
+              && github.event.pull_request.user.login != 'renovate[bot]')
         run: |
           ./gradlew spotlessApply
           if git diff --quiet; then
