@@ -10,10 +10,10 @@ on entry, with no button press involved.
 This page is the starting point. It covers where the scripts are, what one looks
 like, and how to change what an existing one does. From here:
 
-- [Porting a decomp script](../porting-scripts/) — filling in a `TODO` stub, the
+- [Porting a decomp script](../porting-scripts/): filling in a `TODO` stub, the
   decomp command reference, cutscenes, and what to do about commands that have no
   equivalent yet.
-- [The script system](../../concepts/scripts/) — how a button press finds your
+- [The script system](../../concepts/scripts/): how a button press finds your
   Kotlin, and the runtime rules that follow from it.
 
 ## Where the scripts live
@@ -77,14 +77,14 @@ Everything goes through `ctx`, the `ScriptContext`:
 | `ctx.sign(line)` | A sign or object box, no speaker. Waits. |
 | `ctx.isFlagSet(f)` / `ctx.setFlag(f)` / `ctx.clearFlag(f)` | Read and write a story flag. |
 | `ctx.getVar(k)` / `ctx.setVar(k, n)` | Read and write a story var. |
-| `ctx.moveNpc(localId, …steps)` | Walk a map npc through a path. Waits for it to finish. |
-| `ctx.moveSelf(…steps)` | Walk the player's own avatar. Waits. |
+| `ctx.moveNpc(localId, ...steps)` | Walk a map npc through a path. Waits for it to finish. |
+| `ctx.moveSelf(...steps)` | Walk the player's own avatar. Waits. |
 | `ctx.showNpc(localId)` | Reveal a normally hidden npc for a cutscene. |
-| `ctx.setDynamicWarp(…)` | Point this player's `MAP_DYNAMIC` warp somewhere. |
+| `ctx.setDynamicWarp(...)` | Point this player's `MAP_DYNAMIC` warp somewhere. |
 | `ctx.entityId` | The npc that was talked to, or `-1` for a sign or map script. |
 
-That is the whole api. Plenty of decomp commands have no equivalent in it yet —
-choices, doors, giving items, trainer battles —
+That is the whole api. Plenty of decomp commands have no equivalent in it yet,
+choices, doors, giving items, trainer battles,
 [which the porting guide lists](../porting-scripts/#commands-with-no-equivalent-yet).
 
 The calls that say "waits" suspend until the player acts, so you can write boxes
@@ -155,5 +155,5 @@ Script not ported yet
 The label resolved fine, but the body is still a `TODO(...)` stub.
 
 For a script whose whole point is a state change rather than a visible box, write
-a test instead of squinting at the client —
+a test instead of squinting at the client,
 [the pattern is here](../porting-scripts/#testing-a-port).

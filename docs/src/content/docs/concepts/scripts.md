@@ -32,19 +32,19 @@ walking).
 ## From button press to Kotlin
 
 ```
-player presses A
+  player presses A
         │
         v
-InteractionService     finds the npc or bg event, reads its script label
-        │  looks the label up in
+ InteractionService    finds the npc or bg event, reads its script label
+        │              looks the label up in
         v
-ScriptRegistry         label -> Script  (GeneratedScripts.byLabel)
-        │  hands it to
+   ScriptRegistry      label -> Script  (GeneratedScripts.byLabel)
+        │              hands it to
         v
-ScriptRunner           claims the dialog, launches a coroutine
-        │  runs
+   ScriptRunner        claims the dialog, launches a coroutine
+        │              runs
         v
-Script.run(ctx)        your code, talks to the player through ctx
+ Script.run(ctx)       your code, talks to the player through ctx
 ```
 
 ### Labels come from the map data
@@ -61,7 +61,7 @@ NPC entityIdx=3 script=LittlerootTown_EventScript_Boy has no wired dialog
 ```
 
 `GeneratedScripts.byLabel` is the one big map, built by `putAll`ing each map's
-`…Scripts` map. It is emitted in chunks of 40 maps across `chunk0()`, `chunk1()`
+`...Scripts` map. It is emitted in chunks of 40 maps across `chunk0()`, `chunk1()`
 and so on, so no single method ends up enormous.
 
 ## The three triggers
@@ -134,7 +134,7 @@ lock is released even when a script throws.
 | Outcome | What happens |
 | --- | --- |
 | `CancellationException` | Rethrown. Cancellation must not be swallowed. |
-| `NotImplementedError` | Logged at info as "Script not ported yet". This is the `TODO("port …")` stub firing, and it is expected, not a bug. |
+| `NotImplementedError` | Logged at info as "Script not ported yet". This is the `TODO("port ...")` stub firing, and it is expected, not a bug. |
 | Any other `Exception` | Logged at error with the stack trace. |
 
 In all three cases the `finally` closes the dialog, so a broken script leaves the

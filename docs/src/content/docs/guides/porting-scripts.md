@@ -4,7 +4,7 @@ description: How to turn a decomp script body into Kotlin, which commands have a
 ---
 
 Most overworld scripts are not ported yet. Of roughly 3650 generated script
-objects, about 2500 are still `TODO("port …")` stubs carrying their original
+objects, about 2500 are still `TODO("port ...")` stubs carrying their original
 decomp body in a comment. This guide is the reference for turning one of those
 bodies into Kotlin.
 
@@ -49,15 +49,15 @@ end of your function.
 | `msgbox TEXT, MSGBOX_DEFAULT` (and other types) | `ctx.say(Map.Text)` |
 | `setflag FLAG_X` | `ctx.setFlag(HoennFlags.FLAG_X)` |
 | `clearflag FLAG_X` | `ctx.clearFlag(HoennFlags.FLAG_X)` |
-| `goto_if_set FLAG_X, Label` | `if (ctx.isFlagSet(HoennFlags.FLAG_X)) { … }` |
-| `goto_if_unset FLAG_X, Label` | `if (!ctx.isFlagSet(HoennFlags.FLAG_X)) { … }` |
+| `goto_if_set FLAG_X, Label` | `if (ctx.isFlagSet(HoennFlags.FLAG_X)) { ... }` |
+| `goto_if_unset FLAG_X, Label` | `if (!ctx.isFlagSet(HoennFlags.FLAG_X)) { ... }` |
 | `setvar VAR_X, n` | `ctx.setVar(HoennVars.VAR_X, n)` |
-| `goto_if_eq VAR_X, n, Label` | `if (ctx.getVar(HoennVars.VAR_X) == n) { … }` |
-| `goto_if_ne VAR_X, n, Label` | `if (ctx.getVar(HoennVars.VAR_X) != n) { … }` |
-| `applymovement id, M` + `waitmovement 0` | `ctx.moveNpc(LOCALID_X, WALK_UP, …)` |
-| `applymovement OBJ_EVENT_ID_PLAYER, M` + `waitmovement 0` | `ctx.moveSelf(WALK_UP, …)` |
+| `goto_if_eq VAR_X, n, Label` | `if (ctx.getVar(HoennVars.VAR_X) == n) { ... }` |
+| `goto_if_ne VAR_X, n, Label` | `if (ctx.getVar(HoennVars.VAR_X) != n) { ... }` |
+| `applymovement id, M` + `waitmovement 0` | `ctx.moveNpc(LOCALID_X, WALK_UP, ...)` |
+| `applymovement OBJ_EVENT_ID_PLAYER, M` + `waitmovement 0` | `ctx.moveSelf(WALK_UP, ...)` |
 | `addobject id` | `ctx.showNpc(LOCALID_X)` |
-| `setdynamicwarp …` | `ctx.setDynamicWarp(region, bank, map, x, y, facing)` |
+| `setdynamicwarp ...` | `ctx.setDynamicWarp(region, bank, map, x, y, facing)` |
 
 `ctx.say` and `ctx.sign` both **wait** for the player to close the box, so
 consecutive calls show consecutive boxes with no extra plumbing. `moveNpc` and
