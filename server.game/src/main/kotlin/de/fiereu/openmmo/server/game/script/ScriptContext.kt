@@ -7,6 +7,7 @@ import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.net.game.packets.dialog.TextPokemonSpeciesArg
 import de.fiereu.openmmo.server.game.battle.BattleResult
 import de.fiereu.openmmo.server.game.services.BattleService
+import de.fiereu.openmmo.server.game.services.DialogPresentation
 import de.fiereu.openmmo.server.game.services.DialogService
 import de.fiereu.openmmo.server.game.services.ScriptMovementService
 import de.fiereu.openmmo.server.game.services.ScriptWarpService
@@ -72,12 +73,14 @@ internal constructor(
           line.textId,
           NPC,
           movement.npcEntityId(state, localId) ?: -1,
-          listOf(
-              TextPokemonSpeciesArg(
-                  partySlot = 1,
-                  stringVariable = 1,
-                  speciesId = speciesId.toShort(),
-              )),
+          DialogPresentation(
+              messageArgs =
+                  listOf(
+                      TextPokemonSpeciesArg(
+                          partySlot = 1,
+                          stringVariable = 1,
+                          speciesId = speciesId.toShort(),
+                      ))),
       )
 
   /** Opens the Emerald starter picker. */

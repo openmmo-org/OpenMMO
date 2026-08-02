@@ -29,6 +29,12 @@ internal val CLOSE_DIALOG_ACTION =
         detail = ByteArray(0),
     )
 
+data class DialogPresentation(
+    val messageArgs: List<DialogMessageArg> = emptyList(),
+    val contextValue: Int = 0,
+    val detail: ByteArray = byteArrayOf(0),
+)
+
 @Singleton
 class DialogService @Inject constructor() {
 
@@ -91,9 +97,7 @@ class DialogService @Inject constructor() {
       textId: Int,
       actionType: Int,
       entityId: Long,
-      messageArgs: List<DialogMessageArg> = emptyList(),
-      contextValue: Int = 0,
-      detail: ByteArray = byteArrayOf(0),
+      presentation: DialogPresentation = DialogPresentation(),
   ) {
     val advance = CompletableDeferred<Unit>()
     session.attributes[PENDING_DIALOG] = advance
@@ -110,9 +114,9 @@ class DialogService @Inject constructor() {
             actionType = actionType.toByte(),
             textId = textId,
             entityId = entityId,
-            contextValue = contextValue,
-            messageArgs = messageArgs,
-            detail = detail,
+            contextValue = presentation.contextValue,
+            messageArgs = presentation.messageArgs,
+            detail = presentation.detail,
         ))
     advance.await()
   }
@@ -132,9 +136,7 @@ class DialogService @Inject constructor() {
           textId,
           actionType,
           NO_ENTITY,
-          messageArgs,
-          contextValue,
-          ByteArray(0),
+          DialogPresentation(messageArgs, contextValue, ByteArray(0)),
       )
 
   /** Show a scene menu and return its 1-based choice. */
