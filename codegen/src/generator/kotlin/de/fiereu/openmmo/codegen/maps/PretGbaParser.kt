@@ -308,8 +308,9 @@ class PretGbaParser(
             .find(text)
             ?.groupValues
             ?.get(1) ?: return emptyList()
+    // Emerald writes the table label with one colon, FireRed with two.
     val block =
-        Regex("""(?m)^$tableLabel:\s*\n(.*?)(?=\n\s*\.2byte)""", RegexOption.DOT_MATCHES_ALL)
+        Regex("""(?m)^$tableLabel:+[^\n]*\n(.*?)(?=\n\s*\.2byte)""", RegexOption.DOT_MATCHES_ALL)
             .find(text)
             ?.groupValues
             ?.get(1) ?: return emptyList()

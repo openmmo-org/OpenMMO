@@ -7,6 +7,7 @@ import de.fiereu.openmmo.common.enums.BattleAction
 import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.common.enums.Region
+import de.fiereu.openmmo.items.generated.Items
 import de.fiereu.openmmo.moves.MoveRegistry
 import de.fiereu.openmmo.net.game.packets.MapLoadedAckPacket
 import de.fiereu.openmmo.net.game.packets.SocialListEntryAddPacket
@@ -42,7 +43,7 @@ import javax.inject.Singleton
 
 private val log = KotlinLogging.logger {}
 
-private const val POKE_BALL_ITEM: Short = 5004
+private val POKE_BALL_ITEM: Short = Items.POKE_BALL.toShort()
 
 /**
  * A prompt waiting for its answer, kept after the battle ends. A trainer battle can raise one

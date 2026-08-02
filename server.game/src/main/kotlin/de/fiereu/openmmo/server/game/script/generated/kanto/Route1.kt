@@ -1,34 +1,21 @@
 package de.fiereu.openmmo.server.game.script.generated.kanto
 
 import de.fiereu.openmmo.dialog.generated.kanto.Route1
+import de.fiereu.openmmo.items.generated.Items
 import de.fiereu.openmmo.server.game.script.Script
 import de.fiereu.openmmo.server.game.script.ScriptContext
+import de.fiereu.openmmo.story.generated.kanto.KantoFlags
 
-/**
- * Not ported yet. Decomp body:
- * ```
- * lock
- * faceplayer
- * goto_if_set FLAG_GOT_POTION_ON_ROUTE_1, Route1_EventScript_AlreadyGotPotion
- * msgbox Route1_Text_WorkAtPokeMartTakeSample
- * textcolor NPC_TEXT_COLOR_NEUTRAL
- * checkitemspace ITEM_POTION
- * goto_if_eq VAR_RESULT, FALSE, EventScript_BagIsFull
- * bufferitemname STR_VAR_2, ITEM_POTION
- * playfanfare MUS_LEVEL_UP
- * message Text_ObtainedTheX
- * waitmessage
- * waitfanfare
- * additem ITEM_POTION
- * msgbox Route1_Text_PutPotionAway
- * call EventScript_RestorePrevTextColor
- * setflag FLAG_GOT_POTION_ON_ROUTE_1
- * release
- * end
- * ```
- */
 internal object Route1_EventScript_MartClerk : Script {
-  override suspend fun run(ctx: ScriptContext) = TODO("port Route1_EventScript_MartClerk")
+  override suspend fun run(ctx: ScriptContext) {
+    if (ctx.isFlagSet(KantoFlags.FLAG_GOT_POTION_ON_ROUTE_1)) {
+      return ctx.say(Route1.ComeSeeUsIfYouNeedPokeBalls)
+    }
+    ctx.say(Route1.WorkAtPokeMartTakeSample)
+    ctx.giveItem(Items.POTION)
+    ctx.say(Route1.PutPotionAway)
+    ctx.setFlag(KantoFlags.FLAG_GOT_POTION_ON_ROUTE_1)
+  }
 }
 
 internal object Route1_EventScript_Boy : Script {

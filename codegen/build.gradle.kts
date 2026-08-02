@@ -41,6 +41,13 @@ jteCodegen {
           "$region|${rootProject.layout.projectDirectory.dir("decomp/$decomp").asFile.absolutePath}"
         })
   }
+  // Item ids scripts hand to giveItem. Both GBA games number items the same, so one decomp is
+  // enough, like moves and species.
+  register("item") {
+    mainClass.set("de.fiereu.openmmo.codegen.item.Main")
+    inputDirs.from(sourceDecompDir)
+    extraArgs.set(listOf(sourceDecompDir.asFile.absolutePath))
+  }
   register("moves") {
     mainClass.set("de.fiereu.openmmo.codegen.move.Main")
     templatesSubdir.set("move")

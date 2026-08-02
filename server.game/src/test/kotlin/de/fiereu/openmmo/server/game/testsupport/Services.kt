@@ -15,6 +15,7 @@ import de.fiereu.openmmo.server.game.script.ScriptRunner
 import de.fiereu.openmmo.server.game.services.BattleService
 import de.fiereu.openmmo.server.game.services.DialogService
 import de.fiereu.openmmo.server.game.services.EncounterService
+import de.fiereu.openmmo.server.game.services.MapEntryScripts
 import de.fiereu.openmmo.server.game.services.MapLoadService
 import de.fiereu.openmmo.server.game.services.MapScriptService
 import de.fiereu.openmmo.server.game.services.MovementService
@@ -62,7 +63,7 @@ fun movementService(
           moveRegistry = moves,
           trainers = TrainerRegistry(),
       )
-  val registry = ScriptRegistry(emptyMap())
+  val entryScripts = MapEntryScripts(ScriptRegistry(emptyMap()), story)
   val runner =
       ScriptRunner(
           DialogService(),
@@ -72,6 +73,8 @@ fun movementService(
           StoryPlayerService(store, wildMons, species, moves),
           battles,
           store,
+          mapManager,
+          entryScripts,
       )
   return MovementService(
       WarpService(mapLoad, mapManager, store, presence),
@@ -81,6 +84,6 @@ fun movementService(
       mapManager,
       store,
       EncounterService(store, battles),
-      MapScriptService(registry, runner, story),
+      MapScriptService(entryScripts, runner),
   )
 }

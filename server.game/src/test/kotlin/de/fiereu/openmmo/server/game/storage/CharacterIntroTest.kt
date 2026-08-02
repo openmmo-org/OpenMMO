@@ -5,6 +5,7 @@ import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.server.game.testsupport.FakeCharacterRepository
 import de.fiereu.openmmo.story.generated.hoenn.HoennFlags
 import de.fiereu.openmmo.story.generated.hoenn.HoennVars
+import de.fiereu.openmmo.story.generated.kanto.KantoFlags
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -47,7 +48,7 @@ class CharacterIntroTest :
         }
       }
 
-      test("Kanto characters use the captured Pallet bedroom start") {
+      test("Kanto characters start in the Pallet bedroom with FireRed's new game flags") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
 
@@ -64,9 +65,15 @@ class CharacterIntroTest :
           character.info.positionMapId shouldBe 1
           character.info.positionX shouldBe 6
           character.info.positionY shouldBe 6
+          // Kanto has no truck ride, so nothing depends on the player's dynamic warp yet.
           character.info.dynamicWarp shouldBe null
-          character.storyFlags shouldBe emptySet()
           character.storyVars shouldBe emptyMap()
+          // Oak waits in the grass rather than in his lab or in town.
+          (KantoFlags.FLAG_HIDE_OAK_IN_HIS_LAB in character.storyFlags) shouldBe true
+          (KantoFlags.FLAG_HIDE_OAK_IN_PALLET_TOWN in character.storyFlags) shouldBe true
+          // The rival and the three starter balls are there from the start.
+          (KantoFlags.FLAG_HIDE_RIVAL_IN_LAB in character.storyFlags) shouldBe false
+          (KantoFlags.FLAG_HIDE_BULBASAUR_BALL in character.storyFlags) shouldBe false
         }
       }
 

@@ -13,7 +13,14 @@ class TextParser(private val decompDir: File) {
   private val labelLine = Regex("^(\\w+):+\\s*$")
 
   fun parseAll(): List<DecompText> {
-    val roots = listOf(File(decompDir, "data/maps"), File(decompDir, "data/scripts"))
+    // Emerald keeps its shared text next to the scripts that use it, FireRed keeps it in its own
+    // data/text folder. Reading all three roots covers both.
+    val roots =
+        listOf(
+            File(decompDir, "data/maps"),
+            File(decompDir, "data/scripts"),
+            File(decompDir, "data/text"),
+        )
     val out = LinkedHashMap<String, String>()
     for (root in roots) {
       if (!root.isDirectory) continue

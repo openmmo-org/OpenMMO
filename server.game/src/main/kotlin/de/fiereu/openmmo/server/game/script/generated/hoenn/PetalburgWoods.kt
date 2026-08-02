@@ -1,6 +1,7 @@
 package de.fiereu.openmmo.server.game.script.generated.hoenn
 
 import de.fiereu.openmmo.dialog.generated.hoenn.PetalburgWoods
+import de.fiereu.openmmo.items.generated.Items
 import de.fiereu.openmmo.server.game.battle.BattleResult
 import de.fiereu.openmmo.server.game.script.MovementStep.FACE_UP
 import de.fiereu.openmmo.server.game.script.MovementStep.SET_INVISIBLE
@@ -14,7 +15,6 @@ import de.fiereu.openmmo.story.generated.hoenn.HoennVars
 private const val LOCALID_AQUA_GRUNT = 2
 private const val LOCALID_DEVON_RESEARCHER = 3
 private const val POOCHYENA = 261
-private const val GREAT_BALL_ITEM = 5003
 
 internal object PetalburgWoods_EventScript_DevonResearcherLeft : Script {
   override suspend fun run(ctx: ScriptContext) = devonResearcherEvent(ctx)
@@ -51,7 +51,7 @@ private suspend fun devonResearcherEvent(ctx: ScriptContext) {
   )
   ctx.setFlag(HoennFlags.FLAG_HIDE_PETALBURG_WOODS_AQUA_GRUNT)
   ctx.sayNpc(LOCALID_DEVON_RESEARCHER, PetalburgWoods.ThatWasAwfullyClose)
-  ctx.giveItem(GREAT_BALL_ITEM)
+  ctx.giveItem(Items.GREAT_BALL)
   ctx.sayNpc(LOCALID_DEVON_RESEARCHER, PetalburgWoods.TeamAquaAfterSomethingInRustboro)
   ctx.sayNpc(LOCALID_DEVON_RESEARCHER, PetalburgWoods.ICantBeWastingTime)
   ctx.moveNpc(

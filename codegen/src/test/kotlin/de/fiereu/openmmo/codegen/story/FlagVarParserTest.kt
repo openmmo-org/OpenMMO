@@ -76,4 +76,23 @@ class FlagVarParserTest :
         FlagVarParser.maleIntroFlags(decomp) shouldBe listOf("FLAG_MALE")
         FlagVarParser.femaleIntroFlags(decomp) shouldBe listOf("FLAG_FEMALE")
       }
+
+      // FireRed keeps the reset script in data/event_scripts.s and has no moving truck intro.
+      test("finds the reset script wherever the decomp keeps it") {
+        val decomp = kotlin.io.path.createTempDirectory("story-script-flags-alt").toFile()
+        decomp.resolve("data").mkdirs()
+        decomp
+            .resolve("data/event_scripts.s")
+            .writeText(
+                """
+            EventScript_ResetAllMapFlags::
+                setflag FLAG_HIDE_OAK_IN_HIS_LAB
+                setvar VAR_SOMETHING, 500
+                end
+            """
+                    .trimIndent())
+
+        FlagVarParser.initialFlags(decomp) shouldBe listOf("FLAG_HIDE_OAK_IN_HIS_LAB")
+        FlagVarParser.maleIntroFlags(decomp) shouldBe emptyList()
+      }
     })

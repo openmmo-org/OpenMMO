@@ -1,31 +1,47 @@
 package de.fiereu.openmmo.server.game.script.generated.kanto
 
 import de.fiereu.openmmo.dialog.generated.kanto.PalletTown_RivalsHouse
+import de.fiereu.openmmo.items.generated.Items
+import de.fiereu.openmmo.server.game.script.MovementStep.FACE_RIGHT
 import de.fiereu.openmmo.server.game.script.Script
 import de.fiereu.openmmo.server.game.script.ScriptContext
+import de.fiereu.openmmo.story.generated.kanto.KantoVars
 
-/**
- * Not ported yet. Decomp body:
- * ```
- * lock
- * faceplayer
- * famechecker FAMECHECKER_DAISY, FCPICKSTATE_COLORED, UpdatePickStateFromSpecialVar8005
- * goto_if_set FLAG_SYS_GAME_CLEAR, PalletTown_RivalsHouse_EventScript_GroomMon
- * goto_if_eq RECEIVED_TOWN_MAP, TRUE, PalletTown_RivalsHouse_EventScript_PleaseGiveMonsRest
- * goto_if_eq VAR_MAP_SCENE_PALLET_TOWN_RIVALS_HOUSE, 2, PalletTown_RivalsHouse_EventScript_ExplainTownMap
- * goto_if_eq VAR_MAP_SCENE_PALLET_TOWN_RIVALS_HOUSE, 1, PalletTown_RivalsHouse_EventScript_GiveTownMap
- * goto_if_ge VAR_MAP_SCENE_PALLET_TOWN_PROFESSOR_OAKS_LAB, 1, PalletTown_RivalsHouse_EventScript_HeardBattledRival
- * msgbox PalletTown_RivalsHouse_Text_HiBrothersAtLab
- * closemessage
- * applymovement LOCALID_DAISY, Common_Movement_FaceOriginalDirection
- * waitmovement 0
- * release
- * end
- * ```
- */
+private const val LOCALID_DAISY = 0
+private const val LOCALID_TOWN_MAP = 1
+
+internal object PalletTown_RivalsHouse_OnTransition : Script {
+  override suspend fun run(ctx: ScriptContext) {
+    // Daisy sits at the table until the town map is handed over.
+    if (ctx.getVar(KantoVars.VAR_MAP_SCENE_PALLET_TOWN_RIVALS_HOUSE) < 2) {
+      ctx.repositionNpc(LOCALID_DAISY, 5, 4)
+    }
+  }
+}
+
 internal object PalletTown_RivalsHouse_EventScript_Daisy : Script {
-  override suspend fun run(ctx: ScriptContext) =
-      TODO("port PalletTown_RivalsHouse_EventScript_Daisy")
+  override suspend fun run(ctx: ScriptContext) {
+    when (ctx.getVar(KantoVars.VAR_MAP_SCENE_PALLET_TOWN_RIVALS_HOUSE)) {
+      2 -> return ctx.say(PalletTown_RivalsHouse.ExplainTownMap)
+      1 -> return giveTownMap(ctx)
+    }
+    if (ctx.getVar(KantoVars.VAR_MAP_SCENE_PALLET_TOWN_PROFESSOR_OAKS_LAB) >= 1) {
+      return ctx.say(PalletTown_RivalsHouse.HeardYouBattledRival)
+    }
+    ctx.say(PalletTown_RivalsHouse.HiBrothersAtLab)
+  }
+}
+
+/** Oak's errand is what makes Daisy hand over her brother's town map. */
+private suspend fun giveTownMap(ctx: ScriptContext) {
+  ctx.say(PalletTown_RivalsHouse.ErrandForGrandpaThisWillHelp)
+  ctx.moveNpc(LOCALID_DAISY, FACE_RIGHT)
+  ctx.removeNpc(LOCALID_TOWN_MAP)
+  ctx.setVar(KantoVars.VAR_MAP_SCENE_PALLET_TOWN_RIVALS_HOUSE, 2)
+  if (!ctx.giveItem(Items.TOWN_MAP)) {
+    return ctx.say(PalletTown_RivalsHouse.DontHaveSpaceForThis)
+  }
+  ctx.sign(PalletTown_RivalsHouse.ReceivedTownMapFromDaisy)
 }
 
 internal object PalletTown_RivalsHouse_EventScript_TownMap : Script {
@@ -44,6 +60,7 @@ internal object PalletTown_RivalsHouse_EventScript_Picture : Script {
 
 internal val PalletTown_RivalsHouseScripts: Map<String, Script> =
     mapOf(
+        "PalletTown_RivalsHouse_OnTransition" to PalletTown_RivalsHouse_OnTransition,
         "PalletTown_RivalsHouse_EventScript_Daisy" to PalletTown_RivalsHouse_EventScript_Daisy,
         "PalletTown_RivalsHouse_EventScript_TownMap" to PalletTown_RivalsHouse_EventScript_TownMap,
         "PalletTown_RivalsHouse_EventScript_Bookshelf" to

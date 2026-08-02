@@ -1,6 +1,7 @@
 package de.fiereu.openmmo.server.game.script.generated.hoenn
 
 import de.fiereu.openmmo.dialog.generated.hoenn.LittlerootTown_ProfessorBirchsLab
+import de.fiereu.openmmo.items.generated.Items
 import de.fiereu.openmmo.server.game.script.MovementStep.FACE_LEFT
 import de.fiereu.openmmo.server.game.script.MovementStep.FACE_RIGHT
 import de.fiereu.openmmo.server.game.script.MovementStep.WALK_DOWN
@@ -12,7 +13,6 @@ import de.fiereu.openmmo.story.generated.hoenn.HoennVars
 
 private const val LOCALID_BIRCH = 1
 private const val LOCALID_RIVAL = 2
-private const val POKE_BALL_ITEM = 5004
 private const val TREECKO = 252
 private val HOENN_STARTERS = listOf(TREECKO, 255, 258)
 
@@ -68,7 +68,7 @@ internal object LittlerootTown_ProfessorBirchsLab_EventScript_GivePokedexEvent :
     } else {
       ctx.sayNpc(LOCALID_RIVAL, LittlerootTown_ProfessorBirchsLab.MayGotPokedexTooTakeThese)
     }
-    ctx.giveItem(POKE_BALL_ITEM, 5)
+    ctx.giveItem(Items.POKE_BALL, 5)
     if (ctx.isFemale) {
       ctx.sayNpc(LOCALID_RIVAL, LittlerootTown_ProfessorBirchsLab.CatchCoolPokemonWithPokeBalls)
     } else {
