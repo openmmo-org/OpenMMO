@@ -1,6 +1,8 @@
 package de.fiereu.openmmo.server.game.services
 
+import de.fiereu.openmmo.common.enums.CharacterGender
 import de.fiereu.openmmo.common.enums.Direction
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.packets.DialogDataPacket
 import de.fiereu.openmmo.net.game.packets.NpcUpdatePacket
@@ -62,7 +64,7 @@ class ScriptMovementServiceTest :
       test("moveSelf commits the final tile to the character store") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val created = store.createCharacter(1, "Ash")
+          val created = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN)
           val charId = created.info.id
           val session = FakeSession(characterId = charId)
           val state = session.attributes[de.fiereu.openmmo.server.game.session.PLAYER_STATE]!!
@@ -80,7 +82,7 @@ class ScriptMovementServiceTest :
       test("repositionSelf sends the captured coordinate update and commits it") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val created = store.createCharacter(1, "May", gender = 1)
+          val created = store.createCharacter(1, "May", CharacterGender.FEMALE, Region.HOENN)
           store.updatePosition(created.info.id, 7, 14, 50, 16)
           val session = FakeSession(characterId = created.info.id, bankId = 50, mapId = 16)
           val state = session.state()

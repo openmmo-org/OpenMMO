@@ -1,5 +1,7 @@
 package de.fiereu.openmmo.server.game.script
 
+import de.fiereu.openmmo.common.enums.CharacterGender
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.packets.DialogDataPacket
 import de.fiereu.openmmo.net.game.packets.EntityLeavePacket
@@ -38,7 +40,7 @@ class MapTransitionScriptTest :
       test("Littleroot on-transition sets the visited flag on the player") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val charId = store.createCharacter(1, "Ash").info.id
+          val charId = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
           val story = StoryService(store)
 
           val session = FakeSession(characterId = charId)
@@ -58,7 +60,7 @@ class MapTransitionScriptTest :
       test("female bedroom transition advances the intro to the clock step") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val charId = store.createCharacter(1, "May", gender = 1).info.id
+          val charId = store.createCharacter(1, "May", CharacterGender.FEMALE, Region.HOENN).info.id
           val story = StoryService(store)
           story.setVar(
               charId,
@@ -83,7 +85,7 @@ class MapTransitionScriptTest :
       test("the wall-clock cutscene removes Mom and her collision from the bedroom stairs") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val charId = store.createCharacter(1, "May", gender = 1).info.id
+          val charId = store.createCharacter(1, "May", CharacterGender.FEMALE, Region.HOENN).info.id
           store.updatePosition(charId, 3, 3, 51, 3)
           val story = StoryService(store)
           val session = FakeSession(characterId = charId, bankId = 51, mapId = 3)
@@ -150,7 +152,7 @@ class MapTransitionScriptTest :
       test("female players become ready to meet Brendan on entering his bedroom") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val charId = store.createCharacter(1, "May", gender = 1).info.id
+          val charId = store.createCharacter(1, "May", CharacterGender.FEMALE, Region.HOENN).info.id
           val story = StoryService(store)
           val session = FakeSession(characterId = charId, bankId = 51, mapId = 1)
           val state = session.attributes[PLAYER_STATE]!!
@@ -167,7 +169,8 @@ class MapTransitionScriptTest :
       test("male players become ready to meet May on entering her bedroom") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val charId = store.createCharacter(1, "Brendan", gender = 0).info.id
+          val charId =
+              store.createCharacter(1, "Brendan", CharacterGender.MALE, Region.HOENN).info.id
           val story = StoryService(store)
           val session = FakeSession(characterId = charId, bankId = 51, mapId = 3)
           val state = session.attributes[PLAYER_STATE]!!
@@ -184,7 +187,7 @@ class MapTransitionScriptTest :
       test("completed rival meetings repair both bedroom stair-tile hide flags") {
         data class RivalRoom(
             val playerName: String,
-            val gender: Byte,
+            val gender: CharacterGender,
             val mapId: Byte,
             val hideFlag: String,
             val transition: Script,
@@ -196,7 +199,7 @@ class MapTransitionScriptTest :
             listOf(
                 RivalRoom(
                     "May",
-                    1,
+                    CharacterGender.FEMALE,
                     1,
                     HoennFlags.FLAG_HIDE_LITTLEROOT_TOWN_BRENDANS_HOUSE_RIVAL_BEDROOM,
                     LittlerootTown_BrendansHouse_2F_OnTransition,
@@ -205,7 +208,7 @@ class MapTransitionScriptTest :
                 ),
                 RivalRoom(
                     "Brendan",
-                    0,
+                    CharacterGender.MALE,
                     3,
                     HoennFlags.FLAG_HIDE_LITTLEROOT_TOWN_MAYS_HOUSE_RIVAL_BEDROOM,
                     LittlerootTown_MaysHouse_2F_OnTransition,
@@ -218,7 +221,8 @@ class MapTransitionScriptTest :
           rooms.forEach { room ->
             val store =
                 CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-            val charId = store.createCharacter(1, room.playerName, gender = room.gender).info.id
+            val charId =
+                store.createCharacter(1, room.playerName, room.gender, Region.HOENN).info.id
             store.updatePosition(charId, 3, 3, 51, room.mapId)
             val story = StoryService(store)
             story.clearFlag(charId, room.hideFlag)
@@ -242,7 +246,7 @@ class MapTransitionScriptTest :
       test("Route 101 entry arms the Birch rescue coordinate triggers") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val charId = store.createCharacter(1, "May", gender = 1).info.id
+          val charId = store.createCharacter(1, "May", CharacterGender.FEMALE, Region.HOENN).info.id
           val story = StoryService(store)
           val session = FakeSession(characterId = charId, bankId = 50, mapId = 16)
           val state = session.attributes[PLAYER_STATE]!!
@@ -264,7 +268,7 @@ class MapTransitionScriptTest :
       test("Birch rescue repositions existing npcs and keeps Zigzagoon one tile away") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val charId = store.createCharacter(1, "May", gender = 1).info.id
+          val charId = store.createCharacter(1, "May", CharacterGender.FEMALE, Region.HOENN).info.id
           store.updatePosition(charId, 10, 19, 50, 16)
           val story = StoryService(store)
           val session = FakeSession(characterId = charId, bankId = 50, mapId = 16)
@@ -303,7 +307,7 @@ class MapTransitionScriptTest :
       test("Brendan meeting completes the rival state and opens the north intro path") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val charId = store.createCharacter(1, "May", gender = 1).info.id
+          val charId = store.createCharacter(1, "May", CharacterGender.FEMALE, Region.HOENN).info.id
           store.updatePosition(charId, 3, 3, 51, 1)
           val story = StoryService(store)
           story.setVar(charId, HoennVars.VAR_LITTLEROOT_RIVAL_STATE, 2)

@@ -3,7 +3,9 @@ package de.fiereu.openmmo.server.game.storage
 import de.fiereu.openmmo.common.CharacterInfo
 import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.Pokemon
+import de.fiereu.openmmo.common.enums.CharacterGender
 import de.fiereu.openmmo.common.enums.Direction
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.story.generated.hoenn.HoennFlags
 import de.fiereu.openmmo.story.generated.hoenn.HoennVars
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -25,8 +27,6 @@ private val log = KotlinLogging.logger {}
 
 private val FLUSH_TICK = 5.seconds
 private val FLUSH_DEBOUNCE = 10.seconds
-private const val KANTO: Byte = 0
-private const val HOENN: Byte = 1
 
 private data class StartingPosition(
     val bankId: Byte,
@@ -37,8 +37,8 @@ private data class StartingPosition(
 
 private val SHOWCASE_STARTS =
     mapOf(
-        // PalletTown_PlayersHouse_2F.
-        KANTO to StartingPosition(4, 1, 6, 6),
+        Region.KANTO to StartingPosition(4, 1, 6, 6),
+        Region.HOENN to StartingPosition(75, 40, 2, 2),
     )
 
 data class StoredCharacter(
@@ -80,15 +80,12 @@ constructor(
   suspend fun createCharacter(
       userId: Int,
       name: String,
-      gender: Byte = MALE,
-      startingRegion: Byte = HOENN,
+      gender: CharacterGender,
+      startingRegion: Region,
   ): StoredCharacter {
-    require(gender == MALE || gender == FEMALE) { "Unsupported character gender $gender" }
-    require(startingRegion == KANTO || startingRegion == HOENN) {
-      "Unsupported starting region $startingRegion"
-    }
-    val female = gender == FEMALE
-    val showcaseStart = SHOWCASE_STARTS[startingRegion]
+    val female = gender == CharacterGender.FEMALE
+    val startingPosition = SHOWCASE_STARTS.getValue(startingRegion)
+    val isHoenn = startingRegion == Region.HOENN
     val id = entityIds.newCharacterId()
     val now = LocalDateTime.now()
     val info =
@@ -98,7 +95,7 @@ constructor(
             namePrefix = "",
             userId = userId,
             // This historical field stores the player's gender.
-            rivalSex = gender,
+            rivalSex = gender.wireValue,
             lastLogin = now,
             createdAt = now,
             money = 30000,
@@ -109,18 +106,18 @@ constructor(
             battleBoxExtraSlots = 0,
             templateAmount = 0,
             // Hoenn starts inside the moving truck.
-            positionRegionId = startingRegion,
-            positionBankId = showcaseStart?.bankId ?: 75,
-            positionMapId = showcaseStart?.mapId ?: 40,
-            positionX = showcaseStart?.x ?: 2,
-            positionY = showcaseStart?.y ?: 2,
+            positionRegionId = startingRegion.wireValue,
+            positionBankId = startingPosition.bankId,
+            positionMapId = startingPosition.mapId,
+            positionX = startingPosition.x,
+            positionY = startingPosition.y,
             repelLeft = 0,
             repelItemId = 0,
             lureLeft = 0,
             lureItemId = 0,
             // The truck exit uses the player's dynamic warp.
             dynamicWarp =
-                if (showcaseStart != null) null
+                if (!isHoenn) null
                 else
                     DynamicWarp(
                         1,
@@ -132,7 +129,7 @@ constructor(
                     ),
         )
     val storyFlags =
-        if (showcaseStart != null) mutableSetOf<String>()
+        if (!isHoenn) mutableSetOf<String>()
         else
             (HoennFlags.initiallySet +
                     (if (female) HoennFlags.femaleIntro else HoennFlags.maleIntro) +
@@ -142,7 +139,7 @@ constructor(
         if (female) HoennVars.VAR_LITTLEROOT_HOUSES_STATE_MAY
         else HoennVars.VAR_LITTLEROOT_HOUSES_STATE_BRENDAN
     val storyVars =
-        if (showcaseStart != null) mutableMapOf<String, Int>()
+        if (!isHoenn) mutableMapOf<String, Int>()
         else
             mutableMapOf(
                 HoennVars.VAR_LITTLEROOT_INTRO_STATE to if (female) 2 else 1,
@@ -365,10 +362,5 @@ constructor(
     }
     val stored = characters.remove(id) ?: return
     charactersByUser.remove(stored.info.userId)
-  }
-
-  private companion object {
-    const val MALE: Byte = 0
-    const val FEMALE: Byte = 1
   }
 }

@@ -1,5 +1,7 @@
 package de.fiereu.openmmo.server.game.services
 
+import de.fiereu.openmmo.common.enums.CharacterGender
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import de.fiereu.openmmo.server.game.storage.EntityIdService
 import de.fiereu.openmmo.server.game.testsupport.FakeCharacterRepository
@@ -14,7 +16,7 @@ class StoryServiceTest :
       test("flags default unset, can be set and cleared") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val id = store.createCharacter(1, "Ash").info.id
+          val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
           val story = StoryService(store)
 
           story.isFlagSet(id, "hoenn/FLAG_ADVENTURE_STARTED") shouldBe false
@@ -28,7 +30,7 @@ class StoryServiceTest :
       test("vars default to 0, store a value, and drop back to default on 0") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val id = store.createCharacter(1, "Ash").info.id
+          val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
           val story = StoryService(store)
 
           story.getVar(id, "hoenn/VAR_LITTLEROOT_TOWN_STATE") shouldBe 0
@@ -45,7 +47,7 @@ class StoryServiceTest :
       test("setFlag copies instead of mutating the cached set") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val id = store.createCharacter(1, "Ash").info.id
+          val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
           val before = store.getCharacter(id)!!.storyFlags
           val initialSize = before.size
 
@@ -61,7 +63,7 @@ class StoryServiceTest :
         runTest {
           val repo = FakeCharacterRepository()
           val store = CharacterStore(repo, EntityIdService(), backgroundScope)
-          val id = store.createCharacter(1, "Ash").info.id
+          val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
           val story = StoryService(store)
 
           story.setFlag(id, "hoenn/FLAG_ADVENTURE_STARTED")

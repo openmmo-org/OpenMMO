@@ -3,9 +3,11 @@ package de.fiereu.openmmo.server.game.services
 import de.fiereu.network.PacketEvent
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.CharacterInfo
+import de.fiereu.openmmo.common.enums.CharacterGender
 import de.fiereu.openmmo.common.enums.ChatType
 import de.fiereu.openmmo.common.enums.Language
 import de.fiereu.openmmo.common.enums.PokemonContainer
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.common.utils.hexToBytes
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.codecs.SkinSet
@@ -56,7 +58,6 @@ private val WORLD_FLAG_GROUPS =
         )
         .map(String::hexToBytes)
 
-private val SUPPORTED_STARTING_REGIONS = setOf(0.toByte(), 1.toByte())
 private const val DELETE_SUCCESS = 0
 private const val DELETE_REJECTED = 1
 
@@ -110,12 +111,12 @@ constructor(
       return
     }
     log.info { "Creating character '$name' for userId=${state.userId}" }
-    val gender = event.packet.gender
-    val startingRegion = event.packet.startingRegion
-    if ((gender != 0.toByte() && gender != 1.toByte()) ||
-        startingRegion !in SUPPORTED_STARTING_REGIONS) {
+    val gender = CharacterGender.byWireValue(event.packet.gender)
+    val startingRegion = Region.byWireValue(event.packet.startingRegion)
+    if (gender == null || startingRegion == null) {
       log.warn {
-        "Rejected character options gender=$gender region=$startingRegion for userId=${state.userId}"
+        "Rejected character options gender=${event.packet.gender} " +
+            "region=${event.packet.startingRegion} for userId=${state.userId}"
       }
       ctx.send(buildCharacterList(state.userId))
       return

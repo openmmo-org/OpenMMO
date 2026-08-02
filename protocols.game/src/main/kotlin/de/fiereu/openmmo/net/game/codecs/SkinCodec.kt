@@ -6,7 +6,7 @@ import java.util.*
 
 data class Skin(val slot: SkinSlot, val type: UShort?, val color: UByte?)
 
-class SkinSet(var leadingByte: Int = 0) : EnumMap<SkinSlot, Skin>(SkinSlot::class.java) {
+class SkinSet(var regionSelectionIndex: Int = 0) : EnumMap<SkinSlot, Skin>(SkinSlot::class.java) {
   fun put(skin: Skin) {
     this[skin.slot] = skin
   }
@@ -22,12 +22,12 @@ class SkinSetCodec(
     private val withLeadingByte: Boolean = true,
 ) : PacketCodec<SkinSet>() {
   override fun CodecScope<SkinSet>.body(): SkinSet {
-    val leadingByte = if (withLeadingByte) field(U8) { it.leadingByte } else 0
+    val regionSelectionIndex = if (withLeadingByte) field(U8) { it.regionSelectionIndex } else 0
     val mask =
         field(U16LE) { skins ->
           skins.keys.filter { it in slots }.fold(0) { acc, slot -> acc or (1 shl slot.ordinal) }
         }
-    val skins = SkinSet(leadingByte)
+    val skins = SkinSet(regionSelectionIndex)
     slots.forEach { slot ->
       if ((mask and (1 shl slot.ordinal)) != 0) {
         val compressed =

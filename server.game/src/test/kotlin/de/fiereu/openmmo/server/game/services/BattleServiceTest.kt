@@ -4,9 +4,11 @@ import de.fiereu.network.PacketEvent
 import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.PokemonMove
 import de.fiereu.openmmo.common.enums.BattleAction
+import de.fiereu.openmmo.common.enums.CharacterGender
 import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.moves.MoveRegistry
 import de.fiereu.openmmo.net.game.packets.ChatMessageSendPacket
 import de.fiereu.openmmo.net.game.packets.EntityMovePpPacket
@@ -91,7 +93,7 @@ private class Fixture(scope: CoroutineScope) {
       )
 
   suspend fun playerWithParty(level: Byte = 50, hp: Short = 999): Pair<FakeSession, Long> {
-    val created = store.createCharacter(1, "Ash")
+    val created = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN)
     store.addPokemon(created.info.id, bulbasaur(created.info.id, level, hp))
     return FakeSession(created.info.id) to created.info.id
   }

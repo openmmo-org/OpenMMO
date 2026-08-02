@@ -1,5 +1,7 @@
 package de.fiereu.openmmo.server.game.services
 
+import de.fiereu.openmmo.common.enums.CharacterGender
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.packets.NpcSpawnPacket
 import de.fiereu.openmmo.server.game.storage.CharacterStore
@@ -19,7 +21,7 @@ class NpcStoryFlagSyncTest :
       test("persisted hide flags determine the entities restored for a map") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val character = store.createCharacter(userId = 1, name = "Brendan", gender = 0)
+          val character = store.createCharacter(1, "Brendan", CharacterGender.MALE, Region.HOENN)
           val session = FakeSession(characterId = character.info.id, bankId = 50, mapId = 9)
           val npcs = NpcService(MapManager(), store)
 
@@ -41,7 +43,7 @@ class NpcStoryFlagSyncTest :
       test("bedroom decoration placeholders are not spawned as npcs") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val character = store.createCharacter(userId = 1, name = "May", gender = 1)
+          val character = store.createCharacter(1, "May", CharacterGender.FEMALE, Region.HOENN)
           val session = FakeSession(characterId = character.info.id, bankId = 51, mapId = 3)
           val npcs = NpcService(MapManager(), store)
 
@@ -55,7 +57,7 @@ class NpcStoryFlagSyncTest :
       test("the Littleroot twin moves beside the north exit after meeting the rival") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val character = store.createCharacter(userId = 1, name = "May", gender = 1)
+          val character = store.createCharacter(1, "May", CharacterGender.FEMALE, Region.HOENN)
           val session = FakeSession(characterId = character.info.id, bankId = 50, mapId = 9)
           val story = StoryService(store)
           story.setVar(character.info.id, HoennVars.VAR_LITTLEROOT_TOWN_STATE, 1)
@@ -77,7 +79,7 @@ class NpcStoryFlagSyncTest :
 
           val femaleStore =
               CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val female = femaleStore.createCharacter(userId = 1, name = "May", gender = 1)
+          val female = femaleStore.createCharacter(1, "May", CharacterGender.FEMALE, Region.HOENN)
           StoryService(femaleStore).clearFlag(female.info.id, HoennFlags.FLAG_HIDE_ROUTE_103_RIVAL)
           val femaleSession = FakeSession(characterId = female.info.id, bankId = 50, mapId = 18)
           val femaleNpcs = NpcService(mapManager, femaleStore)
@@ -90,7 +92,7 @@ class NpcStoryFlagSyncTest :
 
           val maleStore =
               CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val male = maleStore.createCharacter(userId = 2, name = "Brendan", gender = 0)
+          val male = maleStore.createCharacter(2, "Brendan", CharacterGender.MALE, Region.HOENN)
           StoryService(maleStore).clearFlag(male.info.id, HoennFlags.FLAG_HIDE_ROUTE_103_RIVAL)
           val maleSession = FakeSession(characterId = male.info.id, bankId = 50, mapId = 18)
           val maleNpcs = NpcService(mapManager, maleStore)
@@ -106,7 +108,7 @@ class NpcStoryFlagSyncTest :
       test("completed rescue saves never restore the Route 101 Zigzagoon") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val character = store.createCharacter(userId = 1, name = "May", gender = 1)
+          val character = store.createCharacter(1, "May", CharacterGender.FEMALE, Region.HOENN)
           StoryService(store).setFlag(character.info.id, HoennFlags.FLAG_RESCUED_BIRCH)
           val session = FakeSession(characterId = character.info.id, bankId = 50, mapId = 16)
           val npcs = NpcService(MapManager(), store)

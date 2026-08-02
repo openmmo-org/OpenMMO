@@ -41,7 +41,7 @@ class CreateCharacterPacketTest :
         packet.name shouldBe "MacherDer"
         packet.gender shouldBe 0
         packet.startingRegion shouldBe 1
-        packet.appearance.leadingByte shouldBe 3
+        packet.appearance.regionSelectionIndex shouldBe 3
         CreateCharacterPacketCodec.encodeToBytes(packet).toHex() shouldBe bytes.toHex()
       }
 
@@ -54,7 +54,7 @@ class CreateCharacterPacketTest :
         packet.name shouldBe "MacherRin"
         packet.gender shouldBe 1
         packet.startingRegion shouldBe 0
-        packet.appearance.leadingByte shouldBe 0
+        packet.appearance.regionSelectionIndex shouldBe 0
         CreateCharacterPacketCodec.encodeToBytes(packet).toHex() shouldBe bytes.toHex()
       }
     })

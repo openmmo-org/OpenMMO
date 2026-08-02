@@ -1,9 +1,10 @@
 package de.fiereu.openmmo.server.game.storage
 
+import de.fiereu.openmmo.common.enums.CharacterGender
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.server.game.testsupport.FakeCharacterRepository
 import de.fiereu.openmmo.story.generated.hoenn.HoennFlags
 import de.fiereu.openmmo.story.generated.hoenn.HoennVars
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,7 +17,7 @@ class CharacterIntroTest :
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
 
-          val character = store.createCharacter(userId = 1, name = "Brendan", gender = 0)
+          val character = store.createCharacter(1, "Brendan", CharacterGender.MALE, Region.HOENN)
 
           character.info.rivalSex shouldBe 0
           character.info.dynamicWarp!!.x shouldBe 3
@@ -33,7 +34,7 @@ class CharacterIntroTest :
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
 
-          val character = store.createCharacter(userId = 1, name = "May", gender = 1)
+          val character = store.createCharacter(1, "May", CharacterGender.FEMALE, Region.HOENN)
 
           character.info.rivalSex shouldBe 1
           character.info.dynamicWarp!!.x shouldBe 12
@@ -54,8 +55,8 @@ class CharacterIntroTest :
               store.createCharacter(
                   userId = 1,
                   name = "Leaf",
-                  gender = 1,
-                  startingRegion = 0,
+                  gender = CharacterGender.FEMALE,
+                  startingRegion = Region.KANTO,
               )
 
           character.info.positionRegionId shouldBe 0
@@ -69,18 +70,5 @@ class CharacterIntroTest :
         }
       }
 
-      test("unsupported regions remain locked") {
-        runTest {
-          val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-
-          shouldThrow<IllegalArgumentException> {
-            store.createCharacter(
-                userId = 1,
-                name = "Dawn",
-                gender = 1,
-                startingRegion = 2,
-            )
-          }
-        }
-      }
+      test("unsupported region wire values remain locked") { Region.byWireValue(2) shouldBe null }
     })
