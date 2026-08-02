@@ -23,6 +23,9 @@ abstract class GenerateCertificateTask : DefaultTask() {
   val overwriteCertificates: Property<Boolean> =
       project.objects.property(Boolean::class.java).convention(false)
 
+  @get:Input
+  val algorithm: Property<String> = project.objects.property(String::class.java).convention("EC")
+
   init {
     group = "openmmo"
     outputs.upToDateWhen { !overwriteCertificates.get() }
@@ -37,16 +40,20 @@ abstract class GenerateCertificateTask : DefaultTask() {
       return
     }
 
-    // Generate ECDSA key pair using secp256r1 curve
-    val keyPairGenerator = KeyPairGenerator.getInstance("EC")
-    keyPairGenerator.initialize(ECGenParameterSpec("secp256r1"))
+    val keyPairGenerator = KeyPairGenerator.getInstance(algorithm.get())
+    when (val name = algorithm.get()) {
+      "EC" -> keyPairGenerator.initialize(ECGenParameterSpec("secp256r1"))
+      "RSA" -> keyPairGenerator.initialize(3072)
+      else -> error("Unsupported algorithm: $name")
+    }
     val keyPair = keyPairGenerator.generateKeyPair()
 
     // Write private key as PEM
     val privateKeyPem =
         StringWriter().use { writer ->
           PemWriter(writer).use { pemWriter ->
-            pemWriter.writeObject(PemObject("EC PRIVATE KEY", keyPair.private.encoded))
+            pemWriter.writeObject(
+                PemObject("${algorithm.get()} PRIVATE KEY", keyPair.private.encoded))
           }
           writer.toString()
         }
@@ -76,7 +83,14 @@ tasks.register<GenerateCertificateTask>("generateChat") {
   publicKeyOutput.set(layout.buildDirectory.file("chat.public.pem"))
 }
 
+tasks.register<GenerateCertificateTask>("generateFeed") {
+  description = "Generates a key pair for signing the client's main feed."
+  algorithm.set("RSA")
+  privateKeyOutput.set(layout.buildDirectory.file("feed.private.pem"))
+  publicKeyOutput.set(layout.buildDirectory.file("feed.public.pem"))
+}
+
 tasks.register("generate") {
   group = "openmmo"
-  dependsOn("generateGame", "generateChat")
+  dependsOn("generateGame", "generateChat", "generateFeed")
 }
