@@ -29,6 +29,7 @@ dependencies {
   implementation(libs.kotlinx.coroutines)
   implementation(libs.kotlin.logging)
   implementation(libs.logback)
+  implementation(libs.kotlinx.serialization.json)
 
   testImplementation(libs.bundles.kotest)
   testImplementation(libs.kotlinx.coroutines.test)

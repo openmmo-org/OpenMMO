@@ -3,6 +3,7 @@ package de.fiereu.openmmo.server.game.handler
 import de.fiereu.openmmo.net.game.packets.AddFriendPacket
 import de.fiereu.openmmo.net.game.packets.BlockPlayerPacket
 import de.fiereu.openmmo.net.game.packets.ChatMessagePacket
+import de.fiereu.openmmo.net.game.packets.DeleteCharacterPacket
 import de.fiereu.openmmo.net.game.packets.JoinPacket
 import de.fiereu.openmmo.net.game.packets.KeepAlivePacket
 import de.fiereu.openmmo.net.game.packets.MovementPacket
@@ -34,6 +35,7 @@ class GameAppHandlerTest :
         handler.isRegistered(AddFriendPacket::class) shouldBe true
         handler.isRegistered(RemoveFriendPacket::class) shouldBe true
         handler.isRegistered(BlockPlayerPacket::class) shouldBe true
+        handler.isRegistered(DeleteCharacterPacket::class) shouldBe true
         handler.isRegistered(BattleActionPacket::class) shouldBe true
         handler.isRegistered(BattleChallengeRequestPacket::class) shouldBe true
       }

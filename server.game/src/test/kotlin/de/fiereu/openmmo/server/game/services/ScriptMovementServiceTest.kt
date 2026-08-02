@@ -3,6 +3,7 @@ package de.fiereu.openmmo.server.game.services
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.packets.DialogDataPacket
+import de.fiereu.openmmo.net.game.packets.NpcUpdatePacket
 import de.fiereu.openmmo.server.game.script.MovementStep
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import de.fiereu.openmmo.server.game.storage.EntityIdService
@@ -18,7 +19,7 @@ class ScriptMovementServiceTest :
     FunSpec({
       fun service(store: CharacterStore): ScriptMovementService {
         val mapManager = MapManager()
-        return ScriptMovementService(mapManager, NpcService(mapManager), store)
+        return ScriptMovementService(mapManager, NpcService(mapManager, store), store)
       }
 
       test("drive walks one tile per step and returns the final pose") {
@@ -73,6 +74,25 @@ class ScriptMovementServiceTest :
 
           store.getCharacter(charId)!!.info.positionY.toInt() shouldBe startY + 2
           store.getCharacter(charId)!!.info.positionX.toInt() shouldBe startX
+        }
+      }
+
+      test("repositionSelf sends the captured coordinate update and commits it") {
+        runTest {
+          val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
+          val created = store.createCharacter(1, "May", gender = 1)
+          store.updatePosition(created.info.id, 7, 14, 50, 16)
+          val session = FakeSession(characterId = created.info.id, bankId = 50, mapId = 16)
+          val state = session.state()
+
+          service(store).repositionSelf(session, state, 6, 13, Direction.UP)
+
+          session.sent shouldBe
+              listOf(
+                  NpcUpdatePacket(created.info.id, 1, 50, 16, 6, 13, 0xF6, 1),
+              )
+          store.getCharacter(created.info.id)!!.info.positionX shouldBe 6
+          store.getCharacter(created.info.id)!!.info.positionY shouldBe 13
         }
       }
     })

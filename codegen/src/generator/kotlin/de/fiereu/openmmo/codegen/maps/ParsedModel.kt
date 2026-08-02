@@ -30,9 +30,20 @@ data class ParsedMap(
     val onTransitionScript: String,
     // The map's ON_FRAME table: run the script once its var equals the value, on map entry.
     val onFrameScripts: List<ParsedFrameScript>,
+    // Tile triggers from map.json coord_events.
+    val coordScripts: List<ParsedCoordScript>,
 )
 
 data class ParsedFrameScript(
+    val varKey: String,
+    val value: Int,
+    val script: String,
+)
+
+data class ParsedCoordScript(
+    val x: Int,
+    val y: Int,
+    val elevation: Int,
     val varKey: String,
     val value: Int,
     val script: String,

@@ -8,4 +8,8 @@ enum class TileBehavior {
   NORMAL,
   TALL_GRASS,
   LONG_GRASS,
+  JUMP_EAST,
+  JUMP_WEST,
+  JUMP_NORTH,
+  JUMP_SOUTH,
 }

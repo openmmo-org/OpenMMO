@@ -5,7 +5,9 @@ import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.PokemonMove
 import de.fiereu.openmmo.common.enums.BattleAction
 import de.fiereu.openmmo.common.enums.PokemonContainer
+import de.fiereu.openmmo.moves.MoveRegistry
 import de.fiereu.openmmo.net.game.packets.ChatMessageSendPacket
+import de.fiereu.openmmo.net.game.packets.MapLoadedAckPacket
 import de.fiereu.openmmo.net.game.packets.SocialListEntryAddPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleActionSelectPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleListEventDetail
@@ -15,6 +17,7 @@ import de.fiereu.openmmo.server.game.battle.BattleInstance
 import de.fiereu.openmmo.server.game.battle.BattleMonState
 import de.fiereu.openmmo.server.game.battle.BattlePacketEmitter
 import de.fiereu.openmmo.server.game.battle.BattleRegistry
+import de.fiereu.openmmo.server.game.battle.BattleResult
 import de.fiereu.openmmo.server.game.battle.BattleRewards
 import de.fiereu.openmmo.server.game.battle.BattleRng
 import de.fiereu.openmmo.server.game.battle.StatCalculator
@@ -60,6 +63,7 @@ constructor(
     private val rewards: BattleRewards,
     private val interestManager: InterestManager,
     private val speciesRegistry: SpeciesRegistry,
+    private val moveRegistry: MoveRegistry,
 ) {
 
   fun onBattlePacket(event: PacketEvent<*>) {
@@ -69,6 +73,7 @@ constructor(
   fun onBattleAction(event: PacketEvent<BattleActionSelectPacket>) {
     val charId = event.session.attributes[PLAYER_STATE]?.characterId ?: return
     val battle = battles.byChar(charId) ?: return
+    if (battle.pendingResult != null) return
     val action = event.packet
     log.info { "Battle action char=$charId: $action" }
     // While the active mon is fainted the player owes a replacement and may only switch.
@@ -105,41 +110,88 @@ constructor(
     val charId = session.attributes[PLAYER_STATE]?.characterId ?: return
     val battle = battles.byChar(charId) ?: return
     persistParty(battle)
-    finishBattle(battle)
+    finishBattle(battle, BattleResult.DISCONNECTED)
+  }
+
+  /** Resumes scripts after returning to the overworld. */
+  fun onClientReady(event: PacketEvent<MapLoadedAckPacket>) {
+    if (event.packet.data.isNotEmpty()) return
+    val charId = event.session.attributes[PLAYER_STATE]?.characterId ?: return
+    val battle = battles.byChar(charId) ?: return
+    val result = battle.pendingResult ?: return
+    finishBattle(battle, result)
   }
 
   /** True while the character has a battle running, so callers can skip starting another. */
   fun inBattle(charId: Long): Boolean = battles.byChar(charId) != null
 
   fun startWildBattle(session: SessionContext, dexId: Int, level: Int) {
-    val charId = session.attributes[PLAYER_STATE]?.characterId ?: return
+    createWildBattle(session, dexId, level, catchable = true, escapable = true)
+  }
+
+  /** Runs a story battle and waits for its scene. */
+  suspend fun startScriptedBattle(
+      session: SessionContext,
+      dexId: Int,
+      level: Int,
+      moveIds: List<Int> = emptyList(),
+  ): BattleResult {
+    val battle =
+        createWildBattle(
+            session,
+            dexId,
+            level,
+            catchable = false,
+            escapable = false,
+            moveIds = moveIds,
+        ) ?: return BattleResult.FAILED
+    return battle.completion.await()
+  }
+
+  private fun createWildBattle(
+      session: SessionContext,
+      dexId: Int,
+      level: Int,
+      catchable: Boolean,
+      escapable: Boolean,
+      moveIds: List<Int> = emptyList(),
+  ): BattleInstance? {
+    val charId = session.attributes[PLAYER_STATE]?.characterId ?: return null
     if (battles.byChar(charId) != null) {
       session.send(notice("You are already in a battle."))
-      return
+      return null
     }
-    val stored = characterStore.getCharacter(charId) ?: return
+    val stored = characterStore.getCharacter(charId) ?: return null
     if (stored.pokemon.isEmpty()) {
       session.send(notice("You need a monster in your party to battle."))
-      return
+      return null
     }
     val party = mutableListOf<BattleMonState>()
     for ((index, mon) in stored.pokemon.withIndex()) {
       val def = speciesRegistry.get(mon.dexId)
       if (def == null) {
         session.send(notice("Your party has a species the battle data does not cover yet."))
-        return
+        return null
       }
       party += BattleMonState(mon.id, def, index, mon, StatCalculator.computeAll(def, mon))
     }
     if (party.all { it.fainted }) {
       session.send(notice("All of your monsters have fainted."))
-      return
+      return null
     }
     val rng = BattleRng()
-    val wildPokemon = wildMons.create(dexId, level, rng)
+    var wildPokemon = wildMons.create(dexId, level, rng)
     if (wildPokemon == null) {
       session.send(notice("Unknown species $dexId."))
-      return
+      return null
+    }
+    if (moveIds.isNotEmpty()) {
+      wildPokemon =
+          wildPokemon.copy(
+              moves =
+                  moveIds.take(4).map { id ->
+                    PokemonMove(id.toShort(), (moveRegistry.get(id)?.pp ?: 0).toByte())
+                  } + List((4 - moveIds.size).coerceAtLeast(0)) { PokemonMove(0, 0) })
     }
     val wildDef = speciesRegistry.get(dexId)!!
     val wild =
@@ -153,13 +205,14 @@ constructor(
     log.info {
       "Starting wild battle for char=$charId (${stored.info.name}): ${wildDef.name} level $level"
     }
-    val battle = battles.create(charId, session, party, wild, rng)
+    val battle = battles.create(charId, session, party, wild, rng, catchable, escapable)
     val firstAlive = party.indexOfFirst { !it.fainted }
     battle.activeSlot = firstAlive
     battle.seenActive.clear()
     battle.seenActive.add(firstAlive)
     interestManager.join(session, battle.key)
     emitter.sendStart(battle, stored.info.name)
+    return battle
   }
 
   private fun resolveTurn(battle: BattleInstance, moveId: Short) {
@@ -221,12 +274,22 @@ constructor(
   }
 
   private fun flee(battle: BattleInstance) {
+    if (!battle.escapable) {
+      emitter.sendNotice(battle, "You can't run from this battle.")
+      emitter.sendPrompt(battle)
+      return
+    }
     emitter.sendFled(battle)
     persistParty(battle)
-    finishBattle(battle)
+    battle.pendingResult = BattleResult.FLED
   }
 
   private fun catchWild(battle: BattleInstance) {
+    if (!battle.catchable) {
+      emitter.sendNotice(battle, "You can't catch this monster.")
+      emitter.sendPrompt(battle)
+      return
+    }
     val stored = characterStore.getCharacter(battle.charId) ?: return
     val nextSlot = ((stored.pokemon.maxOfOrNull { it.containerSlot } ?: -1) + 1).toShort()
     val caught =
@@ -253,7 +316,7 @@ constructor(
         ),
     )
     characterStore.addPokemon(battle.charId, caught)
-    endBattle(battle)
+    endBattle(battle, BattleResult.CAUGHT)
   }
 
   private fun endVictory(battle: BattleInstance) {
@@ -274,19 +337,23 @@ constructor(
             moves = winner.moves.map { PokemonMove(it.id, it.pp) },
         ),
     )
-    endBattle(battle, skip = winner.entityId)
+    endBattle(battle, BattleResult.VICTORY, skip = winner.entityId)
   }
 
   private fun endDefeat(battle: BattleInstance) {
-    endBattle(battle)
+    endBattle(battle, BattleResult.DEFEAT)
   }
 
   // Known issue: the caught monster does not show up in the party until the client reopens it.
-  private fun endBattle(battle: BattleInstance, skip: Long? = null) {
+  private fun endBattle(
+      battle: BattleInstance,
+      result: BattleResult,
+      skip: Long? = null,
+  ) {
     persistParty(battle, skip)
     val party = characterStore.getCharacter(battle.charId)?.pokemon ?: emptyList()
     emitter.sendBattleEnd(battle, party)
-    finishBattle(battle)
+    battle.pendingResult = result
   }
 
   /** Write the battle's live hp and pp back into the party and flush the character. */
@@ -303,8 +370,9 @@ constructor(
     characterStore.flushCharacterAsync(battle.charId)
   }
 
-  private fun finishBattle(battle: BattleInstance) {
+  private fun finishBattle(battle: BattleInstance, result: BattleResult) {
     interestManager.leave(battle.session, battle.key)
     battles.remove(battle.charId)
+    battle.completion.complete(result)
   }
 }

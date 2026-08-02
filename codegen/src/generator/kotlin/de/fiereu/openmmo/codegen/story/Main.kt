@@ -18,6 +18,13 @@ fun main(args: Array<String>) {
     val flags = FlagVarParser.flags(decompDir)
     val vars = FlagVarParser.vars(decompDir)
     println("[story] $region: parsed ${flags.size} flags, ${vars.size} vars from $decompDir")
-    StoryConstantsRenderer(region, templatesDir, outputDir, classCacheDir).render(flags, vars)
+    StoryConstantsRenderer(region, templatesDir, outputDir, classCacheDir)
+        .render(
+            flags,
+            vars,
+            FlagVarParser.initialFlags(decompDir),
+            FlagVarParser.maleIntroFlags(decompDir),
+            FlagVarParser.femaleIntroFlags(decompDir),
+        )
   }
 }

@@ -13,6 +13,8 @@ import de.fiereu.openmmo.net.game.packets.CharacterEntry
 import de.fiereu.openmmo.net.game.packets.CharactersListPacket
 import de.fiereu.openmmo.net.game.packets.ChatMessagePacket
 import de.fiereu.openmmo.net.game.packets.CreateCharacterPacket
+import de.fiereu.openmmo.net.game.packets.DeleteCharacterPacket
+import de.fiereu.openmmo.net.game.packets.DeleteCharacterResultPacket
 import de.fiereu.openmmo.net.game.packets.JoinPacket
 import de.fiereu.openmmo.net.game.packets.JoinResponsePacket
 import de.fiereu.openmmo.net.game.packets.LocalPlayerStatePacket
@@ -30,12 +32,11 @@ import de.fiereu.openmmo.net.game.packets.ViewScalePacket
 import de.fiereu.openmmo.net.game.packets.WorldFlagTableResetPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleRatingBulkPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleStateBytePacket
-import de.fiereu.openmmo.net.game.packets.battle.ItemStack
-import de.fiereu.openmmo.net.game.packets.battle.itemStacksPacket
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.session.PlayerState
 import de.fiereu.openmmo.server.game.session.SessionRegistry
 import de.fiereu.openmmo.server.game.storage.CharacterStore
+import de.fiereu.openmmo.server.game.storage.StoredCharacter
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -55,11 +56,9 @@ private val WORLD_FLAG_GROUPS =
         )
         .map(String::hexToBytes)
 
-private const val POKE_BALL_ITEM_ID: Short = 5004
-private const val POKE_BALL_OBJECT_ID = 0x0000000000015000L
-private const val POKE_BALL_QUANTITY: Short = 10
-private val STARTING_BAG =
-    listOf(ItemStack(POKE_BALL_OBJECT_ID, POKE_BALL_ITEM_ID, POKE_BALL_QUANTITY))
+private val SUPPORTED_STARTING_REGIONS = setOf(0.toByte(), 1.toByte())
+private const val DELETE_SUCCESS = 0
+private const val DELETE_REJECTED = 1
 
 @Singleton
 class LoginService
@@ -111,7 +110,17 @@ constructor(
       return
     }
     log.info { "Creating character '$name' for userId=${state.userId}" }
-    characterStore.createCharacter(state.userId, name)
+    val gender = event.packet.gender
+    val startingRegion = event.packet.startingRegion
+    if ((gender != 0.toByte() && gender != 1.toByte()) ||
+        startingRegion !in SUPPORTED_STARTING_REGIONS) {
+      log.warn {
+        "Rejected character options gender=$gender region=$startingRegion for userId=${state.userId}"
+      }
+      ctx.send(buildCharacterList(state.userId))
+      return
+    }
+    characterStore.createCharacter(state.userId, name, gender, startingRegion)
     ctx.send(buildCharacterList(state.userId))
   }
 
@@ -126,6 +135,24 @@ constructor(
     }
   }
 
+  suspend fun onDeleteCharacter(event: PacketEvent<DeleteCharacterPacket>) {
+    val ctx = event.session
+    val state = ctx.attributes[PLAYER_STATE]
+    val userId = state?.userId
+    val characterId = event.packet.characterId
+    val deleted =
+        userId != null &&
+            state.characterId == null &&
+            characterStore.deleteCharacter(userId, characterId)
+    if (deleted) {
+      log.info { "Deleted character $characterId for userId=$userId" }
+    } else {
+      log.warn { "Rejected character deletion id=$characterId from ${ctx.remoteAddress}" }
+    }
+    ctx.send(
+        DeleteCharacterResultPacket(if (deleted) DELETE_SUCCESS else DELETE_REJECTED, characterId))
+  }
+
   private suspend fun buildCharacterList(userId: Int): CharactersListPacket {
     val characters = characterStore.getCharactersByUser(userId)
     val entries =
@@ -134,7 +161,7 @@ constructor(
               characterInfo = stored.info,
               skinSet = SkinSet(),
               guildId = null,
-              // Show the whole party. A party over 6 is an illegal state and CharacterEntry rejects it.
+              // Character selection shows the complete party.
               pokemon = stored.pokemon,
           )
         }
@@ -161,8 +188,10 @@ constructor(
 
     // Initialise the client world-flag table before any monster or follower is built. Without it
     // the table stays null and the client crashes constructing a party monster that reads a flag.
+    // Restore persisted story state after resetting client flags.
     ctx.send(WorldFlagTableResetPacket(WORLD_FLAG_GROUPS))
-    ctx.send(buildLocalPlayerState(stored.info, stored.pokemon.map { it.dexId.toShort() }))
+    ctx.send(buildLocalPlayerState(stored))
+    StoryClientState.flags(stored.info.positionRegionId, stored.storyFlags).forEach { ctx.send(it) }
 
     val info = stored.info
     val now = LocalDateTime.now()
@@ -199,7 +228,7 @@ constructor(
 
     // The bag item stacks (opcode 0x40). The real server sends these during join, interleaved with
     // the container packets, so the client has the items before entering the world.
-    ctx.send(itemStacksPacket(STARTING_BAG))
+    ctx.send(storyItemStacksPacket(stored.items))
 
     ctx.send(SelectedCharacterPacket(info))
     sendJoinState(ctx)
@@ -214,41 +243,32 @@ constructor(
     preloadMapAndJoin(ctx, state, info)
   }
 
-  // TODO Sync persisted story flags and vars to the client
-  //  The server now owns per character story flags and vars (see StoryService), but the client
-  // still
-  //  gets the hardcoded WORLD_FLAG_GROUPS blob and empty badges/variables below. Map the stored
-  //  flags into the world-flag table and the stored vars into LocalPlayerStatePacket.variables so
-  // the
-  //  overworld (hidden or shown npcs, map states, badges) reflects real progress. This needs the
-  // GBA
-  //  numeric flag/var ids, so extend the story codegen to also emit the name to id map per region.
   // The full local-player state snapshot the client loads on login. Missing it leaves player state
   // uninitialised and the client crashes reading it (for example when opening the battle bag).
-  private fun buildLocalPlayerState(
-      info: CharacterInfo,
-      partyDex: List<Short>
-  ): LocalPlayerStatePacket =
-      LocalPlayerStatePacket(
-          region = info.positionRegionId,
-          mapId = info.positionMapId.toShort(),
-          moveSpeed = 0.05f,
-          x = info.positionX,
-          y = info.positionY,
-          z = 0,
-          money = info.money,
-          gender = 0,
-          skinTone = 0,
-          hairColor = 0,
-          playtime = 0.0,
-          flags = 0,
-          partyDex = partyDex,
-          partyForms = partyDex.map { 0.toByte() },
-          pokedexSeen = emptyList(),
-          pokedexCaught = emptyList(),
-          badges = emptyList(),
-          variables = emptyList(),
-      )
+  private fun buildLocalPlayerState(stored: StoredCharacter): LocalPlayerStatePacket {
+    val info = stored.info
+    val partyDex = stored.pokemon.map { it.dexId.toShort() }
+    return LocalPlayerStatePacket(
+        region = info.positionRegionId,
+        mapId = info.positionMapId.toShort(),
+        moveSpeed = 0.05f,
+        x = info.positionX,
+        y = info.positionY,
+        z = 0,
+        money = info.money,
+        gender = info.rivalSex,
+        skinTone = 0,
+        hairColor = 0,
+        playtime = 0.0,
+        flags = 0,
+        partyDex = partyDex,
+        partyForms = partyDex.map { 0.toByte() },
+        pokedexSeen = emptyList(),
+        pokedexCaught = emptyList(),
+        badges = emptyList(),
+        variables = StoryClientState.variables(info.positionRegionId, stored.storyVars),
+    )
+  }
 
   // Small state packets the real server sends in the join flow. The battle-state byte and menu
   // payloads initialise state the battle bag reads, so without them opening the bag crashes.
@@ -316,7 +336,12 @@ constructor(
     val loadEntity = mapLoadService.createLoadEntity(info, facing, party = stored.pokemon)
     ctx.send(loadEntity)
 
-    npcService.spawnNpcsForMap(ctx, info.positionBankId.toInt(), info.positionMapId.toInt())
+    npcService.spawnNpcsForMap(
+        ctx,
+        info.positionBankId.toInt(),
+        info.positionMapId.toInt(),
+        info.positionRegionId.toInt(),
+    )
 
     val bankId = info.positionBankId.toInt()
     val mapId = info.positionMapId.toInt()

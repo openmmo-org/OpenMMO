@@ -108,8 +108,7 @@ constructor(
 
     ctx.send(MapTransitionPacket())
     ctx.send(RenderScreenPacket(false))
-    ctx.send(mapLoadService.createLoadEntity(newInfo, warpFacing, playerZ))
-    ctx.send(MapTransitionAckPacket(0))
+    ctx.send(MapTransitionAckPacket(2))
 
     if (destMap != null) {
       ctx.send(mapManager.createLoadMapPacket(destMap, reloadPlayer = true, deleteCache = true))
@@ -120,9 +119,14 @@ constructor(
       }
     }
 
+    // Release the fade after loading the destination.
+    ctx.send(mapLoadService.createLoadEntity(newInfo, warpFacing, playerZ))
+
     presenceService.refresh(ctx)
 
     if (state != null && destMap != null) mapScriptService.onMapEnter(ctx, state, destMap)
+
+    ctx.send(RenderScreenPacket(true))
 
     log.info { "Player $charId warped to bank=${warp.targetBankId} map=${warp.targetMapId}" }
   }

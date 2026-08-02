@@ -3,6 +3,10 @@ package de.fiereu.openmmo.codegen.maps
 open class RegionConstants(
     val name: String,
     val regionId: Int,
+    /** Client map-group offset. */
+    val gbaBankOffset: Int = 0,
+    /** Client tileset offset. */
+    val gbaPaletteOffset: Int = 0,
     val defaultVisibleNpcs: Map<String, List<Int>> = emptyMap(),
     val dirMap: Map<String, String> = COMMON_DIR_MAP,
     val weatherMap: Map<String, String> = COMMON_WEATHER_MAP,

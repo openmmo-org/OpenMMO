@@ -16,8 +16,7 @@ import de.fiereu.openmmo.server.game.script.ScriptContext
  * ```
  */
 internal object RustboroCity_PokemonCenter_1F_EventScript_Nurse : Script {
-  override suspend fun run(ctx: ScriptContext) =
-      TODO("port RustboroCity_PokemonCenter_1F_EventScript_Nurse")
+  override suspend fun run(ctx: ScriptContext) = healAtPokemonCenter(ctx)
 }
 
 internal object RustboroCity_PokemonCenter_1F_EventScript_Man : Script {

@@ -11,6 +11,7 @@ import de.fiereu.openmmo.moves.MoveRegistry
 import de.fiereu.openmmo.net.game.packets.ChatMessageSendPacket
 import de.fiereu.openmmo.net.game.packets.EntityMovePpPacket
 import de.fiereu.openmmo.net.game.packets.EntityPresencePacket
+import de.fiereu.openmmo.net.game.packets.MapLoadedAckPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleActionSelectPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleBulkStatePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleEntityDeltaPacket
@@ -86,6 +87,7 @@ private class Fixture(scope: CoroutineScope) {
           rewards = BattleRewards(),
           interestManager = interestManager,
           speciesRegistry = SpeciesRegistry(),
+          moveRegistry = MoveRegistry(),
       )
 
   suspend fun playerWithParty(level: Byte = 50, hp: Short = 999): Pair<FakeSession, Long> {
@@ -101,6 +103,10 @@ private fun FakeSession.startBattle(service: BattleService, command: String = "/
 
 private fun FakeSession.act(service: BattleService, action: BattleAction, value: Short = 0) {
   service.onBattleAction(PacketEvent(BattleActionSelectPacket(0, action, value, 0L, 0), this))
+}
+
+private fun FakeSession.finishBattleTransition(service: BattleService) {
+  service.onClientReady(PacketEvent(MapLoadedAckPacket(), this))
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -174,7 +180,7 @@ class BattleServiceTest :
         }
       }
 
-      test("fleeing sends the flee markers and clears the battle") {
+      test("fleeing waits for the overworld before clearing the battle") {
         runTest {
           val fx = Fixture(backgroundScope)
           val (session, charId) = fx.playerWithParty()
@@ -182,6 +188,10 @@ class BattleServiceTest :
 
           session.act(fx.service, BattleAction.RUN)
 
+          fx.registry.byChar(charId).shouldNotBeNull()
+          fx.service.onClientReady(PacketEvent(MapLoadedAckPacket(byteArrayOf(1, 2, 3)), session))
+          fx.registry.byChar(charId).shouldNotBeNull()
+          session.finishBattleTransition(fx.service)
           fx.registry.byChar(charId).shouldBeNull()
           session.sent.filterIsInstance<BattleBulkStatePacket>().shouldNotBeEmpty()
           session.startBattle(fx.service)
@@ -196,10 +206,12 @@ class BattleServiceTest :
           session.startBattle(fx.service)
 
           var rounds = 0
-          while (fx.registry.byChar(charId) != null && rounds < 10) {
+          while (fx.registry.byChar(charId)?.pendingResult == null && rounds < 10) {
             session.act(fx.service, BattleAction.MOVE, TACKLE)
             rounds += 1
           }
+          fx.registry.byChar(charId).shouldNotBeNull()
+          session.finishBattleTransition(fx.service)
           fx.registry.byChar(charId).shouldBeNull()
           advanceUntilIdle()
 

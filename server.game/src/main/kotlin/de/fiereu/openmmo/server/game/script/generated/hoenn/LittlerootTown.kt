@@ -1,10 +1,12 @@
 package de.fiereu.openmmo.server.game.script.generated.hoenn
 
 import de.fiereu.openmmo.dialog.generated.hoenn.LittlerootTown
+import de.fiereu.openmmo.server.game.script.MovementStep.FACE_DOWN
 import de.fiereu.openmmo.server.game.script.MovementStep.FACE_LEFT
+import de.fiereu.openmmo.server.game.script.MovementStep.FACE_RIGHT
+import de.fiereu.openmmo.server.game.script.MovementStep.FACE_UP
 import de.fiereu.openmmo.server.game.script.MovementStep.SET_INVISIBLE
 import de.fiereu.openmmo.server.game.script.MovementStep.WALK_DOWN
-import de.fiereu.openmmo.server.game.script.MovementStep.WALK_LEFT
 import de.fiereu.openmmo.server.game.script.MovementStep.WALK_RIGHT
 import de.fiereu.openmmo.server.game.script.MovementStep.WALK_UP
 import de.fiereu.openmmo.server.game.script.Script
@@ -14,6 +16,7 @@ import de.fiereu.openmmo.story.generated.hoenn.HoennVars
 
 // Decomp local id of mom in this map's object events (LOCALID_LITTLEROOT_MOM).
 private const val LOCALID_MOM = 3
+private const val LOCALID_TWIN = 0
 
 /**
  * Not ported yet. Decomp body:
@@ -29,7 +32,18 @@ private const val LOCALID_MOM = 3
  * ```
  */
 internal object LittlerootTown_EventScript_Twin : Script {
-  override suspend fun run(ctx: ScriptContext) = TODO("port LittlerootTown_EventScript_Twin")
+  override suspend fun run(ctx: ScriptContext) {
+    when {
+      ctx.isFlagSet(HoennFlags.FLAG_ADVENTURE_STARTED) ->
+          ctx.say(LittlerootTown.GoodLuckCatchingPokemon)
+      ctx.isFlagSet(HoennFlags.FLAG_RESCUED_BIRCH) -> ctx.say(LittlerootTown.YouSavedBirch)
+      ctx.getVar(HoennVars.VAR_LITTLEROOT_TOWN_STATE) != 0 -> {
+        ctx.say(LittlerootTown.CanYouGoSeeWhatsHappening)
+        ctx.setVar(HoennVars.VAR_LITTLEROOT_TOWN_STATE, 2)
+      }
+      else -> ctx.say(LittlerootTown.IfYouGoInGrassPokemonWillJumpOut)
+    }
+  }
 }
 
 /**
@@ -40,33 +54,51 @@ internal object LittlerootTown_EventScript_Twin : Script {
  * call_if_eq VAR_LITTLEROOT_INTRO_STATE, 2, LittlerootTown_EventScript_MoveMomToMaysDoor
  * ```
  *
- * The two calls set the rival's sprite and move mom for the intro, which need object and movement
- * scripting that does not exist yet, so only the flag is ported for now.
+ * Female-path positions are applied during spawning.
  */
 internal object LittlerootTown_OnTransition : Script {
   override suspend fun run(ctx: ScriptContext) {
     ctx.setFlag(HoennFlags.FLAG_VISITED_LITTLEROOT_TOWN)
+    if (ctx.getVar(HoennVars.VAR_LITTLEROOT_TOWN_STATE) == 3 &&
+        !ctx.isFlagSet(HoennFlags.FLAG_RECEIVED_RUNNING_SHOES)) {
+      ctx.clearFlag(HoennFlags.FLAG_HIDE_LITTLEROOT_TOWN_MOM_OUTSIDE)
+      ctx.showNpcAt(LOCALID_MOM, if (ctx.isFemale) 14 else 5, 9)
+    }
   }
 }
 
-/**
- * The intro cutscene, run from the on-frame table when VAR_LITTLEROOT_INTRO_STATE is 1 (the player
- * just stepped off the truck). Lean port of LittlerootTown_EventScript_StepOffTruckMale plus
- * GoInsideWithMom: mom comes out and greets the player, then the intro advances so it plays once.
- */
+/** Runs the male moving-truck cutscene. */
 internal object LittlerootTown_EventScript_StepOffTruckMale : Script {
-  override suspend fun run(ctx: ScriptContext) {
-    ctx.showNpc(LOCALID_MOM)
-    ctx.moveNpc(LOCALID_MOM, WALK_DOWN, WALK_DOWN, WALK_LEFT, FACE_LEFT)
-    ctx.say(LittlerootTown.OurNewHomeLetsGoInside)
-    // Mom walks back to her door and steps inside (goes invisible).
-    ctx.moveNpc(LOCALID_MOM, WALK_RIGHT, WALK_UP, WALK_UP, SET_INVISIBLE)
-    ctx.setVar(HoennVars.VAR_LITTLEROOT_INTRO_STATE, 3)
-    // TODO Finish the Littleroot intro cutscene
-    //  Port the rest of GoInsideWithMom: the player jumping off the truck, the door open/close
-    //  animations, the player following mom into the house, and the warpsilent inside. These need
-    //  door, hideplayer, warpsilent and sound-effect script verbs.
-  }
+  override suspend fun run(ctx: ScriptContext) = stepOffTruck(ctx, female = false)
+}
+
+/** Female half of the moving-truck cutscene (intro state 2). */
+internal object LittlerootTown_EventScript_StepOffTruckFemale : Script {
+  override suspend fun run(ctx: ScriptContext) = stepOffTruck(ctx, female = true)
+}
+
+private suspend fun stepOffTruck(ctx: ScriptContext, female: Boolean) {
+  val doorX = if (female) 14 else 5
+  val houseMap = if (female) 2 else 0
+  val houseX = if (female) 2 else 8
+
+  // Approximate the scripted hop with ordinary movement.
+  ctx.moveSelf(WALK_RIGHT)
+  ctx.showNpcAt(LOCALID_MOM, doorX, 8)
+  ctx.moveNpc(LOCALID_MOM, WALK_DOWN, WALK_DOWN, FACE_LEFT)
+  ctx.say(LittlerootTown.OurNewHomeLetsGoInside)
+  ctx.moveNpc(LOCALID_MOM, WALK_UP, WALK_UP, SET_INVISIBLE)
+  ctx.moveSelf(WALK_RIGHT, FACE_UP, WALK_UP, WALK_UP)
+
+  ctx.setFlag(HoennFlags.FLAG_HIDE_LITTLEROOT_TOWN_MOM_OUTSIDE)
+  ctx.setFlag(
+      if (female) HoennFlags.FLAG_HIDE_LITTLEROOT_TOWN_MAYS_HOUSE_TRUCK
+      else HoennFlags.FLAG_HIDE_LITTLEROOT_TOWN_BRENDANS_HOUSE_TRUCK)
+  ctx.clearFlag(HoennFlags.FLAG_HIDE_LITTLEROOT_TOWN_FAT_MAN)
+  ctx.clearFlag(HoennFlags.FLAG_HIDE_MAP_NAME_POPUP)
+  ctx.setVar(HoennVars.VAR_LITTLEROOT_INTRO_STATE, 3)
+  ctx.warp(
+      regionId = 1, bankId = 51, mapId = houseMap, x = houseX, y = 8, facing = FACE_UP.direction)
 }
 
 internal object LittlerootTown_EventScript_FatMan : Script {
@@ -75,6 +107,31 @@ internal object LittlerootTown_EventScript_FatMan : Script {
 
 internal object LittlerootTown_EventScript_Boy : Script {
   override suspend fun run(ctx: ScriptContext) = ctx.say(LittlerootTown.BirchSpendsDaysInLab)
+}
+
+/** Starts Birch's rescue after meeting the rival. */
+internal object LittlerootTown_EventScript_GoSaveBirchTrigger : Script {
+  override suspend fun run(ctx: ScriptContext) {
+    ctx.moveNpc(LOCALID_TWIN, FACE_RIGHT)
+    ctx.moveSelf(FACE_LEFT)
+    ctx.sayNpc(LOCALID_TWIN, LittlerootTown.CanYouGoSeeWhatsHappening)
+    ctx.moveNpc(LOCALID_TWIN, FACE_DOWN)
+    ctx.setVar(HoennVars.VAR_LITTLEROOT_TOWN_STATE, 2)
+  }
+}
+
+internal object LittlerootTown_EventScript_NeedPokemonTriggerLeft : Script {
+  override suspend fun run(ctx: ScriptContext) = preventLeavingWithoutPokemon(ctx)
+}
+
+internal object LittlerootTown_EventScript_NeedPokemonTriggerRight : Script {
+  override suspend fun run(ctx: ScriptContext) = preventLeavingWithoutPokemon(ctx)
+}
+
+private suspend fun preventLeavingWithoutPokemon(ctx: ScriptContext) {
+  ctx.sayNpc(LOCALID_TWIN, LittlerootTown.IfYouGoInGrassPokemonWillJumpOut)
+  ctx.moveSelf(WALK_DOWN)
+  ctx.sayNpc(LOCALID_TWIN, LittlerootTown.DangerousIfYouDontHavePokemon)
 }
 
 /**
@@ -100,7 +157,25 @@ internal object LittlerootTown_EventScript_Boy : Script {
  * ```
  */
 internal object LittlerootTown_EventScript_Mom : Script {
-  override suspend fun run(ctx: ScriptContext) = TODO("port LittlerootTown_EventScript_Mom")
+  override suspend fun run(ctx: ScriptContext) = giveRunningShoes(ctx)
+}
+
+internal object LittlerootTown_EventScript_GiveRunningShoes : Script {
+  override suspend fun run(ctx: ScriptContext) = giveRunningShoes(ctx)
+}
+
+private suspend fun giveRunningShoes(ctx: ScriptContext) {
+  if (ctx.isFlagSet(HoennFlags.FLAG_RECEIVED_RUNNING_SHOES)) return
+  ctx.sayNpc(LOCALID_MOM, LittlerootTown.WaitPlayer)
+  ctx.sayNpc(LOCALID_MOM, LittlerootTown.WearTheseRunningShoes)
+  ctx.sayNpc(LOCALID_MOM, LittlerootTown.SwitchShoesWithRunningShoes)
+  ctx.setFlag(HoennFlags.FLAG_RECEIVED_RUNNING_SHOES)
+  ctx.setFlag(HoennFlags.FLAG_SYS_B_DASH)
+  ctx.sayNpc(LOCALID_MOM, LittlerootTown.ExplainRunningShoes)
+  ctx.sayNpc(LOCALID_MOM, LittlerootTown.ComeHomeIfAnythingHappens)
+  ctx.moveNpc(LOCALID_MOM, WALK_UP, SET_INVISIBLE)
+  ctx.setFlag(HoennFlags.FLAG_HIDE_LITTLEROOT_TOWN_MOM_OUTSIDE)
+  ctx.setVar(HoennVars.VAR_LITTLEROOT_TOWN_STATE, 4)
 }
 
 internal object LittlerootTown_EventScript_TownSign : Script {
@@ -148,9 +223,29 @@ internal val LittlerootTownScripts: Map<String, Script> =
         "LittlerootTown_OnTransition" to LittlerootTown_OnTransition,
         "LittlerootTown_EventScript_StepOffTruckMale" to
             LittlerootTown_EventScript_StepOffTruckMale,
+        "LittlerootTown_EventScript_StepOffTruckFemale" to
+            LittlerootTown_EventScript_StepOffTruckFemale,
         "LittlerootTown_EventScript_Twin" to LittlerootTown_EventScript_Twin,
         "LittlerootTown_EventScript_FatMan" to LittlerootTown_EventScript_FatMan,
         "LittlerootTown_EventScript_Boy" to LittlerootTown_EventScript_Boy,
+        "LittlerootTown_EventScript_GoSaveBirchTrigger" to
+            LittlerootTown_EventScript_GoSaveBirchTrigger,
+        "LittlerootTown_EventScript_NeedPokemonTriggerLeft" to
+            LittlerootTown_EventScript_NeedPokemonTriggerLeft,
+        "LittlerootTown_EventScript_NeedPokemonTriggerRight" to
+            LittlerootTown_EventScript_NeedPokemonTriggerRight,
+        "LittlerootTown_EventScript_GiveRunningShoesTrigger0" to
+            LittlerootTown_EventScript_GiveRunningShoes,
+        "LittlerootTown_EventScript_GiveRunningShoesTrigger1" to
+            LittlerootTown_EventScript_GiveRunningShoes,
+        "LittlerootTown_EventScript_GiveRunningShoesTrigger2" to
+            LittlerootTown_EventScript_GiveRunningShoes,
+        "LittlerootTown_EventScript_GiveRunningShoesTrigger3" to
+            LittlerootTown_EventScript_GiveRunningShoes,
+        "LittlerootTown_EventScript_GiveRunningShoesTrigger4" to
+            LittlerootTown_EventScript_GiveRunningShoes,
+        "LittlerootTown_EventScript_GiveRunningShoesTrigger5" to
+            LittlerootTown_EventScript_GiveRunningShoes,
         "LittlerootTown_EventScript_Mom" to LittlerootTown_EventScript_Mom,
         "LittlerootTown_EventScript_TownSign" to LittlerootTown_EventScript_TownSign,
         "LittlerootTown_EventScript_BirchsLabSign" to LittlerootTown_EventScript_BirchsLabSign,

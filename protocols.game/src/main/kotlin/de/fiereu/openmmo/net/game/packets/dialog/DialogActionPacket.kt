@@ -10,8 +10,12 @@ data class CreatureDataArg(val value: Int, val args: List<DialogMessageArg>) : D
 
 data class CreatureMovesArg(val team: Byte, val moveIds: List<Short>) : DialogMessageArg()
 
-data class MoveAnimationArg(val sourceSlot: Byte, val targetSlot: Byte, val moveId: Short) :
-    DialogMessageArg()
+/** Fills a ROM string variable with a species name. */
+data class TextPokemonSpeciesArg(
+    val partySlot: Byte,
+    val stringVariable: Byte,
+    val speciesId: Short,
+) : DialogMessageArg()
 
 data class TextCreatureArg(
     val slot: Byte,
@@ -38,8 +42,7 @@ private val DialogMessageArgCodec: Codec<DialogMessageArg> =
             }
 
             2 -> {
-              val moveId = S16LE.read(buf)
-              MoveAnimationArg(buf.readByte(), buf.readByte(), moveId)
+              TextPokemonSpeciesArg(buf.readByte(), buf.readByte(), S16LE.read(buf))
             }
 
             3 -> TextCreatureArg(buf.readByte(), buf.readByte(), S16LE.read(buf), S16LE.read(buf))
@@ -63,11 +66,11 @@ private val DialogMessageArgCodec: Codec<DialogMessageArg> =
             value.moveIds.forEach { S16LE.write(buf, it) }
           }
 
-          is MoveAnimationArg -> {
+          is TextPokemonSpeciesArg -> {
             buf.writeByte(2)
-            S16LE.write(buf, value.moveId)
-            buf.writeByte(value.sourceSlot)
-            buf.writeByte(value.targetSlot)
+            buf.writeByte(value.partySlot)
+            buf.writeByte(value.stringVariable)
+            S16LE.write(buf, value.speciesId)
           }
 
           is TextCreatureArg -> {

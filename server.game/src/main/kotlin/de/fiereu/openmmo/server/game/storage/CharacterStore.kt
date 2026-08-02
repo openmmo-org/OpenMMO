@@ -4,6 +4,7 @@ import de.fiereu.openmmo.common.CharacterInfo
 import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.enums.Direction
+import de.fiereu.openmmo.story.generated.hoenn.HoennFlags
 import de.fiereu.openmmo.story.generated.hoenn.HoennVars
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDateTime
@@ -24,6 +25,21 @@ private val log = KotlinLogging.logger {}
 
 private val FLUSH_TICK = 5.seconds
 private val FLUSH_DEBOUNCE = 10.seconds
+private const val KANTO: Byte = 0
+private const val HOENN: Byte = 1
+
+private data class StartingPosition(
+    val bankId: Byte,
+    val mapId: Byte,
+    val x: Short,
+    val y: Short,
+)
+
+private val SHOWCASE_STARTS =
+    mapOf(
+        // PalletTown_PlayersHouse_2F.
+        KANTO to StartingPosition(4, 1, 6, 6),
+    )
 
 data class StoredCharacter(
     val info: CharacterInfo,
@@ -64,7 +80,15 @@ constructor(
   suspend fun createCharacter(
       userId: Int,
       name: String,
+      gender: Byte = MALE,
+      startingRegion: Byte = HOENN,
   ): StoredCharacter {
+    require(gender == MALE || gender == FEMALE) { "Unsupported character gender $gender" }
+    require(startingRegion == KANTO || startingRegion == HOENN) {
+      "Unsupported starting region $startingRegion"
+    }
+    val female = gender == FEMALE
+    val showcaseStart = SHOWCASE_STARTS[startingRegion]
     val id = entityIds.newCharacterId()
     val now = LocalDateTime.now()
     val info =
@@ -73,7 +97,8 @@ constructor(
             name = name,
             namePrefix = "",
             userId = userId,
-            rivalSex = 0,
+            // This historical field stores the player's gender.
+            rivalSex = gender,
             lastLogin = now,
             createdAt = now,
             money = 30000,
@@ -83,30 +108,55 @@ constructor(
             pcExtraSlots = 0,
             battleBoxExtraSlots = 0,
             templateAmount = 0,
-            // New characters start inside the moving truck (InsideOfTruck, bank 75 map 40). Walking
-            // out warps to Littleroot, where the intro var below drives the mom cutscene.
-            positionRegionId = 1,
-            positionBankId = 75,
-            positionMapId = 40,
-            positionX = 2,
-            positionY = 2,
+            // Hoenn starts inside the moving truck.
+            positionRegionId = startingRegion,
+            positionBankId = showcaseStart?.bankId ?: 75,
+            positionMapId = showcaseStart?.mapId ?: 40,
+            positionX = showcaseStart?.x ?: 2,
+            positionY = showcaseStart?.y ?: 2,
             repelLeft = 0,
             repelItemId = 0,
             lureLeft = 0,
             lureItemId = 0,
-            // The truck's exit is a MAP_DYNAMIC warp. Point it at Littleroot Town for the intro,
-            // the
-            // same thing the decomp setdynamicwarp does at new game. Facing right off the truck.
-            dynamicWarp = DynamicWarp(1, 50, 9, 3, 10, Direction.RIGHT),
+            // The truck exit uses the player's dynamic warp.
+            dynamicWarp =
+                if (showcaseStart != null) null
+                else
+                    DynamicWarp(
+                        1,
+                        50,
+                        9,
+                        if (female) 12 else 3,
+                        10,
+                        Direction.RIGHT,
+                    ),
         )
-    // Male intro path. Gender selection is not implemented yet, so everyone takes the male branch.
-    // TODO Support the female intro path
-    //  Add character gender (checkplayergender) so new characters can take the female Littleroot
-    //  intro (VAR_LITTLEROOT_INTRO_STATE = 2, May's house at 12,10) instead of always the male one.
-    val storyVars = mutableMapOf(HoennVars.VAR_LITTLEROOT_INTRO_STATE to 1)
+    val storyFlags =
+        if (showcaseStart != null) mutableSetOf<String>()
+        else
+            (HoennFlags.initiallySet +
+                    (if (female) HoennFlags.femaleIntro else HoennFlags.maleIntro) +
+                    HoennFlags.FLAG_HIDE_MAP_NAME_POPUP)
+                .toMutableSet()
+    val housesState =
+        if (female) HoennVars.VAR_LITTLEROOT_HOUSES_STATE_MAY
+        else HoennVars.VAR_LITTLEROOT_HOUSES_STATE_BRENDAN
+    val storyVars =
+        if (showcaseStart != null) mutableMapOf<String, Int>()
+        else
+            mutableMapOf(
+                HoennVars.VAR_LITTLEROOT_INTRO_STATE to if (female) 2 else 1,
+                housesState to 1,
+            )
     val stored =
         StoredCharacter(
-            info, mutableListOf(), mutableListOf(), mutableMapOf(), storyVars = storyVars)
+            info,
+            mutableListOf(),
+            mutableListOf(),
+            mutableMapOf(),
+            storyFlags = storyFlags,
+            storyVars = storyVars,
+        )
     repository.insertAggregate(stored)
     characters[id] = stored
     charactersByUser.computeIfAbsent(userId) { CopyOnWriteArrayList() }.add(id)
@@ -135,6 +185,16 @@ constructor(
     loaded.forEach { pendingUnload.remove(it.info.id) }
     charactersByUser.putIfAbsent(userId, CopyOnWriteArrayList(loaded.map { it.info.id }))
     return loaded
+  }
+
+  /** Permanently delete an owned character and evict every cached reference to it. */
+  suspend fun deleteCharacter(userId: Int, characterId: Long): Boolean {
+    if (!repository.deleteById(userId, characterId)) return false
+    characters.remove(characterId)
+    charactersByUser[userId]?.remove(characterId)
+    dirtySince.remove(characterId)
+    pendingUnload.remove(characterId)
+    return true
   }
 
   fun updateCharacter(info: CharacterInfo) {
@@ -183,6 +243,19 @@ constructor(
     val newInfo = stored.info.copy(money = stored.info.money + amount)
     characters[characterId] = stored.copy(info = newInfo)
     markDirty(characterId)
+  }
+
+  /** Add (or remove with a negative amount) one persisted bag stack. */
+  fun addItem(characterId: Long, itemId: Int, amount: Int): Boolean {
+    val stored = characters[characterId] ?: return false
+    val oldQuantity = stored.items[itemId] ?: 0
+    val newQuantity = oldQuantity + amount
+    if (newQuantity < 0) return false
+    val items = stored.items.toMutableMap()
+    if (newQuantity == 0) items.remove(itemId) else items[itemId] = newQuantity
+    characters[characterId] = stored.copy(items = items)
+    markDirty(characterId)
+    return true
   }
 
   /** Set (or clear with null) the runtime destination for MAP_DYNAMIC warps (setdynamicwarp). */
@@ -292,5 +365,10 @@ constructor(
     }
     val stored = characters.remove(id) ?: return
     charactersByUser.remove(stored.info.userId)
+  }
+
+  private companion object {
+    const val MALE: Byte = 0
+    const val FEMALE: Byte = 1
   }
 }

@@ -5,6 +5,7 @@ import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.packets.DialogDataPacket
+import de.fiereu.openmmo.net.game.packets.NpcUpdatePacket
 import de.fiereu.openmmo.server.game.script.MovementStep
 import de.fiereu.openmmo.server.game.session.PlayerState
 import de.fiereu.openmmo.server.game.storage.CharacterStore
@@ -48,12 +49,126 @@ constructor(
     drive(session, entityId, Pose(npc.x, npc.y, npc.facing), steps)
   }
 
+  /** Starts concurrent NPC movement paths. */
+  suspend fun moveNpcs(
+      session: SessionContext,
+      state: PlayerState,
+      paths: List<Pair<Int, List<MovementStep>>>,
+  ) {
+    val charId = state.characterId ?: return
+    val info = characterStore.getCharacter(charId)?.info ?: return
+    val map =
+        mapManager.getMap(info.positionRegionId, info.positionBankId, info.positionMapId) ?: return
+    val resolved =
+        paths.mapNotNull { (localId, steps) ->
+          if (map.npcs.none { it.entityIdx == localId }) return@mapNotNull null
+          npcService.entityIdFor(
+              info.positionBankId.toInt(), info.positionMapId.toInt(), localId) to steps
+        }
+    resolved.forEach { (entityId, steps) -> sendActions(session, entityId, steps) }
+    delay(resolved.maxOfOrNull { (_, steps) -> durationMs(steps) } ?: 0)
+  }
+
+  /** Starts player and NPC movement together. */
+  suspend fun moveSelfAndNpcs(
+      session: SessionContext,
+      state: PlayerState,
+      selfSteps: List<MovementStep>,
+      paths: List<Pair<Int, List<MovementStep>>>,
+  ) {
+    val charId = state.characterId ?: return
+    val info = characterStore.getCharacter(charId)?.info ?: return
+    val map =
+        mapManager.getMap(info.positionRegionId, info.positionBankId, info.positionMapId) ?: return
+    val resolved =
+        paths.mapNotNull { (localId, steps) ->
+          if (map.npcs.none { it.entityIdx == localId }) return@mapNotNull null
+          npcService.entityIdFor(
+              info.positionBankId.toInt(), info.positionMapId.toInt(), localId) to steps
+        }
+    sendActions(session, info.id, selfSteps)
+    resolved.forEach { (entityId, steps) -> sendActions(session, entityId, steps) }
+    delay(
+        maxOf(
+            durationMs(selfSteps),
+            resolved.maxOfOrNull { (_, steps) -> durationMs(steps) } ?: 0,
+        ))
+
+    val start = Pose(info.positionX.toInt(), info.positionY.toInt(), state.facingDirection)
+    val end = applySteps(start, selfSteps)
+    characterStore.updatePosition(charId, end.x.toShort(), end.y.toShort())
+    state.x = end.x.toShort()
+    state.y = end.y.toShort()
+    state.facingDirection = end.facing
+  }
+
   /** Show a normally hidden map npc to the player for a cutscene (the decomp addobject). */
   fun showNpc(session: SessionContext, state: PlayerState, localId: Int) {
     val charId = state.characterId ?: return
     val info = characterStore.getCharacter(charId)?.info ?: return
     npcService.spawnNpc(session, info.positionBankId.toInt(), info.positionMapId.toInt(), localId)
   }
+
+  /** Show a normally hidden map npc at an overridden cutscene position. */
+  fun showNpcAt(session: SessionContext, state: PlayerState, localId: Int, x: Int, y: Int) {
+    val charId = state.characterId ?: return
+    val info = characterStore.getCharacter(charId)?.info ?: return
+    npcService.spawnNpcAt(
+        session, info.positionBankId.toInt(), info.positionMapId.toInt(), localId, x, y)
+  }
+
+  /** Relocate an npc that the normal map spawn already created. */
+  fun repositionNpc(session: SessionContext, state: PlayerState, localId: Int, x: Int, y: Int) {
+    val charId = state.characterId ?: return
+    val info = characterStore.getCharacter(charId)?.info ?: return
+    npcService.repositionNpc(
+        session, info.positionBankId.toInt(), info.positionMapId.toInt(), localId, x, y)
+  }
+
+  /** Repositions the player and synchronizes server state. */
+  fun repositionSelf(
+      session: SessionContext,
+      state: PlayerState,
+      x: Int,
+      y: Int,
+      facing: Direction,
+  ) {
+    val charId = state.characterId ?: return
+    val info = characterStore.getCharacter(charId)?.info ?: return
+    session.send(
+        NpcUpdatePacket(
+            entityId = info.id,
+            regionId = info.positionRegionId.toInt(),
+            bankId = info.positionBankId.toInt(),
+            mapId = info.positionMapId.toInt(),
+            x = x,
+            y = y,
+            facing = 0xF6,
+            unk = facing.ordinal,
+        ))
+    characterStore.updatePosition(charId, x.toShort(), y.toShort())
+    state.x = x.toShort()
+    state.y = y.toShort()
+    state.facingDirection = facing
+  }
+
+  /** Removes a cutscene NPC and its collision. */
+  fun removeNpc(session: SessionContext, state: PlayerState, localId: Int) {
+    val charId = state.characterId ?: return
+    val info = characterStore.getCharacter(charId)?.info ?: return
+    npcService.despawnNpc(session, info.positionBankId.toInt(), info.positionMapId.toInt(), localId)
+  }
+
+  /** Resolves local NPC ids to entity ids. */
+  fun npcEntityId(state: PlayerState, localId: Int): Long? {
+    val charId = state.characterId ?: return null
+    val info = characterStore.getCharacter(charId)?.info ?: return null
+    return npcService.entityIdFor(info.positionBankId.toInt(), info.positionMapId.toInt(), localId)
+  }
+
+  /** Returns the created player's gender. */
+  fun playerGender(state: PlayerState): Byte? =
+      state.characterId?.let(characterStore::getCharacter)?.info?.rivalSex
 
   /**
    * Set the destination a MAP_DYNAMIC warp resolves to for this player (the decomp setdynamicwarp).
@@ -89,25 +204,41 @@ constructor(
       steps: List<MovementStep>,
   ): Pose {
     if (steps.isEmpty()) return start
-    // The whole sequence goes in one movement packet (entityId, startIndex 0, count, action bytes).
-    // The client walks/turns the entity itself, so no coords are sent.
-    val actions = ByteArray(steps.size) { steps[it].action.toByte() }
-    session.send(DialogDataPacket(entityId, unk1 = 0, type = steps.size, data = actions))
+    sendActions(session, entityId, steps)
     // waitmovement: hold until the client has had time to play the sequence.
-    delay(steps.sumOf { if (it.walks) WALK_STEP_MS else FACE_STEP_MS })
+    delay(durationMs(steps))
+    return applySteps(start, steps)
+  }
+
+  private fun applySteps(start: Pose, steps: List<MovementStep>): Pose {
     var pose = start
     for (step in steps) {
       pose =
           if (step.walks)
               Pose(pose.x + step.direction.dx, pose.y + step.direction.dy, step.direction)
-          else pose.copy(facing = step.direction)
+          else if (step.changesFacing) pose.copy(facing = step.direction) else pose
     }
     return pose
   }
 
+  private fun sendActions(
+      session: SessionContext,
+      entityId: Long,
+      steps: List<MovementStep>,
+  ) {
+    if (steps.isEmpty()) return
+    // Send each movement sequence in one packet.
+    val actions = ByteArray(steps.size) { steps[it].action.toByte() }
+    session.send(DialogDataPacket(entityId, unk1 = 0, type = steps.size, data = actions))
+  }
+
+  private fun durationMs(steps: List<MovementStep>): Long =
+      steps.sumOf { if (it.fast) FAST_STEP_MS else if (it.walks) WALK_STEP_MS else FACE_STEP_MS }
+
   private companion object {
     // Rough client step timings, tune if the animation and server drift apart.
     const val WALK_STEP_MS = 250L
+    const val FAST_STEP_MS = 130L
     const val FACE_STEP_MS = 120L
   }
 }

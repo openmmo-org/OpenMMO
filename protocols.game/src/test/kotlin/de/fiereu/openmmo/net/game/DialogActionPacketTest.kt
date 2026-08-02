@@ -6,6 +6,7 @@ import de.fiereu.openmmo.common.utils.hexToBytes
 import de.fiereu.openmmo.common.utils.toHex
 import de.fiereu.openmmo.net.game.packets.dialog.CreatureDataArg
 import de.fiereu.openmmo.net.game.packets.dialog.DialogActionPacketCodec
+import de.fiereu.openmmo.net.game.packets.dialog.TextPokemonSpeciesArg
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -37,5 +38,13 @@ class DialogActionPacketTest :
         packet.entityId shouldBe 0x1ac0c486bf08e00aL
         packet.contextValue shouldBe 0x04b0
         packet.messageArgs shouldBe listOf(CreatureDataArg(0x03d09209, emptyList()))
+      }
+
+      test("species-name argument uses the captured party slot variable and species order") {
+        val bytes = "000400000000ffffffffffffffff0000000001020101ff0000".hexToBytes()
+        val packet = DialogActionPacketCodec.decodeBytes(bytes)
+
+        packet.messageArgs shouldBe listOf(TextPokemonSpeciesArg(1, 1, 255))
+        DialogActionPacketCodec.encodeToBytes(packet) shouldBe bytes
       }
     })

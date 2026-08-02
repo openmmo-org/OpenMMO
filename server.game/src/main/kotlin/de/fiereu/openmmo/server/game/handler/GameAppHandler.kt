@@ -12,13 +12,15 @@ import de.fiereu.openmmo.net.game.packets.CancelSocialInteractionPacket
 import de.fiereu.openmmo.net.game.packets.ChatMessagePacket
 import de.fiereu.openmmo.net.game.packets.ChatMessageSendPacket
 import de.fiereu.openmmo.net.game.packets.CreateCharacterPacket
+import de.fiereu.openmmo.net.game.packets.DeleteCharacterPacket
 import de.fiereu.openmmo.net.game.packets.DialogChoicePacket
 import de.fiereu.openmmo.net.game.packets.EntityInteractPacket
 import de.fiereu.openmmo.net.game.packets.FaceDirectionPacket
-import de.fiereu.openmmo.net.game.packets.FriendProfileRequestPacket
 import de.fiereu.openmmo.net.game.packets.JoinPacket
 import de.fiereu.openmmo.net.game.packets.KeepAlivePacket
+import de.fiereu.openmmo.net.game.packets.MapLoadedAckPacket
 import de.fiereu.openmmo.net.game.packets.MovementPacket
+import de.fiereu.openmmo.net.game.packets.NullPacket
 import de.fiereu.openmmo.net.game.packets.RemoveFriendPacket
 import de.fiereu.openmmo.net.game.packets.RequestCharactersPacket
 import de.fiereu.openmmo.net.game.packets.RequestPlayerPacket
@@ -101,6 +103,7 @@ constructor(
     onSuspend<CreateCharacterPacket> { event -> loginService.onCreateCharacter(event) }
     onSuspend<RequestCharactersPacket> { event -> loginService.onCharacterRequest(event) }
     onSuspend<SelectCharacterPacket> { event -> loginService.onCharacterSelected(event) }
+    onSuspend<DeleteCharacterPacket> { event -> loginService.onDeleteCharacter(event) }
     onSuspend<RequestPlayerPacket> { event -> loginService.onRequestPlayer(event) }
 
     onSuspend<MovementPacket> { event -> movementService.onMovement(event) }
@@ -115,7 +118,6 @@ constructor(
     on<RemoveFriendPacket> { event -> socialService.onRemoveFriend(event) }
     on<BlockPlayerPacket> { event -> socialService.onBlockPlayer(event) }
     on<UnblockPlayerPacket> { event -> socialService.onUnblockPlayer(event) }
-    on<FriendProfileRequestPacket> { event -> socialService.onFriendProfileRequest(event) }
     on<RequestSocialProfilePacket> { event -> socialService.onRequestSocialProfile(event) }
     on<CancelSocialInteractionPacket> { event -> socialService.onCancelSocialInteraction(event) }
 
@@ -152,7 +154,10 @@ constructor(
     on<BattleTeamPreviewConfirmPacket> { event -> battleService.onBattlePacket(event) }
     on<BattleRewardSelectPacket> { event -> battleService.onBattlePacket(event) }
     on<BattleChallengeRequestPacket> { event -> battleService.onBattlePacket(event) }
+    on<MapLoadedAckPacket> { event -> battleService.onClientReady(event) }
 
+    // The client sends an empty heartbeat packet.
+    on<NullPacket> {}
     on<KeepAlivePacket> { event -> event.session.send(event.packet) }
     on<ChatMessagePacket> { event -> onChatMessage(event) }
     on<ChatMessageSendPacket> { event -> battleService.onChatSend(event) }

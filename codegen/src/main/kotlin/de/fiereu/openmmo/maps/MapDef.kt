@@ -36,6 +36,8 @@ class MapDef(
     val onTransitionScript: String = "",
     /** Conditional entry scripts: run [MapFrameScript.script] when its var equals its value. */
     val onFrameScripts: List<MapFrameScript> = emptyList(),
+    /** Conditional tile scripts checked after the player completes a step. */
+    val coordScripts: List<MapCoordScript> = emptyList(),
     private val blockData: String = "",
     private val behaviorData: String = "",
 ) {
@@ -52,6 +54,16 @@ class MapDef(
 
 /** One ON_FRAME entry: run [script] when the story var [varKey] currently equals [value]. */
 data class MapFrameScript(
+    val varKey: String,
+    val value: Int,
+    val script: String,
+)
+
+/** One map coordinate trigger, corresponding to a decomp map.json `coord_events` entry. */
+data class MapCoordScript(
+    val x: Int,
+    val y: Int,
+    val elevation: Int,
     val varKey: String,
     val value: Int,
     val script: String,

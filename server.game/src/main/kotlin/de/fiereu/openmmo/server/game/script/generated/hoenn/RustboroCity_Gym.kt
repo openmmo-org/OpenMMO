@@ -1,7 +1,15 @@
 package de.fiereu.openmmo.server.game.script.generated.hoenn
 
+import de.fiereu.openmmo.dialog.generated.hoenn.RustboroCity_Gym
+import de.fiereu.openmmo.server.game.battle.BattleResult
 import de.fiereu.openmmo.server.game.script.Script
 import de.fiereu.openmmo.server.game.script.ScriptContext
+import de.fiereu.openmmo.story.generated.hoenn.HoennFlags
+import de.fiereu.openmmo.story.generated.hoenn.HoennVars
+
+private const val GEODUDE = 74
+private const val NOSEPASS = 299
+private const val TM39_ROCK_TOMB_ITEM = 5327
 
 /**
  * Not ported yet. Decomp body:
@@ -16,7 +24,38 @@ import de.fiereu.openmmo.server.game.script.ScriptContext
  * ```
  */
 internal object RustboroCity_Gym_EventScript_Roxanne : Script {
-  override suspend fun run(ctx: ScriptContext) = TODO("port RustboroCity_Gym_EventScript_Roxanne")
+  override suspend fun run(ctx: ScriptContext) {
+    if (ctx.isFlagSet(HoennFlags.FLAG_DEFEATED_RUSTBORO_GYM)) {
+      if (!ctx.isFlagSet(HoennFlags.FLAG_RECEIVED_TM_ROCK_TOMB)) giveRockTomb(ctx)
+      else ctx.say(RustboroCity_Gym.RoxannePostBattle)
+      return
+    }
+    ctx.say(RustboroCity_Gym.RoxanneIntro)
+
+    // Trainer switching uses consecutive battle rounds.
+    if (ctx.battle(GEODUDE, 12, 33, 111, 88, 317) != BattleResult.VICTORY) return
+    if (ctx.battle(GEODUDE, 12, 33, 111, 88, 317) != BattleResult.VICTORY) return
+    if (ctx.battle(NOSEPASS, 15, 335, 106, 33, 317) != BattleResult.VICTORY) return
+
+    ctx.say(RustboroCity_Gym.RoxanneDefeat)
+    ctx.say(RustboroCity_Gym.ReceivedStoneBadge)
+    ctx.say(RustboroCity_Gym.StoneBadgeInfoTakeThis)
+    ctx.setFlag(HoennFlags.FLAG_DEFEATED_RUSTBORO_GYM)
+    ctx.setFlag(HoennFlags.FLAG_BADGE01_GET)
+    ctx.setVar(HoennVars.VAR_RUSTBORO_CITY_STATE, 1)
+    ctx.setVar(
+        HoennVars.VAR_PETALBURG_GYM_STATE,
+        ctx.getVar(HoennVars.VAR_PETALBURG_GYM_STATE) + 1,
+    )
+    giveRockTomb(ctx)
+  }
+}
+
+private suspend fun giveRockTomb(ctx: ScriptContext) {
+  if (ctx.giveItem(TM39_ROCK_TOMB_ITEM)) {
+    ctx.setFlag(HoennFlags.FLAG_RECEIVED_TM_ROCK_TOMB)
+    ctx.say(RustboroCity_Gym.ExplainRockTomb)
+  }
 }
 
 /**
@@ -55,7 +94,13 @@ internal object RustboroCity_Gym_EventScript_Tommy : Script {
  * ```
  */
 internal object RustboroCity_Gym_EventScript_GymGuide : Script {
-  override suspend fun run(ctx: ScriptContext) = TODO("port RustboroCity_Gym_EventScript_GymGuide")
+  override suspend fun run(ctx: ScriptContext) {
+    if (ctx.isFlagSet(HoennFlags.FLAG_DEFEATED_RUSTBORO_GYM)) {
+      ctx.say(RustboroCity_Gym.GymGuidePostVictory)
+    } else {
+      ctx.say(RustboroCity_Gym.GymGuideAdvice)
+    }
+  }
 }
 
 /**
@@ -80,8 +125,7 @@ internal object RustboroCity_Gym_EventScript_Marc : Script {
  * ```
  */
 internal object RustboroCity_Gym_EventScript_LeftGymStatue : Script {
-  override suspend fun run(ctx: ScriptContext) =
-      TODO("port RustboroCity_Gym_EventScript_LeftGymStatue")
+  override suspend fun run(ctx: ScriptContext) = showGymStatue(ctx)
 }
 
 /**
@@ -94,8 +138,12 @@ internal object RustboroCity_Gym_EventScript_LeftGymStatue : Script {
  * ```
  */
 internal object RustboroCity_Gym_EventScript_RightGymStatue : Script {
-  override suspend fun run(ctx: ScriptContext) =
-      TODO("port RustboroCity_Gym_EventScript_RightGymStatue")
+  override suspend fun run(ctx: ScriptContext) = showGymStatue(ctx)
+}
+
+private suspend fun showGymStatue(ctx: ScriptContext) {
+  if (ctx.isFlagSet(HoennFlags.FLAG_BADGE01_GET)) ctx.sign(RustboroCity_Gym.GymStatueCertified)
+  else ctx.sign(RustboroCity_Gym.GymStatue)
 }
 
 internal val RustboroCity_GymScripts: Map<String, Script> =

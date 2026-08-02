@@ -47,11 +47,13 @@ class StoryServiceTest :
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
           val id = store.createCharacter(1, "Ash").info.id
           val before = store.getCharacter(id)!!.storyFlags
+          val initialSize = before.size
 
           StoryService(store).setFlag(id, "hoenn/FLAG_RESCUED_BIRCH")
 
-          before.size shouldBe 0
-          store.getCharacter(id)!!.storyFlags.size shouldBe 1
+          before.size shouldBe initialSize
+          ("hoenn/FLAG_RESCUED_BIRCH" in before) shouldBe false
+          store.getCharacter(id)!!.storyFlags.size shouldBe initialSize + 1
         }
       }
 
@@ -66,7 +68,8 @@ class StoryServiceTest :
           story.setVar(id, "hoenn/VAR_LITTLEROOT_TOWN_STATE", 4)
           store.flushAll()
 
-          repo.saved[id]!!.storyFlags shouldBe setOf("hoenn/FLAG_ADVENTURE_STARTED")
+          repo.saved[id]!!.storyFlags shouldBe store.getCharacter(id)!!.storyFlags
+          ("hoenn/FLAG_ADVENTURE_STARTED" in repo.saved[id]!!.storyFlags) shouldBe true
           // New characters are seeded with the intro var, so check the entry rather than the map.
           repo.saved[id]!!.storyVars["hoenn/VAR_LITTLEROOT_TOWN_STATE"] shouldBe 4
         }

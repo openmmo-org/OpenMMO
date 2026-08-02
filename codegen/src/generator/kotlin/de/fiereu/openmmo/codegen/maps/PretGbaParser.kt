@@ -168,7 +168,7 @@ class PretGbaParser(
         groupName = groupName,
         mapId = mapJson["id"]?.jsonPrimitive?.contentOrNull ?: mapDirName,
         region = region.regionId,
-        bank = groupIndex + BANK_GROUP_OFFSET,
+        bank = wireBank(groupIndex),
         index = mapIndex,
         width = layout["width"]?.jsonPrimitive?.intOrNull ?: 20,
         height = layout["height"]?.jsonPrimitive?.intOrNull ?: 15,
@@ -194,6 +194,7 @@ class PretGbaParser(
         bgEvents = parseBgEvents(mapJson),
         onTransitionScript = parseOnTransitionScript(mapDirName),
         onFrameScripts = parseOnFrameScripts(mapDirName),
+        coordScripts = parseCoordScripts(mapJson),
     )
   }
 
@@ -217,7 +218,7 @@ class PretGbaParser(
         ParsedConnection(
             direction = dir,
             offset = obj["offset"]?.jsonPrimitive?.intOrNull ?: 0,
-            targetBank = addr.groupIndex + BANK_GROUP_OFFSET,
+            targetBank = wireBank(addr.groupIndex),
             targetMap = addr.mapIndex,
         )
       } ?: emptyList()
@@ -257,7 +258,7 @@ class PretGbaParser(
             y = y,
             elevation = (srcElevation - 1).coerceAtLeast(0),
             targetRegion = region.regionId,
-            targetBank = destAddr.groupIndex + BANK_GROUP_OFFSET,
+            targetBank = wireBank(destAddr.groupIndex),
             targetMap = destAddr.mapIndex,
             targetX = target?.get("x")?.jsonPrimitive?.intOrNull ?: x,
             targetY = target?.get("y")?.jsonPrimitive?.intOrNull ?: y,
@@ -335,6 +336,25 @@ class PretGbaParser(
                 obj["player_facing_dir"]?.jsonPrimitive?.contentOrNull
                     ?: "BG_EVENT_PLAYER_FACING_ANY",
             script = obj["script"]?.jsonPrimitive?.contentOrNull ?: "0x0",
+        )
+      } ?: emptyList()
+
+  /** Scripts fired on map trigger coordinates. */
+  private fun parseCoordScripts(mapJson: JsonObject): List<ParsedCoordScript> =
+      mapJson["coord_events"]?.jsonArrayOrNull()?.mapNotNull { event ->
+        val obj = event.jsonObject
+        if (obj["type"]?.jsonPrimitive?.contentOrNull != "trigger") return@mapNotNull null
+        val varName = obj["var"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+        val value =
+            obj["var_value"]?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: return@mapNotNull null
+        val script = obj["script"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+        ParsedCoordScript(
+            x = obj["x"]?.jsonPrimitive?.intOrNull ?: 0,
+            y = obj["y"]?.jsonPrimitive?.intOrNull ?: 0,
+            elevation = obj["elevation"]?.jsonPrimitive?.intOrNull ?: 0,
+            varKey = "${region.name}/$varName",
+            value = value,
+            script = script,
         )
       } ?: emptyList()
 
@@ -435,11 +455,11 @@ class PretGbaParser(
     val file = File(rootDir, "src/data/tilesets/headers.h")
     if (!file.exists()) return emptyMap()
     val pattern = Regex("""^const struct Tileset\s+(gTileset_\w+)\s*=""")
-    var index = 0
+    var index = region.gbaPaletteOffset
     val out = mutableMapOf<String, Int>()
     file.forEachLine { line ->
       val m = pattern.find(line.trim()) ?: return@forEachLine
-      out[m.groupValues[1]] = 100 + index
+      out[m.groupValues[1]] = index
       index++
     }
     return out
@@ -453,6 +473,8 @@ class PretGbaParser(
     while (buf.remaining() >= 2) out += buf.short.toInt() and 0xFFFF
     return out
   }
+
+  private fun wireBank(groupIndex: Int): Int = groupIndex + region.gbaBankOffset
 
   private fun JsonElement.jsonArrayOrNull() = (this as? JsonArray)
 }

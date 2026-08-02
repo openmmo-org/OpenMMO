@@ -204,4 +204,31 @@ class CharacterStoreCacheTest :
           store.getCharacter(id).shouldNotBeNull()
         }
       }
+
+      test("deleting an owned character removes its persisted and cached aggregate") {
+        runTest {
+          val repo = FakeCharacterRepository()
+          val store = CharacterStore(repo, EntityIdService(), backgroundScope)
+          val id = store.createCharacter(7, "Misty").info.id
+
+          store.deleteCharacter(userId = 7, characterId = id) shouldBe true
+
+          repo.saved[id] shouldBe null
+          store.getCharacter(id) shouldBe null
+          store.getCharactersByUser(7) shouldBe emptyList()
+        }
+      }
+
+      test("character deletion rejects an id owned by another user") {
+        runTest {
+          val repo = FakeCharacterRepository()
+          val store = CharacterStore(repo, EntityIdService(), backgroundScope)
+          val id = store.createCharacter(7, "Misty").info.id
+
+          store.deleteCharacter(userId = 8, characterId = id) shouldBe false
+
+          repo.saved[id].shouldNotBeNull()
+          store.getCharacter(id).shouldNotBeNull()
+        }
+      }
     })

@@ -27,4 +27,10 @@ class FakeCharacterRepository : CharacterRepository {
     saveCount.incrementAndGet()
     saved[stored.info.id] = stored
   }
+
+  override suspend fun deleteById(userId: Int, id: Long): Boolean {
+    val stored = saved[id] ?: return false
+    if (stored.info.userId != userId) return false
+    return saved.remove(id, stored)
+  }
 }
