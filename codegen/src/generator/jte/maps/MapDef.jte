@@ -15,6 +15,7 @@ import de.fiereu.openmmo.common.enums.MapType
 import de.fiereu.openmmo.common.enums.MovementType
 import de.fiereu.openmmo.common.enums.Weather
 import de.fiereu.openmmo.maps.BgEventDef
+import de.fiereu.openmmo.maps.MapCoordScript
 import de.fiereu.openmmo.maps.MapDef
 import de.fiereu.openmmo.maps.MapFrameScript
 import de.fiereu.openmmo.maps.NpcDef
@@ -25,9 +26,9 @@ import de.fiereu.openmmo.net.game.packets.MapData
 
 internal val ${objectName}: MapDef =
     MapDef(
-        regionId = ${map.getRegion()},
-        bankId = ${map.getBank()},
-        mapId = ${map.getIndex()},
+        regionId = ${map.getRegion()}.toByte(),
+        bankId = ${map.getBank()}.toByte(),
+        mapId = ${map.getIndex()}.toByte(),
         width = ${map.getWidth()},
         height = ${map.getHeight()},
         paletteIdx1 = ${map.getPaletteIdx1()},
@@ -48,4 +49,5 @@ internal val ${objectName}: MapDef =
         bgEvents = ${RenderUtil.INSTANCE.bgEvents(map.getBgEvents())},
         onTransitionScript = "${map.getOnTransitionScript()}",
         onFrameScripts = ${RenderUtil.INSTANCE.frameScripts(map.getOnFrameScripts())},
+        coordScripts = ${RenderUtil.INSTANCE.coordScripts(map.getCoordScripts())},
     )

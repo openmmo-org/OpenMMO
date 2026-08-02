@@ -39,6 +39,12 @@ class GameCodecRoundtripTest :
         MovementPacketCodec.decodeBytes(MovementPacketCodec.encodeToBytes(pkt)) shouldBe pkt
       }
 
+      test("MovementPacket decodes the running flag") {
+        val pkt = MovementPacket(x = 100, y = 250, direction = Direction.UP, running = true)
+        MovementPacketCodec.encodeToBytes(pkt) shouldBe byteArrayOf(100, 0, -6, 0, -127)
+        MovementPacketCodec.decodeBytes(byteArrayOf(100, 0, -6, 0, -127)) shouldBe pkt
+      }
+
       test("DialogStatePacket roundtrip") {
         DialogStatePacketCodec.encodeToBytes(DialogStatePacket(true)) shouldBe byteArrayOf(1)
         DialogStatePacketCodec.decodeBytes(byteArrayOf(0)) shouldBe DialogStatePacket(false)

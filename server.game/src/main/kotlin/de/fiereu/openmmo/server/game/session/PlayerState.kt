@@ -15,4 +15,6 @@ data class PlayerState(
     var mapId: Int = 3,
     var x: Short = 4,
     var y: Short = 2,
+    /** Trusts one source tile after scripted movement. */
+    var acceptNextMoveSource: Boolean = false,
 )

@@ -19,8 +19,20 @@ class BattleRegistry @Inject constructor() {
       party: List<BattleMonState>,
       wild: BattleMonState,
       rng: BattleRng,
+      catchable: Boolean = true,
+      escapable: Boolean = true,
   ): BattleInstance {
-    val battle = BattleInstance(ids.getAndIncrement(), charId, session, party, wild, rng)
+    val battle =
+        BattleInstance(
+            ids.getAndIncrement(),
+            charId,
+            session,
+            party,
+            wild,
+            rng,
+            catchable,
+            escapable,
+        )
     byChar[charId] = battle
     return battle
   }

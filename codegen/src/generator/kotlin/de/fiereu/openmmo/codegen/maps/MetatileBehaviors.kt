@@ -88,6 +88,10 @@ private constructor(
         when (name) {
           "MB_TALL_GRASS" -> TileBehavior.TALL_GRASS
           "MB_LONG_GRASS" -> TileBehavior.LONG_GRASS
+          "MB_JUMP_EAST" -> TileBehavior.JUMP_EAST
+          "MB_JUMP_WEST" -> TileBehavior.JUMP_WEST
+          "MB_JUMP_NORTH" -> TileBehavior.JUMP_NORTH
+          "MB_JUMP_SOUTH" -> TileBehavior.JUMP_SOUTH
           else -> null
         }
 

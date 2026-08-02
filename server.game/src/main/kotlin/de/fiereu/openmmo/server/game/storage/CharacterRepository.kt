@@ -30,6 +30,9 @@ interface CharacterRepository {
   suspend fun insertAggregate(stored: StoredCharacter)
 
   suspend fun saveAggregate(stored: StoredCharacter)
+
+  /** Deletes a character owned by the user. */
+  suspend fun deleteById(userId: Int, id: Long): Boolean
 }
 
 @Singleton
@@ -64,6 +67,14 @@ constructor(
           tx.deleteFrom(CHARACTERS).where(CHARACTERS.ID.eq(stored.info.id)).execute()
           insert(tx, stored)
         }
+      }
+
+  override suspend fun deleteById(userId: Int, id: Long): Boolean =
+      withContext(dispatcher) {
+        dsl.deleteFrom(CHARACTERS)
+            .where(CHARACTERS.ID.eq(id))
+            .and(CHARACTERS.USER_ID.eq(userId))
+            .execute() == 1
       }
 
   private fun insert(tx: DSLContext, stored: StoredCharacter) {

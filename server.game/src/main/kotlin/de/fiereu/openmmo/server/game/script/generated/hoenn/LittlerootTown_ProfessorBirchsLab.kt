@@ -1,8 +1,86 @@
 package de.fiereu.openmmo.server.game.script.generated.hoenn
 
 import de.fiereu.openmmo.dialog.generated.hoenn.LittlerootTown_ProfessorBirchsLab
+import de.fiereu.openmmo.server.game.script.MovementStep.FACE_LEFT
+import de.fiereu.openmmo.server.game.script.MovementStep.FACE_RIGHT
+import de.fiereu.openmmo.server.game.script.MovementStep.WALK_DOWN
+import de.fiereu.openmmo.server.game.script.MovementStep.WALK_UP
 import de.fiereu.openmmo.server.game.script.Script
 import de.fiereu.openmmo.server.game.script.ScriptContext
+import de.fiereu.openmmo.story.generated.hoenn.HoennFlags
+import de.fiereu.openmmo.story.generated.hoenn.HoennVars
+
+private const val LOCALID_BIRCH = 1
+private const val LOCALID_RIVAL = 2
+private const val POKE_BALL_ITEM = 5004
+private const val TREECKO = 252
+private val HOENN_STARTERS = listOf(TREECKO, 255, 258)
+
+internal object LittlerootTown_ProfessorBirchsLab_OnTransition : Script {
+  override suspend fun run(ctx: ScriptContext) = Unit
+}
+
+internal object LittlerootTown_ProfessorBirchsLab_EventScript_GiveStarterEvent : Script {
+  override suspend fun run(ctx: ScriptContext) {
+    if (ctx.getVar(HoennVars.VAR_BIRCH_LAB_STATE) != 2) return
+    val starter = HOENN_STARTERS.getOrElse(ctx.getVar(HoennVars.VAR_STARTER_MON)) { TREECKO }
+    ctx.sayNpcWithSpeciesName(
+        LOCALID_BIRCH,
+        LittlerootTown_ProfessorBirchsLab.LikeYouToHavePokemon,
+        starter,
+    )
+
+    // The captured client skips the nickname screen.
+    var agreed =
+        ctx.askYesNoNpc(
+            LOCALID_BIRCH,
+            LittlerootTown_ProfessorBirchsLab.MightBeGoodIdeaToGoSeeRival,
+        )
+    while (!agreed) {
+      agreed =
+          ctx.askYesNoNpc(
+              LOCALID_BIRCH,
+              LittlerootTown_ProfessorBirchsLab.DontBeThatWay,
+          )
+    }
+    ctx.sayNpc(LOCALID_BIRCH, LittlerootTown_ProfessorBirchsLab.GetRivalToTeachYou)
+    ctx.clearFlag(HoennFlags.FLAG_HIDE_ROUTE_101_BOY)
+    ctx.setVar(HoennVars.VAR_BIRCH_LAB_STATE, 3)
+  }
+}
+
+internal object LittlerootTown_ProfessorBirchsLab_EventScript_GivePokedexEvent : Script {
+  override suspend fun run(ctx: ScriptContext) {
+    if (ctx.getVar(HoennVars.VAR_BIRCH_LAB_STATE) != 4) return
+    repeat(7) { ctx.moveSelf(WALK_UP) }
+    ctx.sayNpc(LOCALID_BIRCH, LittlerootTown_ProfessorBirchsLab.HeardYouBeatRivalTakePokedex)
+    ctx.sayNpc(LOCALID_BIRCH, LittlerootTown_ProfessorBirchsLab.ReceivedPokedex)
+    ctx.setFlag(HoennFlags.FLAG_SYS_POKEDEX_GET)
+    ctx.setFlag(HoennFlags.FLAG_RECEIVED_POKEDEX_FROM_BIRCH)
+    ctx.sayNpc(LOCALID_BIRCH, LittlerootTown_ProfessorBirchsLab.ExplainPokedex)
+    ctx.moveNpc(LOCALID_RIVAL, WALK_DOWN, FACE_LEFT)
+    ctx.moveSelf(FACE_RIGHT)
+    if (ctx.isFemale) {
+      ctx.sayNpc(
+          LOCALID_RIVAL,
+          LittlerootTown_ProfessorBirchsLab.BrendanGotPokedexTooTakeThese,
+      )
+    } else {
+      ctx.sayNpc(LOCALID_RIVAL, LittlerootTown_ProfessorBirchsLab.MayGotPokedexTooTakeThese)
+    }
+    ctx.giveItem(POKE_BALL_ITEM, 5)
+    if (ctx.isFemale) {
+      ctx.sayNpc(LOCALID_RIVAL, LittlerootTown_ProfessorBirchsLab.CatchCoolPokemonWithPokeBalls)
+    } else {
+      ctx.sayNpc(LOCALID_RIVAL, LittlerootTown_ProfessorBirchsLab.CatchCutePokemonWithPokeBalls)
+    }
+    ctx.setVar(HoennVars.VAR_BIRCH_LAB_STATE, 5)
+    ctx.setFlag(HoennFlags.FLAG_ADVENTURE_STARTED)
+    ctx.setVar(HoennVars.VAR_OLDALE_TOWN_STATE, 1)
+    ctx.setVar(HoennVars.VAR_LITTLEROOT_RIVAL_STATE, 4)
+    ctx.setVar(HoennVars.VAR_LITTLEROOT_TOWN_STATE, 3)
+  }
+}
 
 /**
  * Not ported yet. Decomp body:
@@ -18,8 +96,16 @@ import de.fiereu.openmmo.server.game.script.ScriptContext
  * ```
  */
 internal object LittlerootTown_ProfessorBirchsLab_EventScript_Aide : Script {
-  override suspend fun run(ctx: ScriptContext) =
-      TODO("port LittlerootTown_ProfessorBirchsLab_EventScript_Aide")
+  override suspend fun run(ctx: ScriptContext) {
+    if (ctx.getVar(HoennVars.VAR_BIRCH_LAB_STATE) >= 3) {
+      ctx.say(LittlerootTown_ProfessorBirchsLab.BirchEnjoysRivalsHelpToo)
+    } else if (ctx.isFlagSet(HoennFlags.FLAG_BIRCH_AIDE_MET)) {
+      ctx.say(LittlerootTown_ProfessorBirchsLab.BirchIsntOneForDeskWork)
+    } else {
+      ctx.say(LittlerootTown_ProfessorBirchsLab.BirchAwayOnFieldwork)
+      ctx.setFlag(HoennFlags.FLAG_BIRCH_AIDE_MET)
+    }
+  }
 }
 
 /**
@@ -36,8 +122,13 @@ internal object LittlerootTown_ProfessorBirchsLab_EventScript_Aide : Script {
  * ```
  */
 internal object LittlerootTown_ProfessorBirchsLab_EventScript_Birch : Script {
-  override suspend fun run(ctx: ScriptContext) =
-      TODO("port LittlerootTown_ProfessorBirchsLab_EventScript_Birch")
+  override suspend fun run(ctx: ScriptContext) {
+    if (ctx.getVar(HoennVars.VAR_BIRCH_LAB_STATE) >= 5) {
+      ctx.say(LittlerootTown_ProfessorBirchsLab.CountlessPokemonAwait)
+    } else {
+      ctx.say(LittlerootTown_ProfessorBirchsLab.BirchRivalGoneHome)
+    }
+  }
 }
 
 /**
@@ -139,6 +230,12 @@ internal object LittlerootTown_ProfessorBirchsLab_EventScript_PC : Script {
 
 internal val LittlerootTown_ProfessorBirchsLabScripts: Map<String, Script> =
     mapOf(
+        "LittlerootTown_ProfessorBirchsLab_OnTransition" to
+            LittlerootTown_ProfessorBirchsLab_OnTransition,
+        "LittlerootTown_ProfessorBirchsLab_EventScript_GiveStarterEvent" to
+            LittlerootTown_ProfessorBirchsLab_EventScript_GiveStarterEvent,
+        "LittlerootTown_ProfessorBirchsLab_EventScript_GivePokedexEvent" to
+            LittlerootTown_ProfessorBirchsLab_EventScript_GivePokedexEvent,
         "LittlerootTown_ProfessorBirchsLab_EventScript_Aide" to
             LittlerootTown_ProfessorBirchsLab_EventScript_Aide,
         "LittlerootTown_ProfessorBirchsLab_EventScript_Birch" to

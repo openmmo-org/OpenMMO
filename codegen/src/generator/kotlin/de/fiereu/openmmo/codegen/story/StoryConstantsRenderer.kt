@@ -22,7 +22,13 @@ class StoryConstantsRenderer(
   private val basePackage = "de.fiereu.openmmo.story.generated.$region"
   private val objectPrefix = region.replaceFirstChar { it.uppercase() }
 
-  fun render(flags: List<String>, vars: List<String>) {
+  fun render(
+      flags: List<StoryConstant>,
+      vars: List<StoryConstant>,
+      initialFlags: List<String>,
+      maleIntroFlags: List<String>,
+      femaleIntroFlags: List<String>,
+  ) {
     classCacheDir.mkdirs()
     val engine =
         TemplateEngine.create(
@@ -35,7 +41,16 @@ class StoryConstantsRenderer(
     if (packageRoot.exists()) packageRoot.deleteRecursively()
     packageRoot.mkdirs()
 
-    write(engine, packageRoot, "${objectPrefix}Flags", flags)
+    val knownFlags = flags.associateBy(StoryConstant::name)
+    write(
+        engine,
+        packageRoot,
+        "${objectPrefix}Flags",
+        flags,
+        initialFlags.mapNotNull(knownFlags::get),
+        maleIntroFlags.mapNotNull(knownFlags::get),
+        femaleIntroFlags.mapNotNull(knownFlags::get),
+    )
     write(engine, packageRoot, "${objectPrefix}Vars", vars)
   }
 
@@ -43,7 +58,10 @@ class StoryConstantsRenderer(
       engine: TemplateEngine,
       packageRoot: File,
       objectName: String,
-      names: List<String>,
+      constants: List<StoryConstant>,
+      initialFlags: List<StoryConstant> = emptyList(),
+      maleIntroFlags: List<StoryConstant> = emptyList(),
+      femaleIntroFlags: List<StoryConstant> = emptyList(),
   ) {
     FileOutput(File(packageRoot, "$objectName.kt").toPath()).use { out ->
       engine.render(
@@ -52,7 +70,12 @@ class StoryConstantsRenderer(
               "pkg" to basePackage,
               "objectName" to objectName,
               "namespace" to namespace,
-              "names" to names,
+              "constants" to constants,
+              // Keep lookup methods comfortably below the JVM's per-method bytecode limit.
+              "idChunks" to constants.chunked(128),
+              "initialFlags" to initialFlags,
+              "maleIntroFlags" to maleIntroFlags,
+              "femaleIntroFlags" to femaleIntroFlags,
           ),
           out,
       )

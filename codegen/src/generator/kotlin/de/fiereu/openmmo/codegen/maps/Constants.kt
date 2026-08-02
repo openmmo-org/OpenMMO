@@ -1,7 +1,5 @@
 package de.fiereu.openmmo.codegen.maps
 
-internal const val BANK_GROUP_OFFSET = 50
-
 internal val COMMON_DIR_MAP =
     mapOf(
         "down" to "Direction.DOWN",

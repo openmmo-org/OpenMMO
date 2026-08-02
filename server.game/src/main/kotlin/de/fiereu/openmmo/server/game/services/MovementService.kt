@@ -3,12 +3,13 @@ package de.fiereu.openmmo.server.game.services
 import de.fiereu.network.PacketEvent
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.enums.Direction
+import de.fiereu.openmmo.common.enums.TileBehavior
 import de.fiereu.openmmo.maps.MapDef
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.maps.WarpTile
 import de.fiereu.openmmo.net.game.packets.EntityFaceTurnPacket
-import de.fiereu.openmmo.net.game.packets.EntityMovePacket
 import de.fiereu.openmmo.net.game.packets.FaceDirectionPacket
+import de.fiereu.openmmo.net.game.packets.GbaEntityMovePacket
 import de.fiereu.openmmo.net.game.packets.MapData
 import de.fiereu.openmmo.net.game.packets.MovementPacket
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
@@ -19,6 +20,33 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 private val log = KotlinLogging.logger {}
+
+/** Resolve a cardinal Gen-3 ledge hop to its tile two spaces away. */
+internal fun ledgeLanding(
+    map: MapDef,
+    fromX: Int,
+    fromY: Int,
+    direction: Direction,
+): Pair<Int, Int>? {
+  val expectedBehavior =
+      when (direction) {
+        Direction.DOWN -> TileBehavior.JUMP_SOUTH
+        Direction.UP -> TileBehavior.JUMP_NORTH
+        Direction.LEFT -> TileBehavior.JUMP_WEST
+        Direction.RIGHT -> TileBehavior.JUMP_EAST
+        Direction.DIVE,
+        Direction.EMERGE -> return null
+      }
+  val ledgeX = fromX + direction.dx
+  val ledgeY = fromY + direction.dy
+  if (map.tileAt(ledgeX, ledgeY)?.behavior != expectedBehavior) return null
+
+  val landingX = fromX + direction.dx * 2
+  val landingY = fromY + direction.dy * 2
+  if (landingX !in 0 until map.width || landingY !in 0 until map.height) return null
+  if (map.tileAt(landingX, landingY)?.blocksMovement() == true) return null
+  return landingX to landingY
+}
 
 @Singleton
 class MovementService
@@ -44,32 +72,58 @@ constructor(
     log.debug { "Movement: char=$charId from (${msg.x}, ${msg.y}) dir=${msg.direction}" }
 
     val stored = characterStore.getCharacter(charId) ?: return
-    val fromX = stored.info.positionX.toInt()
-    val fromY = stored.info.positionY.toInt()
-    val atServerTile = msg.x == fromX && msg.y == fromY
-
-    if (state.justWarped) {
-      // Ignore steps until the client reports the warp destination, so a packet still in flight
-      // from the old map is dropped rather than applied against the new one.
-      if (!atServerTile) return
-      state.justWarped = false
-    } else if (!atServerTile) {
-      log.debug {
-        "DESYNC: char=$charId claims (${msg.x}, ${msg.y}), server has ($fromX, $fromY), resetting"
-      }
-      sendPositionReset(ctx, charId, fromX, fromY, state.facingDirection)
-      return
-    }
-
     val currentMap =
         mapManager.getMap(
             stored.info.positionRegionId,
             stored.info.positionBankId,
             stored.info.positionMapId,
         ) ?: return
+    var fromX = stored.info.positionX.toInt()
+    var fromY = stored.info.positionY.toInt()
+    if (state.acceptNextMoveSource &&
+        msg.x in 0 until currentMap.width &&
+        msg.y in 0 until currentMap.height) {
+      // Trust the client after scripted movement.
+      fromX = msg.x
+      fromY = msg.y
+      characterStore.updatePosition(charId, fromX.toShort(), fromY.toShort())
+      state.x = fromX.toShort()
+      state.y = fromY.toShort()
+      state.acceptNextMoveSource = false
+    }
 
-    val toX = fromX + msg.direction.dx
-    val toY = fromY + msg.direction.dy
+    val atServerTile = msg.x == fromX && msg.y == fromY
+
+    if (state.justWarped) {
+      // Drop movement packets sent before the warp completed.
+      if (!atServerTile) return
+      state.justWarped = false
+    } else if (!atServerTile) {
+      log.debug {
+        "DESYNC: char=$charId claims (${msg.x}, ${msg.y}), server has ($fromX, $fromY), resetting"
+      }
+      sendPositionReset(ctx, charId, currentMap, fromX, fromY, state.facingDirection)
+      return
+    }
+
+    var toX = fromX + msg.direction.dx
+    var toY = fromY + msg.direction.dy
+
+    // Ledge hops land two tiles away.
+    ledgeLanding(currentMap, fromX, fromY, msg.direction)?.let { landing ->
+      toX = landing.first
+      toY = landing.second
+    }
+
+    // Some warps trigger from their current tile.
+    val onTileWarp =
+        currentMap.warps.find { w ->
+          w.x == fromX && w.y == fromY && w.facingDirection == msg.direction
+        }
+    if (onTileWarp != null) {
+      warpService.executeWarp(ctx, charId, onTileWarp)
+      return
+    }
 
     // Walking off the edge of a map hands the player to the neighbouring map, if there is one.
     if (toX !in 0 until currentMap.width || toY !in 0 until currentMap.height) {
@@ -77,7 +131,7 @@ constructor(
       val targetMap =
           connection?.let { mapManager.getMap(1, it.targetBank.toByte(), it.targetMap.toByte()) }
       if (connection == null || targetMap == null) {
-        sendPositionReset(ctx, charId, fromX, fromY, msg.direction)
+        sendPositionReset(ctx, charId, currentMap, fromX, fromY, msg.direction)
         return
       }
       val entryX =
@@ -96,7 +150,7 @@ constructor(
       return
     }
 
-    // A warp fires on the tile the player steps onto, not the one it left.
+    // Warps fire on the destination tile.
     val warp =
         currentMap.warps.find { w ->
           w.x == toX &&
@@ -106,14 +160,16 @@ constructor(
     if (warp != null) {
       log.info { "WARP at ($toX, $toY) facing ${msg.direction}" }
       // A MAP_DYNAMIC warp (the truck exit) resolves to the destination a script set on the player.
-      val resolved = if (warp.dynamic) resolveDynamicWarp(stored) else warp
+      val resolved =
+          if (warp.dynamic) resolveDynamicWarp(characterStore.getCharacter(charId) ?: stored)
+          else warp
       if (resolved != null) warpService.executeWarp(ctx, charId, resolved)
       return
     }
 
     if (!isWalkable(currentMap, toX, toY)) {
       log.debug { "WALL: char=$charId blocked at ($toX, $toY)" }
-      sendPositionReset(ctx, charId, fromX, fromY, msg.direction)
+      sendPositionReset(ctx, charId, currentMap, fromX, fromY, msg.direction)
       return
     }
 
@@ -124,10 +180,13 @@ constructor(
     // The client already walked itself there, so only the observers need telling.
     presenceService.broadcastToObservers(
         ctx,
-        EntityMovePacket(entityId = charId, x = toX, y = toY, direction = msg.direction),
+        gbaMovePacket(charId, currentMap, toX, toY, msg.direction),
     )
 
-    encounterService.onStep(ctx, charId, currentMap, toX, toY)
+    // Story coordinate events take precedence over random encounters on the same step.
+    if (!mapScriptService.onStep(ctx, state, currentMap, toX, toY)) {
+      encounterService.onStep(ctx, charId, currentMap, toX, toY)
+    }
   }
 
   /**
@@ -155,12 +214,30 @@ constructor(
   private fun sendPositionReset(
       ctx: SessionContext,
       charId: Long,
+      map: MapDef,
       x: Int,
       y: Int,
       direction: Direction,
   ) {
-    ctx.send(EntityMovePacket(entityId = charId, x = x, y = y, direction = direction))
+    ctx.send(gbaMovePacket(charId, map, x, y, direction))
   }
+
+  private fun gbaMovePacket(
+      charId: Long,
+      map: MapDef,
+      x: Int,
+      y: Int,
+      direction: Direction,
+  ): GbaEntityMovePacket =
+      GbaEntityMovePacket(
+          entityId = charId,
+          bankId = map.bankId.toInt() and 0xff,
+          mapId = map.mapId.toInt() and 0xff,
+          x = x,
+          y = y,
+          movementMode = 2,
+          direction = direction,
+      )
 
   /** Turning in place. Only observers need it, the client has already turned itself. */
   fun onFaceDirection(event: PacketEvent<FaceDirectionPacket>) {
@@ -212,15 +289,9 @@ constructor(
     presenceService.refresh(ctx)
 
     mapLoadService.preloadConnectedMaps(ctx, map, depth = 1)
-    npcService.spawnNpcsForMap(ctx, targetBank.toInt(), targetMap.toInt())
+    npcService.spawnNpcsForMap(ctx, targetBank.toInt(), targetMap.toInt(), state?.regionId ?: 1)
 
-    ctx.send(
-        EntityMovePacket(
-            entityId = charId,
-            x = targetX.toInt(),
-            y = targetY.toInt(),
-            direction = direction,
-        ))
+    ctx.send(gbaMovePacket(charId, map, targetX.toInt(), targetY.toInt(), direction))
 
     if (state != null) mapScriptService.onMapEnter(ctx, state, map)
 

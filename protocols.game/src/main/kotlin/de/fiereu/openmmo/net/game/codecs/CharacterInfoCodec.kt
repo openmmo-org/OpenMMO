@@ -41,15 +41,18 @@ class CharacterInfoCodec(private val withExtraLong: Boolean) : PacketCodec<Chara
     val battleBoxExtraSlots = field(S8, CharacterInfo::battleBoxExtraSlots)
     val templateAmount = field(S8, CharacterInfo::templateAmount)
     field(S8) { 0 }
-    field(S8) { 0 }
-    field(S8) { 0 }
+    // Captured markers precede the complete position block.
+    field(S8, CharacterInfo::positionRegionId)
+    field(S8) { -1 }
+    field(S8) { 2 }
     val positionRegionId = field(S8, CharacterInfo::positionRegionId)
     val positionBankId = field(S8, CharacterInfo::positionBankId)
-    val positionMapId = field(S8, CharacterInfo::positionMapId)
-    field(S8) { 0 }
+    val positionMapId =
+        field(
+            S16LE.imap(decode = { it.toByte() }, encode = { it.toShort() }),
+            CharacterInfo::positionMapId)
     val positionX = field(S16LE, CharacterInfo::positionX)
     val positionY = field(S16LE, CharacterInfo::positionY)
-    field(S8) { 0 }
     field(S8) { 0 }
     val repelLeft = field(S16LE, CharacterInfo::repelLeft)
     val repelItemId = field(S16LE, CharacterInfo::repelItemId)

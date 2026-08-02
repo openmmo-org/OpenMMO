@@ -1,6 +1,8 @@
 package de.fiereu.openmmo.server.game.services
 
+import de.fiereu.openmmo.common.enums.CharacterGender
 import de.fiereu.openmmo.common.enums.Direction
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.packets.EntityLeavePacket
 import de.fiereu.openmmo.net.game.packets.EntityMovePacket
@@ -35,7 +37,7 @@ class PresenceServiceTest :
       }
 
       suspend fun CharacterStore.session(name: String, mapId: Int = 3): FakeSession {
-        val character = createCharacter(userId = 1, name = name)
+        val character = createCharacter(1, name, CharacterGender.MALE, Region.HOENN)
         return FakeSession(characterId = character.info.id, mapId = mapId)
       }
 

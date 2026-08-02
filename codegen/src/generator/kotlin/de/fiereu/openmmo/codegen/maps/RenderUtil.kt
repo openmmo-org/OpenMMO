@@ -29,8 +29,8 @@ object RenderUtil {
     if (warps.isEmpty()) return EMPTY_LIST
     return warps.joinToString(LIST_SEP, LIST_OPEN, LIST_CLOSE) {
       "WarpTile(x = ${it.x}, y = ${it.y}, elevation = ${it.elevation}," +
-          " targetRegionId = ${it.targetRegion}, targetBankId = ${it.targetBank}," +
-          " targetMapId = ${it.targetMap}," +
+          " targetRegionId = ${it.targetRegion}.toByte(), targetBankId = ${it.targetBank}.toByte()," +
+          " targetMapId = ${it.targetMap}.toByte()," +
           " targetX = ${it.targetX}, targetY = ${it.targetY}, targetElevation = ${it.targetElevation}," +
           " dynamic = ${it.dynamic})"
     }
@@ -52,6 +52,15 @@ object RenderUtil {
     if (scripts.isEmpty()) return EMPTY_LIST
     return scripts.joinToString(LIST_SEP, LIST_OPEN, LIST_CLOSE) {
       "MapFrameScript(varKey = ${escapeString(it.varKey)}, value = ${it.value}," +
+          " script = ${escapeString(it.script)})"
+    }
+  }
+
+  fun coordScripts(scripts: List<ParsedCoordScript>): String {
+    if (scripts.isEmpty()) return EMPTY_LIST
+    return scripts.joinToString(LIST_SEP, LIST_OPEN, LIST_CLOSE) {
+      "MapCoordScript(x = ${it.x}, y = ${it.y}, elevation = ${it.elevation}," +
+          " varKey = ${escapeString(it.varKey)}, value = ${it.value}," +
           " script = ${escapeString(it.script)})"
     }
   }

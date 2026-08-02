@@ -1,7 +1,36 @@
 package de.fiereu.openmmo.server.game.script.generated.hoenn
 
+import de.fiereu.openmmo.dialog.generated.hoenn.PetalburgCity_Gym
+import de.fiereu.openmmo.server.game.script.MovementStep.SET_INVISIBLE
+import de.fiereu.openmmo.server.game.script.MovementStep.WALK_DOWN
 import de.fiereu.openmmo.server.game.script.Script
 import de.fiereu.openmmo.server.game.script.ScriptContext
+import de.fiereu.openmmo.story.generated.hoenn.HoennFlags
+import de.fiereu.openmmo.story.generated.hoenn.HoennVars
+
+private const val LOCALID_NORMAN = 0
+private const val LOCALID_WALLY = 9
+
+internal object PetalburgCity_Gym_OnTransition : Script {
+  override suspend fun run(ctx: ScriptContext) {
+    val state = ctx.getVar(HoennVars.VAR_PETALBURG_GYM_STATE)
+    if (state < 6) ctx.showNpcAt(LOCALID_NORMAN, 4, 107)
+    if (state == 1) ctx.showNpcAt(LOCALID_WALLY, 5, 108)
+  }
+}
+
+internal object PetalburgCity_Gym_EventScript_ReturnFromWallyTutorial : Script {
+  override suspend fun run(ctx: ScriptContext) {
+    if (ctx.getVar(HoennVars.VAR_PETALBURG_GYM_STATE) != 1) return
+    ctx.sayNpc(LOCALID_NORMAN, PetalburgCity_Gym.DadSoDidItWorkOut)
+    ctx.sayNpc(LOCALID_WALLY, PetalburgCity_Gym.WallyThankYouBye)
+    ctx.moveNpc(LOCALID_WALLY, WALK_DOWN, WALK_DOWN, WALK_DOWN, SET_INVISIBLE)
+    ctx.setFlag(HoennFlags.FLAG_HIDE_PETALBURG_CITY_WALLY)
+    ctx.setFlag(HoennFlags.FLAG_HIDE_PETALBURG_GYM_WALLY)
+    ctx.sayNpc(LOCALID_NORMAN, PetalburgCity_Gym.DadGoCollectBadges)
+    ctx.setVar(HoennVars.VAR_PETALBURG_GYM_STATE, 2)
+  }
+}
 
 /**
  * Not ported yet. Decomp body:
@@ -27,7 +56,37 @@ import de.fiereu.openmmo.server.game.script.ScriptContext
  * ```
  */
 internal object PetalburgCity_Gym_EventScript_Norman : Script {
-  override suspend fun run(ctx: ScriptContext) = TODO("port PetalburgCity_Gym_EventScript_Norman")
+  override suspend fun run(ctx: ScriptContext) {
+    when (ctx.getVar(HoennVars.VAR_PETALBURG_GYM_STATE)) {
+      0 -> beginWallyTutorial(ctx)
+      1 -> PetalburgCity_Gym_EventScript_ReturnFromWallyTutorial.run(ctx)
+      2 -> ctx.say(PetalburgCity_Gym.NormanGoToRustboro)
+      else -> ctx.say(PetalburgCity_Gym.NormanGoToRustboro)
+    }
+  }
+}
+
+private suspend fun beginWallyTutorial(ctx: ScriptContext) {
+  ctx.sayNpc(LOCALID_NORMAN, PetalburgCity_Gym.DadYoureHereWithYourPokemon)
+  ctx.clearFlag(HoennFlags.FLAG_HIDE_PETALBURG_GYM_WALLY)
+  ctx.showNpcAt(LOCALID_WALLY, 4, 111)
+  ctx.sayNpc(LOCALID_WALLY, PetalburgCity_Gym.WallyIdLikeAPokemon)
+  ctx.sayNpc(LOCALID_NORMAN, PetalburgCity_Gym.DadOhYoureWallyRight)
+  ctx.sayNpc(LOCALID_WALLY, PetalburgCity_Gym.WallyIveNeverCaughtAPokemon)
+  ctx.sayNpc(LOCALID_NORMAN, PetalburgCity_Gym.DadHmISee)
+  ctx.sayNpc(LOCALID_NORMAN, PetalburgCity_Gym.DadPlayerGoWithWally)
+  ctx.sayNpc(LOCALID_NORMAN, PetalburgCity_Gym.IllLoanYouMyZigzagoon)
+  ctx.sayNpc(LOCALID_WALLY, PetalburgCity_Gym.WallyThankYouAndDadGivesPokeBall)
+  ctx.sayNpc(LOCALID_WALLY, PetalburgCity_Gym.WallyOhWowThankYou)
+  ctx.sayNpc(LOCALID_WALLY, PetalburgCity_Gym.WouldYouReallyComeWithMe)
+
+  // PokeMMO intentionally skips the GBA catching demonstration. Retain its ROM-backed
+  // conversation and advance directly to the post-tutorial state without modifying the party.
+  ctx.setFlag(HoennFlags.FLAG_HIDE_PETALBURG_CITY_WALLYS_MOM)
+  ctx.setVar(HoennVars.VAR_PETALBURG_CITY_STATE, 3)
+  ctx.setVar(HoennVars.VAR_PETALBURG_GYM_STATE, 1)
+  ctx.setFlag(HoennFlags.FLAG_HIDE_LITTLEROOT_TOWN_BIRCHS_LAB_RIVAL)
+  PetalburgCity_Gym_EventScript_ReturnFromWallyTutorial.run(ctx)
 }
 
 /**
@@ -382,6 +441,9 @@ internal object PetalburgCity_Gym_EventScript_RightGymStatue : Script {
 
 internal val PetalburgCity_GymScripts: Map<String, Script> =
     mapOf(
+        "PetalburgCity_Gym_OnTransition" to PetalburgCity_Gym_OnTransition,
+        "PetalburgCity_Gym_EventScript_ReturnFromWallyTutorial" to
+            PetalburgCity_Gym_EventScript_ReturnFromWallyTutorial,
         "PetalburgCity_Gym_EventScript_Norman" to PetalburgCity_Gym_EventScript_Norman,
         "PetalburgCity_Gym_EventScript_Mary" to PetalburgCity_Gym_EventScript_Mary,
         "PetalburgCity_Gym_EventScript_Randall" to PetalburgCity_Gym_EventScript_Randall,

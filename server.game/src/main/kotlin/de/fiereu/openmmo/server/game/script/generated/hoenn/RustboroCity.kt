@@ -3,6 +3,13 @@ package de.fiereu.openmmo.server.game.script.generated.hoenn
 import de.fiereu.openmmo.dialog.generated.hoenn.RustboroCity
 import de.fiereu.openmmo.server.game.script.Script
 import de.fiereu.openmmo.server.game.script.ScriptContext
+import de.fiereu.openmmo.story.generated.hoenn.HoennFlags
+
+internal object RustboroCity_OnTransition : Script {
+  override suspend fun run(ctx: ScriptContext) {
+    ctx.setFlag(HoennFlags.FLAG_VISITED_RUSTBORO_CITY)
+  }
+}
 
 internal object RustboroCity_EventScript_Woman : Script {
   override suspend fun run(ctx: ScriptContext) = ctx.say(RustboroCity.GymLeaderIsntEasyWithFire)
@@ -173,6 +180,7 @@ internal object RustboroCity_EventScript_CuttersHouseSign : Script {
 
 internal val RustboroCityScripts: Map<String, Script> =
     mapOf(
+        "RustboroCity_OnTransition" to RustboroCity_OnTransition,
         "RustboroCity_EventScript_Woman" to RustboroCity_EventScript_Woman,
         "RustboroCity_EventScript_FatMan" to RustboroCity_EventScript_FatMan,
         "RustboroCity_EventScript_NinjaBoy" to RustboroCity_EventScript_NinjaBoy,

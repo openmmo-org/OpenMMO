@@ -1,11 +1,15 @@
 package de.fiereu.openmmo.server.game.script
 
 import de.fiereu.network.SessionContext
+import de.fiereu.openmmo.server.game.services.BattleService
 import de.fiereu.openmmo.server.game.services.DialogService
 import de.fiereu.openmmo.server.game.services.ScriptMovementService
+import de.fiereu.openmmo.server.game.services.ScriptWarpService
+import de.fiereu.openmmo.server.game.services.StoryPlayerService
 import de.fiereu.openmmo.server.game.services.StoryService
 import de.fiereu.openmmo.server.game.session.PlayerState
 import de.fiereu.openmmo.server.game.session.SCRIPT_SCOPE
+import de.fiereu.openmmo.server.game.storage.CharacterStore
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -30,6 +34,10 @@ constructor(
     private val dialogService: DialogService,
     private val storyService: StoryService,
     private val movementService: ScriptMovementService,
+    private val warpService: ScriptWarpService,
+    private val storyPlayerService: StoryPlayerService,
+    private val battleService: BattleService,
+    private val characterStore: CharacterStore,
 ) {
   fun run(session: SessionContext, state: PlayerState, script: Script, entityId: Long) =
       runAll(session, state, listOf(script), entityId)
@@ -50,7 +58,19 @@ constructor(
         session.attributes.getOrPut(SCRIPT_SCOPE) {
           CoroutineScope(SupervisorJob() + Dispatchers.Default)
         }
-    val ctx = ScriptContext(session, state, entityId, dialogService, storyService, movementService)
+    val ctx =
+        ScriptContext(
+            session,
+            state,
+            entityId,
+            dialogService,
+            storyService,
+            movementService,
+            warpService,
+            storyPlayerService,
+            battleService,
+            characterStore,
+        )
     scope.launch {
       try {
         for (script in scripts) script.run(ctx)

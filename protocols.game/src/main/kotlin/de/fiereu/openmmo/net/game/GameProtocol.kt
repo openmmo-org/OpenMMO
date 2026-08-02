@@ -123,7 +123,7 @@ object GameProtocol : Protocol() {
     s2c<ShopPriceTablePacket>(0x29u, ShopPriceTablePacketCodec)
 
     c2s<TeamNameChangePacket>(0x2Au, TeamNameChangePacketCodec)
-    s2c<BattleStatusFlagPacket>(0x2Au, BattleStatusFlagPacketCodec)
+    s2c<StoryFlagUpdatePacket>(0x2Au, StoryFlagUpdatePacketCodec)
 
     c2s<SetCharacterNamePacket>(0x2Bu, SetCharacterNamePacketCodec)
     s2c<FollowerAdvancePacket>(0x2Bu, FollowerAdvancePacketCodec)
@@ -276,12 +276,12 @@ object GameProtocol : Protocol() {
     s2c<EntityCoordSyncPacket>(0x61u, EntityCoordSyncPacketCodec)
 
     c2s<AddFriendPacket>(0x62u, AddFriendPacketCodec)
-    s2c<SocialActionOutcomePacket>(0x62u, SocialActionOutcomePacketCodec)
+    s2c<DeleteCharacterResultPacket>(0x62u, DeleteCharacterResultPacketCodec)
 
     c2s<RemoveFriendPacket>(0x63u, RemoveFriendPacketCodec)
     s2c<FriendListPacket>(0x63u, FriendListPacketCodec)
 
-    c2s<FriendProfileRequestPacket>(0x64u, FriendProfileRequestPacketCodec)
+    c2s<DeleteCharacterPacket>(0x64u, DeleteCharacterPacketCodec)
     s2c<ContactInsertPacket>(0x64u, ContactInsertPacketCodec)
 
     s2c<ContactDeletePacket>(0x65u, ContactDeletePacketCodec)
@@ -566,6 +566,8 @@ object GameProtocol : Protocol() {
 
     c2s<BattleChallengeRequestPacket>(0xE4u, BattleChallengeRequestPacketCodec)
     s2c<EntityMovePacket>(0xE4u, EntityMovePacketCodec)
+
+    s2c<GbaEntityMovePacket>(0xEAu, GbaEntityMovePacketCodec)
 
     s2c<QueuePositionPacket>(0xF0u, QueuePositionPacketCodec)
 

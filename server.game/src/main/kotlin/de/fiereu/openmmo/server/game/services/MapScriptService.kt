@@ -30,7 +30,7 @@ constructor(
     if (state.inDialog) return
     val charId = state.characterId
     // The on-transition script runs on every entry, then the one on-frame script whose var matches.
-    val scripts = buildList {
+    val entryScripts = buildList {
       resolve(map.onTransitionScript)?.let { add(it) }
       if (charId != null) {
         map.onFrameScripts
@@ -39,7 +39,41 @@ constructor(
             ?.let { add(it) }
       }
     }
-    if (scripts.isNotEmpty()) scriptRunner.runAll(session, state, scripts, entityId = -1)
+    val hasArrivalTrigger =
+        map.coordScripts.any { it.x == state.x.toInt() && it.y == state.y.toInt() }
+    if (entryScripts.isEmpty() && !hasArrivalTrigger) return
+
+    // Entry scripts may trigger their landing coordinate.
+    val entrySequence = Script { ctx ->
+      entryScripts.forEach { it.run(ctx) }
+      if (charId != null) {
+        matchingCoordScript(map, charId, state.x.toInt(), state.y.toInt())?.run(ctx)
+      }
+    }
+    scriptRunner.run(session, state, entrySequence, entityId = -1)
+  }
+
+  /** Run the matching conditional coordinate script after a completed player step. */
+  fun onStep(
+      session: SessionContext,
+      state: PlayerState,
+      map: MapDef,
+      x: Int,
+      y: Int,
+  ): Boolean {
+    if (state.inDialog) return false
+    val charId = state.characterId ?: return false
+    val script = matchingCoordScript(map, charId, x, y) ?: return false
+    scriptRunner.run(session, state, script, entityId = -1)
+    return true
+  }
+
+  private fun matchingCoordScript(map: MapDef, charId: Long, x: Int, y: Int): Script? {
+    val trigger =
+        map.coordScripts.firstOrNull {
+          it.x == x && it.y == y && storyService.getVar(charId, it.varKey) == it.value
+        } ?: return null
+    return resolve(trigger.script)
   }
 
   private fun resolve(label: String): Script? {

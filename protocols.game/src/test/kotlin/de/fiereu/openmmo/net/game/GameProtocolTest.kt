@@ -3,12 +3,16 @@ package de.fiereu.openmmo.net.game
 import de.fiereu.network.Direction
 import de.fiereu.network.Side
 import de.fiereu.openmmo.net.game.packets.ChatMessagePacket
+import de.fiereu.openmmo.net.game.packets.DeleteCharacterPacket
+import de.fiereu.openmmo.net.game.packets.DeleteCharacterResultPacket
 import de.fiereu.openmmo.net.game.packets.EntityMovePacket
+import de.fiereu.openmmo.net.game.packets.GbaEntityMovePacket
 import de.fiereu.openmmo.net.game.packets.JoinPacket
 import de.fiereu.openmmo.net.game.packets.JoinResponsePacket
 import de.fiereu.openmmo.net.game.packets.KeepAlivePacket
 import de.fiereu.openmmo.net.game.packets.LoadMapPacket
 import de.fiereu.openmmo.net.game.packets.NullPacket
+import de.fiereu.openmmo.net.game.packets.StoryFlagUpdatePacket
 import de.fiereu.openmmo.net.game.packets.TokenPayloadPacket
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainAll
@@ -46,6 +50,7 @@ class GameProtocolTest :
                 0xB9u.toUByte(),
                 0xC2u.toUByte(),
                 0xE4u.toUByte(),
+                0xEAu.toUByte(),
             )
       }
 
@@ -63,10 +68,26 @@ class GameProtocolTest :
         GameProtocol.outgoingRegistration(Side.CLIENT, EntityMovePacket::class) shouldBe null
       }
 
+      test("capture-backed story and GBA movement packets are S2C only") {
+        GameProtocol.outgoingRegistration(Side.SERVER, StoryFlagUpdatePacket::class)
+            ?.opcode shouldBe 0x2Au
+        GameProtocol.outgoingRegistration(Side.CLIENT, StoryFlagUpdatePacket::class) shouldBe null
+        GameProtocol.outgoingRegistration(Side.SERVER, GbaEntityMovePacket::class)?.opcode shouldBe
+            0xEAu
+        GameProtocol.outgoingRegistration(Side.CLIENT, GbaEntityMovePacket::class) shouldBe null
+      }
+
       test("0x20 split: NullPacket C2S, TokenPayloadPacket S2C") {
         GameProtocol.incomingRegistration(Side.SERVER, 0x20u)?.type shouldBe NullPacket::class
         GameProtocol.incomingRegistration(Side.CLIENT, 0x20u)?.type shouldBe
             TokenPayloadPacket::class
+      }
+
+      test("captured character deletion opcodes are direction-specific") {
+        GameProtocol.outgoingRegistration(Side.CLIENT, DeleteCharacterPacket::class)
+            ?.opcode shouldBe 0x64u
+        GameProtocol.outgoingRegistration(Side.SERVER, DeleteCharacterResultPacket::class)
+            ?.opcode shouldBe 0x62u
       }
 
       test("bidi packets are registered both directions") {

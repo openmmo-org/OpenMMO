@@ -12,12 +12,11 @@ dependencies {
   "generatorImplementation"(project(":common"))
   "generatorImplementation"(libs.jte)
   "generatorImplementation"(libs.kotlinx.serialization.json)
+  testImplementation(sourceSets["generator"].output)
   testImplementation(libs.bundles.kotest)
 }
 
-// Region name -> source decomp. Only non-NDS (GBA, 2D) decomps that share the pret
-// map format are listed. The NDS decomps (pokeblack, pokeheartgold, pokeplatinum) use
-// 3D maps and are not parsed here. Region ids live in the per-region constants.
+// GBA regions sharing the pret map format.
 val regionSources =
     mapOf(
         "hoenn" to "pokeemerald",
