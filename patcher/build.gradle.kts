@@ -5,10 +5,6 @@ plugins {
   id("buildsrc.common.keys")
 }
 
-group = "de.fiereu.openmmo"
-
-version = "1.0.0"
-
 dependencies {
   implementation(libs.bundles.crypto)
   testImplementation(libs.bundles.kotest)
