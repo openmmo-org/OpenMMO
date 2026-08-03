@@ -33,6 +33,19 @@ git submodule update --init --recursive
 Without the submodules the `:maps` build fails, because the generator has no
 decomp data to read.
 
+### ROMs
+
+A dialog id is a file offset into the retail GBA ROM. The decomp is byte-identical
+to it, so the generator encodes a text from the decomp, finds those bytes in the
+ROM, and packs the offset into the id. The decomp alone has no offsets.
+
+Put the Emerald (`BPEE`, Hoenn) and FireRed (`BPRE`, Kanto) ROMs in `roms/`.
+Filenames do not matter, each is identified by the game code in its GBA header.
+The folder is **gitignored**, this project ships no ROMs.
+
+Without them the build still succeeds and every dialog id is `0`, so CI passes but
+the client shows the wrong text.
+
 ## Configuration
 
 All local configuration and secrets live in a `.env` file at the repository
