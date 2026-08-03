@@ -20,6 +20,7 @@ import de.fiereu.openmmo.server.game.battle.BattleRegistry
 import de.fiereu.openmmo.server.game.battle.BattleResult
 import de.fiereu.openmmo.server.game.battle.BattleRewards
 import de.fiereu.openmmo.server.game.battle.BattleRng
+import de.fiereu.openmmo.server.game.battle.MoveLearner
 import de.fiereu.openmmo.server.game.battle.StatCalculator
 import de.fiereu.openmmo.server.game.battle.TurnEngine
 import de.fiereu.openmmo.server.game.battle.WildMonFactory
@@ -61,6 +62,7 @@ constructor(
     private val wildMons: WildMonFactory,
     private val emitter: BattlePacketEmitter,
     private val rewards: BattleRewards,
+    private val moveLearner: MoveLearner,
     private val interestManager: InterestManager,
     private val speciesRegistry: SpeciesRegistry,
     private val moveRegistry: MoveRegistry,
@@ -326,7 +328,12 @@ constructor(
       "char=${battle.charId} won: +${reward.xpGained} xp, level ${winner.level} -> ${reward.newLevel}"
     }
     winner.currentHp = reward.newCurrentHp
+    val learned =
+        moveLearner.learn(winner.moves, winner.source.dexId, winner.level, reward.newLevel)
     emitter.sendVictoryDelta(battle, winner.entityId, reward)
+    for (move in learned) {
+      emitter.sendNotice(battle, "${winner.species.name} learned ${move.name}!")
+    }
     characterStore.updatePokemon(
         battle.charId,
         winner.source.copy(
