@@ -1,15 +1,21 @@
 package de.fiereu.openmmo.server.game.storage
 
 import de.fiereu.openmmo.common.CharacterInfo
+import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.PokemonMove
+import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
+import de.fiereu.openmmo.db.game.tables.references.CHARACTER_ITEMS
+import de.fiereu.openmmo.db.game.tables.references.POKEMON
 import de.fiereu.openmmo.server.game.testsupport.DockerAvailable
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.annotation.EnabledIf
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -17,6 +23,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.Dispatchers
 import org.flywaydb.core.Flyway
+import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.testcontainers.containers.PostgreSQLContainer
 
@@ -26,6 +33,7 @@ class CharacterRepositoryIT :
       val container = PostgreSQLContainer<Nothing>("postgres:18")
       val entityIds = EntityIdService()
       lateinit var repository: JooqCharacterRepository
+      lateinit var dsl: DSLContext
 
       // Postgres timestamps have microsecond precision, so nanos would not round-trip.
       fun now(): LocalDateTime = LocalDateTime.now().truncatedTo(ChronoUnit.MICROS)
@@ -110,7 +118,7 @@ class CharacterRepositoryIT :
             .locations("classpath:db/migration", "classpath:db/dev")
             .load()
             .migrate()
-        val dsl = DSL.using(container.jdbcUrl, container.username, container.password)
+        dsl = DSL.using(container.jdbcUrl, container.username, container.password)
         repository = JooqCharacterRepository(dsl, Dispatchers.IO)
       }
 
@@ -138,25 +146,96 @@ class CharacterRepositoryIT :
         repository.loadByUser(77).map { it.info.id } shouldBe listOf(mine.info.id)
       }
 
-      test("saveAggregate replaces the character, pokemon, and items") {
+      test("saveChanges writes the character, pokemon, and items that changed") {
         val stored = aggregate(userId = 90)
         repository.insertAggregate(stored)
 
-        val mutated =
+        val kept = stored.pokemon.single()
+        val added = monster(stored.info.id, PokemonContainer.PARTY, 1)
+        val current =
             stored.copy(
                 info = stored.info.copy(money = 999, positionX = 12),
-                pokemon = mutableListOf(monster(stored.info.id, PokemonContainer.PARTY, 0)),
+                pokemon = mutableListOf(kept.copy(hp = 3), added),
                 pcStorage = mutableListOf(),
                 items = mutableMapOf(4 to 9, 13 to 1),
             )
-        repository.saveAggregate(mutated)
+        repository.saveChanges(stored, current)
 
         val loaded = repository.loadById(stored.info.id).shouldNotBeNull()
         loaded.info.money shouldBe 999
-        loaded.pokemon.size shouldBe 1
-        loaded.pokemon.single().id shouldBe mutated.pokemon.single().id
-        loaded.pcStorage.size shouldBe 0
+        loaded.info.positionX shouldBe 12
+        loaded.pokemon.map { it.id } shouldBe listOf(kept.id, added.id)
+        loaded.pokemon.first().hp shouldBe 3
+        loaded.pcStorage.shouldBeEmpty()
         loaded.items shouldBe mapOf(4 to 9, 13 to 1)
+      }
+
+      test("a character only change leaves the pokemon and item rows alone") {
+        val stored = aggregate(userId = 93)
+        repository.insertAggregate(stored)
+        // A row that gets rewritten loses these.
+        dsl.update(POKEMON)
+            .set(POKEMON.NICKNAME, "sentinel")
+            .where(POKEMON.OWNER_ID.eq(stored.info.id))
+            .execute()
+        dsl.update(CHARACTER_ITEMS)
+            .set(CHARACTER_ITEMS.QUANTITY, 4242)
+            .where(CHARACTER_ITEMS.CHARACTER_ID.eq(stored.info.id))
+            .execute()
+
+        repository.saveChanges(stored, stored.copy(info = stored.info.copy(money = 1)))
+
+        val loaded = repository.loadById(stored.info.id).shouldNotBeNull()
+        loaded.info.money shouldBe 1
+        loaded.pokemon.single().nickname shouldBe "sentinel"
+        loaded.pcStorage.single().nickname shouldBe "sentinel"
+        loaded.items shouldBe mapOf(4 to 4242)
+      }
+
+      test("saveChanges drops released monsters, spent items, and cleared story state") {
+        val stored =
+            aggregate(userId = 94).let {
+              it.copy(storyFlags = mutableSetOf("a", "b"), storyVars = mutableMapOf("v" to 7))
+            }
+        repository.insertAggregate(stored)
+
+        val current =
+            stored.copy(
+                pokemon = mutableListOf(),
+                items = mutableMapOf(),
+                storyFlags = mutableSetOf("b"),
+                storyVars = mutableMapOf(),
+            )
+        repository.saveChanges(stored, current)
+
+        val loaded = repository.loadById(stored.info.id).shouldNotBeNull()
+        loaded.pokemon.shouldBeEmpty()
+        loaded.pcStorage.size shouldBe 1
+        loaded.items.shouldBeEmpty()
+        loaded.storyFlags shouldBe setOf("b")
+        loaded.storyVars.shouldBeEmpty()
+      }
+
+      test("saveChanges clears a dynamic warp") {
+        val stored =
+            aggregate(userId = 95).let {
+              it.copy(info = it.info.copy(dynamicWarp = DynamicWarp(1, 50, 9, 3, 10, Direction.UP)))
+            }
+        repository.insertAggregate(stored)
+
+        repository.saveChanges(stored, stored.copy(info = stored.info.copy(dynamicWarp = null)))
+
+        repository.loadById(stored.info.id).shouldNotBeNull().info.dynamicWarp.shouldBeNull()
+      }
+
+      test("saveChanges without a base writes every row") {
+        val stored = aggregate(userId = 96)
+
+        repository.saveChanges(null, stored)
+
+        val loaded = repository.loadById(stored.info.id).shouldNotBeNull()
+        loaded.pokemon shouldBe stored.pokemon
+        loaded.items shouldBe stored.items
       }
 
       test("loadById returns null for an unknown id") {

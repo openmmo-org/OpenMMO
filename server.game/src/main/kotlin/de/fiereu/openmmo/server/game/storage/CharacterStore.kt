@@ -73,6 +73,8 @@ constructor(
 
   private val characters = ConcurrentHashMap<Long, StoredCharacter>()
   private val charactersByUser = ConcurrentHashMap<Int, CopyOnWriteArrayList<Long>>()
+  // The last aggregate a write succeeded for. A flush sends the difference to it.
+  private val persisted = ConcurrentHashMap<Long, StoredCharacter>()
   private val dirtySince = ConcurrentHashMap<Long, Long>()
   private val pendingUnload = ConcurrentHashMap.newKeySet<Long>()
 
@@ -156,6 +158,7 @@ constructor(
         )
     repository.insertAggregate(stored)
     characters[id] = stored
+    persisted[id] = stored
     charactersByUser.computeIfAbsent(userId) { CopyOnWriteArrayList() }.add(id)
     return stored
   }
@@ -188,6 +191,7 @@ constructor(
   suspend fun deleteCharacter(userId: Int, characterId: Long): Boolean {
     if (!repository.deleteById(userId, characterId)) return false
     characters.remove(characterId)
+    persisted.remove(characterId)
     charactersByUser[userId]?.remove(characterId)
     dirtySince.remove(characterId)
     pendingUnload.remove(characterId)
@@ -325,6 +329,7 @@ constructor(
 
   private fun cache(stored: StoredCharacter): StoredCharacter {
     val existing = characters.putIfAbsent(stored.info.id, stored)
+    if (existing == null) persisted[stored.info.id] = stored
     return existing ?: stored
   }
 
@@ -344,7 +349,9 @@ constructor(
     val stored = characters[id]
     if (since != null && stored != null) {
       try {
-        repository.saveAggregate(stored)
+        repository.saveChanges(persisted[id], stored)
+        // The written instance, not the current one, so a racing mutation stays dirty.
+        persisted[id] = stored
       } catch (e: Exception) {
         log.warn(e) { "Failed to persist character $id, will retry" }
         dirtySince.putIfAbsent(id, since)
@@ -361,6 +368,7 @@ constructor(
       return
     }
     val stored = characters.remove(id) ?: return
+    persisted.remove(id)
     charactersByUser.remove(stored.info.userId)
   }
 }

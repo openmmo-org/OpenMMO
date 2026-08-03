@@ -133,6 +133,56 @@ class CharacterStoreCacheTest :
         }
       }
 
+      test("each flush diffs against the aggregate the last one wrote") {
+        runTest {
+          val repo = FakeCharacterRepository()
+          val store = CharacterStore(repo, EntityIdService(), backgroundScope)
+          val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
+
+          store.addMoney(id, 1)
+          store.flushAll()
+          repo.lastPrevious[id]!!.info.money shouldBe 30000
+
+          store.addMoney(id, 1)
+          store.flushAll()
+          repo.lastPrevious[id]!!.info.money shouldBe 30001
+        }
+      }
+
+      test("a failed flush keeps the older base so the retry writes both changes") {
+        runTest {
+          val repo = FakeCharacterRepository()
+          val store = CharacterStore(repo, EntityIdService(), backgroundScope)
+          val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
+
+          store.addMoney(id, 1)
+          repo.failNextSave = true
+          store.flushAll()
+
+          store.addMoney(id, 2)
+          store.flushAll()
+
+          repo.lastPrevious[id]!!.info.money shouldBe 30000
+          repo.saved[id]!!.info.money shouldBe 30003
+        }
+      }
+
+      test("a loaded character diffs against the aggregate it was loaded from") {
+        runTest {
+          val repo = FakeCharacterRepository()
+          val seedStore = CharacterStore(repo, EntityIdService(), backgroundScope)
+          val id =
+              seedStore.createCharacter(7, "Misty", CharacterGender.FEMALE, Region.HOENN).info.id
+
+          val store = CharacterStore(repo, EntityIdService(), backgroundScope)
+          store.getOrLoadCharacter(id).shouldNotBeNull()
+          store.addMoney(id, 3)
+          store.flushAll()
+
+          repo.lastPrevious[id]!!.info.money shouldBe 30000
+        }
+      }
+
       test("unload persists and evicts after the flush succeeds") {
         runTest {
           val repo = FakeCharacterRepository()
