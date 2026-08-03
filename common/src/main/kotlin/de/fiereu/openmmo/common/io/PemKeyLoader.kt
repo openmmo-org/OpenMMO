@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.common.io
 
+import java.io.File
 import java.io.InputStream
 import java.security.KeyFactory
 import java.security.interfaces.ECPrivateKey
@@ -36,3 +37,15 @@ object PemKeyLoader {
 fun resource(name: String): InputStream =
     PemKeyLoader::class.java.classLoader.getResourceAsStream(name)
         ?: error("classpath resource not found: $name")
+
+/** Opens a PEM key. Inline wins over a file path, which wins over the classpath. */
+fun pemStream(pem: String?, path: String?, resourceName: String): InputStream =
+    when {
+      !pem.isNullOrBlank() -> pem.byteInputStream(Charsets.US_ASCII)
+      !path.isNullOrBlank() -> File(path).inputStream()
+      else ->
+          PemKeyLoader::class.java.classLoader.getResourceAsStream(resourceName)
+              ?: error(
+                  "no private key. Set the key or key file environment variable, " +
+                      "or run a local build that generates '$resourceName'.")
+    }

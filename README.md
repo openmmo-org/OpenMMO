@@ -50,6 +50,15 @@ For local-only tweaks to the container setup, create a
 Docker Compose merges it automatically on `docker compose up`. 
 For deployment,supply a proper `.env` and run `docker compose -f docker-compose.yml up -d` to skip any override.
 
+### Server key
+
+The login and game servers share one private key and must be given the same one.
+A local build generates it and puts it on the classpath, so development needs no
+setup. Released archives ship no private key, so a deployment supplies its own
+through either `OPENMMO_GAME_PRIVATE_KEY` (the PEM itself) or
+`OPENMMO_GAME_PRIVATE_KEY_FILE` (a path to it). Generate one with
+`./gradlew :keys:generateGame`.
+
 ## Releases
 
 Releases are cut by [release-please](https://github.com/googleapis/release-please)

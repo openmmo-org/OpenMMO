@@ -82,6 +82,10 @@ tasks.register("copyKeys") {
   dependsOn("copyKeysChat", "copyKeysGame", "copyKeysFeed")
 }
 
+// Generated keys are for local runs only. Keeping them out of the jar means a
+// published archive never ships a private key.
+tasks.withType<Jar>().configureEach { exclude("*.private.pem") }
+
 val keyCopyTasks =
     listOf(
         "copyPublicKeyChat",
