@@ -20,8 +20,6 @@ fun String.evalEnvVars(): String =
 tasks.register<JavaExec>("run") {
   group = "application"
   description = "Patches the PokeMMO client and runs the patched copy"
-  dependsOn("copyPublicKeys", "copyPrivateKeyFeed")
-  tasks.processResources.get().mustRunAfter("copyPublicKeys", "copyPrivateKeyFeed")
 
   val pokemmoExecutable = (project.findProperty("pokemmo.executable") as String).evalEnvVars()
   val pokemmoWorkingDir = (project.findProperty("pokemmo.workingDir") as String).evalEnvVars()
@@ -33,4 +31,8 @@ tasks.register<JavaExec>("run") {
   systemProperty("openmmo.workingDir", pokemmoWorkingDir)
   systemProperty("openmmo.output", patchedExecutable.get().asFile.path)
   maxHeapSize = "1g"
+}
+
+listOf("classes", "processResources").forEach { taskName ->
+  tasks.named(taskName) { dependsOn("copyPublicKeys", "copyPrivateKeyFeed") }
 }
