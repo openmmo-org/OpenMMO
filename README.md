@@ -52,29 +52,28 @@ For deployment,supply a proper `.env` and run `docker compose -f docker-compose.
 
 ### Server key
 
-The login and game servers share one private key and must be given the same one.
-A local build generates it and puts it on the classpath, so development needs no
-setup. Released archives ship no private key, so a deployment supplies its own
-through either `OPENMMO_GAME_PRIVATE_KEY` (the PEM itself) or
-`OPENMMO_GAME_PRIVATE_KEY_FILE` (a path to it). Generate one with
-`./gradlew :keys:generateGame`.
+Both servers share one private key. A local build generates it, so development
+needs no setup.
+
+Released archives ship no keys. Generate a pair with
+`./gradlew :keys:generateGame` and pass the private key to both servers through
+`OPENMMO_GAME_PRIVATE_KEY` (the PEM) or `OPENMMO_GAME_PRIVATE_KEY_FILE` (a path
+to it). Clients need a patched build carrying the matching public key.
 
 ## Releases
 
-Releases are cut by [release-please](https://github.com/googleapis/release-please)
-from the commit history, so pull request titles must follow
+[release-please](https://github.com/googleapis/release-please) cuts releases from
+the commit history. Pull requests are squash merged, so their titles become the
+commit messages it reads and must follow
 [Conventional Commits](https://www.conventionalcommits.org/). CI rejects titles
-that do not, because pull requests are squash merged and the title becomes the
-commit message on `master`.
+that do not.
 
-`feat` bumps the minor version, `fix` the patch version. While the version is
-below `1.0.0`, a breaking change (`feat!` or `BREAKING CHANGE`) bumps the minor
-version instead of jumping to `1.0.0`.
+`feat` bumps the minor version, `fix` the patch version. Below `1.0.0` a
+breaking change bumps the minor version instead of jumping to `1.0.0`.
 
-On every push to `master`, release-please opens or updates a release pull
-request with the new version and changelog. Merging it tags the release and
-publishes the release notes. The version lives in `gradle.properties` and
-applies to every module, do not edit it by hand.
+Every push to `master` opens or updates a release pull request. Merging it tags
+the release and attaches the server archives. The version lives in
+`gradle.properties` and applies to every module, do not edit it by hand.
 
 ## Wiki
 
