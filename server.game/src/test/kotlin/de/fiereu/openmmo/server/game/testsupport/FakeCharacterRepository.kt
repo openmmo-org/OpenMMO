@@ -9,6 +9,7 @@ class FakeCharacterRepository : CharacterRepository {
   val saved = ConcurrentHashMap<Long, StoredCharacter>()
   val saveCount = AtomicInteger(0)
   var failNextSave = false
+  val lastPrevious = ConcurrentHashMap<Long, StoredCharacter>()
 
   override suspend fun loadByUser(userId: Int): List<StoredCharacter> =
       saved.values.filter { it.info.userId == userId }
@@ -19,13 +20,14 @@ class FakeCharacterRepository : CharacterRepository {
     saved[stored.info.id] = stored
   }
 
-  override suspend fun saveAggregate(stored: StoredCharacter) {
+  override suspend fun saveChanges(previous: StoredCharacter?, current: StoredCharacter) {
     if (failNextSave) {
       failNextSave = false
       throw IllegalStateException("simulated save failure")
     }
     saveCount.incrementAndGet()
-    saved[stored.info.id] = stored
+    previous?.let { lastPrevious[current.info.id] = it }
+    saved[current.info.id] = current
   }
 
   override suspend fun deleteById(userId: Int, id: Long): Boolean {

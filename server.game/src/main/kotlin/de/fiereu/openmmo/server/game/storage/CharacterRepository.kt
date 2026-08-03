@@ -8,6 +8,9 @@ import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
+import de.fiereu.openmmo.db.game.tables.records.CharacterFlagsRecord
+import de.fiereu.openmmo.db.game.tables.records.CharacterItemsRecord
+import de.fiereu.openmmo.db.game.tables.records.CharacterVarsRecord
 import de.fiereu.openmmo.db.game.tables.records.CharactersRecord
 import de.fiereu.openmmo.db.game.tables.records.PokemonRecord
 import de.fiereu.openmmo.db.game.tables.references.CHARACTERS
@@ -29,7 +32,8 @@ interface CharacterRepository {
 
   suspend fun insertAggregate(stored: StoredCharacter)
 
-  suspend fun saveAggregate(stored: StoredCharacter)
+  /** A null [previous] writes every row. */
+  suspend fun saveChanges(previous: StoredCharacter?, current: StoredCharacter)
 
   /** Deletes a character owned by the user. */
   suspend fun deleteById(userId: Int, id: Long): Boolean
@@ -57,16 +61,9 @@ constructor(
   override suspend fun insertAggregate(stored: StoredCharacter) =
       withContext(dispatcher) { dsl.transaction { cfg -> insert(cfg.dsl(), stored) } }
 
-  /** Replaces the whole aggregate. The character delete cascades to pokemon and items. */
-  // TODO Split the dirty tracking so a character-only change updates just the characters row
-  //  instead of rewriting every pokemon and item row.
-  override suspend fun saveAggregate(stored: StoredCharacter) =
+  override suspend fun saveChanges(previous: StoredCharacter?, current: StoredCharacter) =
       withContext(dispatcher) {
-        dsl.transaction { cfg ->
-          val tx = cfg.dsl()
-          tx.deleteFrom(CHARACTERS).where(CHARACTERS.ID.eq(stored.info.id)).execute()
-          insert(tx, stored)
-        }
+        dsl.transaction { cfg -> writeChanges(cfg.dsl(), previous, current) }
       }
 
   override suspend fun deleteById(userId: Int, id: Long): Boolean =
@@ -76,6 +73,47 @@ constructor(
             .and(CHARACTERS.USER_ID.eq(userId))
             .execute() == 1
       }
+
+  private fun writeChanges(
+      tx: DSLContext,
+      previous: StoredCharacter?,
+      current: StoredCharacter,
+  ) {
+    val id = current.info.id
+    tx.writeDelta(
+        CHARACTERS,
+        rowDelta(previous?.let { mapOf(id to it.info) }.orEmpty(), mapOf(id to current.info)),
+        { CHARACTERS.ID.eq(it) },
+        { _, info -> info.toRecord() },
+    )
+    tx.writeDelta(
+        POKEMON,
+        rowDelta(previous.monstersById(), current.monstersById()),
+        { POKEMON.ID.eq(it) },
+        { _, monster -> monster.toRecord() },
+    )
+    tx.writeDelta(
+        CHARACTER_ITEMS,
+        rowDelta(previous?.items.orEmpty(), current.items),
+        { CHARACTER_ITEMS.CHARACTER_ID.eq(id).and(CHARACTER_ITEMS.ITEM_ID.eq(it)) },
+        { itemId, quantity -> CharacterItemsRecord(id, itemId, quantity) },
+    )
+    tx.writeDelta(
+        CHARACTER_FLAGS,
+        rowDelta(previous?.storyFlags.orEmpty(), current.storyFlags),
+        { CHARACTER_FLAGS.CHARACTER_ID.eq(id).and(CHARACTER_FLAGS.FLAG_KEY.eq(it)) },
+        { key, _ -> CharacterFlagsRecord(id, key) },
+    )
+    tx.writeDelta(
+        CHARACTER_VARS,
+        rowDelta(previous?.storyVars.orEmpty(), current.storyVars),
+        { CHARACTER_VARS.CHARACTER_ID.eq(id).and(CHARACTER_VARS.VAR_KEY.eq(it)) },
+        { key, value -> CharacterVarsRecord(id, key, value) },
+    )
+  }
+
+  private fun StoredCharacter?.monstersById(): Map<Long, Pokemon> =
+      this?.let { (it.pokemon + it.pcStorage).associateBy { monster -> monster.id } }.orEmpty()
 
   private fun insert(tx: DSLContext, stored: StoredCharacter) {
     tx.insertInto(CHARACTERS).set(stored.info.toRecord()).execute()
