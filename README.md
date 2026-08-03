@@ -6,6 +6,7 @@
 - [Description](#description)
 - [Building](#building)
 - [Configuration](#configuration)
+- [Releases](#releases)
 - [Documentation](#wiki)
 - [License](LICENSE)
 - [Disclaimer](#disclaimer)
@@ -48,6 +49,23 @@ For local-only tweaks to the container setup, create a
 `docker-compose.override.yml` (also gitignored). 
 Docker Compose merges it automatically on `docker compose up`. 
 For deployment,supply a proper `.env` and run `docker compose -f docker-compose.yml up -d` to skip any override.
+
+## Releases
+
+Releases are cut by [release-please](https://github.com/googleapis/release-please)
+from the commit history, so pull request titles must follow
+[Conventional Commits](https://www.conventionalcommits.org/). CI rejects titles
+that do not, because pull requests are squash merged and the title becomes the
+commit message on `master`.
+
+`feat` bumps the minor version, `fix` the patch version. While the version is
+below `1.0.0`, a breaking change (`feat!` or `BREAKING CHANGE`) bumps the minor
+version instead of jumping to `1.0.0`.
+
+On every push to `master`, release-please opens or updates a release pull
+request with the new version and changelog. Merging it tags the release and
+publishes the release notes. The version lives in `gradle.properties` and
+applies to every module, do not edit it by hand.
 
 ## Wiki
 

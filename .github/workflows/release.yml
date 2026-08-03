@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    branches: [ "master" ]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# Do not cancel a release in flight, it can tag without publishing.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Prepare release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          # The default token cannot trigger CI on the release PR. Set
+          # RELEASE_PLEASE_TOKEN to a PAT with contents and pull-requests write.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+# No binaries are attached yet. The server distributions bundle
+# game.private.pem, so they cannot be published until the keys are supplied at
+# deploy time instead of being baked into the jar.
