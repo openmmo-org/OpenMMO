@@ -12,6 +12,7 @@ import de.fiereu.network.handshake.ClientSessionHandshakeHandler
 import de.fiereu.network.handshake.ServerSessionHandshakeHandler
 import de.fiereu.network.internal.MutableSessionContext
 import de.fiereu.network.internal.SESSION_KEY
+import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelPipeline
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
@@ -69,11 +70,22 @@ fun installPipeline(
   pipeline.addLast(PipelineNames.CHECKSUM_ENCODER, ChecksumFrameEncoder(NoOpChecksum))
   pipeline.addLast(PipelineNames.CIPHER_DECODER, CipherDecoder(NoOpSessionCipher))
   pipeline.addLast(PipelineNames.CIPHER_ENCODER, CipherEncoder(NoOpSessionCipher))
-  // TODO: the compression codec is inserted between this logger and the protocol handler, so this
-  // logs compressed frames. Reposition it next to the protocol handler to log raw packets, before
-  // compression on the way out and after decompression on the way in.
   if (options.frameLogging) {
     pipeline.addLast(PipelineNames.PROTOCOL_LOGGER, LoggingHandler(LogLevel.TRACE))
   }
   pipeline.addLast(PipelineNames.PROTOCOL_HANDLER, handshakeHandler)
+}
+
+/**
+ * Adds a handler in front of the protocol logger, so the logger only sees uncompressed packets:
+ * decompressed on the way in, not yet compressed on the way out.
+ */
+internal fun ChannelPipeline.addBeforeProtocolLogger(name: String, handler: ChannelHandler) {
+  val anchor =
+      if (get(PipelineNames.PROTOCOL_LOGGER) != null) {
+        PipelineNames.PROTOCOL_LOGGER
+      } else {
+        PipelineNames.PROTOCOL_HANDLER
+      }
+  addBefore(anchor, name, handler)
 }
