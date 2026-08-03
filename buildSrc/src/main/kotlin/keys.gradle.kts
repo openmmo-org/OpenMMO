@@ -82,6 +82,9 @@ tasks.register("copyKeys") {
   dependsOn("copyKeysChat", "copyKeysGame", "copyKeysFeed")
 }
 
+// Generated keys are for local runs. Published archives ship none.
+tasks.withType<Jar>().configureEach { exclude("*.pem") }
+
 val keyCopyTasks =
     listOf(
         "copyPublicKeyChat",
