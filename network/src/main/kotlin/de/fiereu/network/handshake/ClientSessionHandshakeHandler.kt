@@ -8,6 +8,7 @@ import de.fiereu.network.ProtocolHandler
 import de.fiereu.network.SessionPhase
 import de.fiereu.network.Side
 import de.fiereu.network.TypedProtocolHandler
+import de.fiereu.network.addBeforeProtocolLogger
 import de.fiereu.network.cipher.AesCtrSessionCipher
 import de.fiereu.network.handlers.ChecksumFrameDecoder
 import de.fiereu.network.handlers.ChecksumFrameEncoder
@@ -57,8 +58,7 @@ internal class ClientSessionHandshakeHandler(
       (pipeline.get(PipelineNames.CIPHER_DECODER) as CipherDecoder).cipher = crypto.cipher
       (pipeline.get(PipelineNames.CIPHER_ENCODER) as CipherEncoder).cipher = crypto.cipher
       if (applicationProtocol.compressed) {
-        pipeline.addBefore(
-            PipelineNames.PROTOCOL_HANDLER,
+        pipeline.addBeforeProtocolLogger(
             PipelineNames.COMPRESSION_DECODER,
             CompressionDecoder(),
         )

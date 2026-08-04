@@ -3,6 +3,7 @@ package de.fiereu.network.handshake
 import de.fiereu.bytecodec.CodecScope
 import de.fiereu.bytecodec.PacketCodec
 import de.fiereu.bytecodec.U16LE
+import de.fiereu.network.PipelineNames
 import de.fiereu.network.PipelineOptions
 import de.fiereu.network.Protocol
 import de.fiereu.network.ProtocolHandler
@@ -14,6 +15,7 @@ import de.fiereu.network.bidi
 import de.fiereu.network.installPipeline
 import de.fiereu.network.internal.SESSION_KEY
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.ints.shouldBeLessThan
 import io.kotest.matchers.shouldBe
 import io.netty.buffer.ByteBuf
 import io.netty.channel.Channel
@@ -34,6 +36,14 @@ private object EchoProtocol : Protocol() {
   }
 }
 
+private object CompressedEchoProtocol : Protocol() {
+  override val compressed = true
+
+  init {
+    bidi<Echo>(0x55u, EchoCodec)
+  }
+}
+
 private class CollectingHandler(side: Side) :
     TypedProtocolHandler<EchoProtocol>(EchoProtocol, side) {
   val received = mutableListOf<Echo>()
@@ -42,6 +52,28 @@ private class CollectingHandler(side: Side) :
     on<Echo> { event -> received += event.packet }
   }
 }
+
+private fun embedded(
+    side: Side,
+    identity: SessionIdentity,
+    protocol: Protocol,
+    handler: ProtocolHandler,
+    options: PipelineOptions,
+) =
+    EmbeddedChannel(
+        object : ChannelInitializer<Channel>() {
+          override fun initChannel(ch: Channel) {
+            installPipeline(
+                pipeline = ch.pipeline(),
+                side = side,
+                identity = identity,
+                applicationProtocol = protocol,
+                applicationHandlerFactory = { handler },
+                options = options,
+            )
+          }
+        },
+    )
 
 private fun drain(from: EmbeddedChannel, into: EmbeddedChannel) {
   while (true) {
@@ -110,6 +142,50 @@ class EndToEndHandshakeTest :
         serverApp.received shouldBe listOf(Echo(0xCAFE))
 
         // Server responds
+        serverChannel.attr(SESSION_KEY).get().send(Echo(0xBABE))
+        drain(serverChannel, clientChannel)
+        clientApp.received shouldBe listOf(Echo(0xBABE))
+      }
+
+      test("compression codecs sit in front of the protocol logger") {
+        val rootKeyPair = EcKeys.generateEphemeralKeyPair()
+        val rootPrivate = rootKeyPair.private as ECPrivateKey
+        val rootPublic = rootKeyPair.public as ECPublicKey
+
+        val serverApp = CollectingHandler(Side.SERVER)
+        val clientApp = CollectingHandler(Side.CLIENT)
+
+        val options = PipelineOptions(checksumSize = 8, frameLogging = true)
+
+        val serverChannel =
+            embedded(
+                Side.SERVER,
+                SessionIdentity.ServerRoot(rootPrivate),
+                CompressedEchoProtocol,
+                serverApp,
+                options,
+            )
+        val clientChannel =
+            embedded(
+                Side.CLIENT,
+                SessionIdentity.ClientTrust(rootPublic),
+                CompressedEchoProtocol,
+                clientApp,
+                options,
+            )
+
+        drain(clientChannel, serverChannel)
+        drain(serverChannel, clientChannel)
+        drain(clientChannel, serverChannel)
+
+        val serverNames = serverChannel.pipeline().names()
+        serverNames.indexOf(PipelineNames.COMPRESSION_ENCODER) shouldBeLessThan
+            serverNames.indexOf(PipelineNames.PROTOCOL_LOGGER)
+
+        val clientNames = clientChannel.pipeline().names()
+        clientNames.indexOf(PipelineNames.COMPRESSION_DECODER) shouldBeLessThan
+            clientNames.indexOf(PipelineNames.PROTOCOL_LOGGER)
+
         serverChannel.attr(SESSION_KEY).get().send(Echo(0xBABE))
         drain(serverChannel, clientChannel)
         clientApp.received shouldBe listOf(Echo(0xBABE))
