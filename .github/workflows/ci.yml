@@ -13,6 +13,28 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  pr-title:
+    name: Conventional PR title
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the title against the Conventional Commits spec
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          types='build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test'
+          if [[ "$PR_TITLE" =~ ^($types)(\([a-z0-9._/-]+\))?!?:\ .+ ]]; then
+            echo "OK: $PR_TITLE"
+            exit 0
+          fi
+          echo "::error::PR title is not a Conventional Commit: $PR_TITLE"
+          echo "Expected '<type>(<optional scope>): <description>', for example:"
+          echo "  feat(game): start a wild battle when a player steps in grass"
+          echo "  fix(codegen): merge the duplicate branches in the text parser"
+          echo "Valid types: ${types//|/, }"
+          echo "Append '!' after the type or scope to mark a breaking change."
+          exit 1
+
   ci:
     name: Spotless and check
     runs-on: ubuntu-latest
@@ -37,9 +59,10 @@ jobs:
 
       - name: Apply Spotless and push formatting changes
         if: >-
-          github.event_name == 'pull_request' && 
-          github.event.pull_request.head.repo.full_name == github.repository && 
-          github.event.pull_request.user.login != 'renovate[bot]'
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository &&
+          github.event.pull_request.user.login != 'renovate[bot]' &&
+          !startsWith(github.head_ref, 'release-please--')
         run: |
           ./gradlew spotlessApply
           if git diff --quiet; then

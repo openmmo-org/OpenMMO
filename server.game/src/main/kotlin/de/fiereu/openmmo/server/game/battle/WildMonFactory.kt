@@ -1,11 +1,13 @@
 package de.fiereu.openmmo.server.game.battle
 
+import de.fiereu.openmmo.common.MAX_MOVE_SLOTS
 import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.PokemonMove
 import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.moves.MoveRegistry
+import de.fiereu.openmmo.pokemon.LearnsetRegistry
 import de.fiereu.openmmo.pokemon.SpeciesRegistry
 import de.fiereu.openmmo.server.game.storage.EntityIdService
 import java.time.LocalDateTime
@@ -22,6 +24,7 @@ class WildMonFactory
 constructor(
     private val species: SpeciesRegistry,
     private val moves: MoveRegistry,
+    private val learnsets: LearnsetRegistry,
     private val entityIds: EntityIdService,
 ) {
 
@@ -36,10 +39,11 @@ constructor(
           spDef = rng.ivRoll()
           spd = rng.ivRoll()
         }
-    // TODO Give wild monsters their real level up moveset
-    //  Parse level_up_learnsets.h in a new codegen generator, use it here for wild movesets and
-    //  for learning moves on level up, and capture the client's move learn prompt packets.
-    val tacklePp = (moves.get(TACKLE_ID)?.pp ?: FALLBACK_PP).toByte()
+    // Species without a learnset fall back to Tackle so the monster can still attack.
+    val moveIds = learnsets.initialMoveset(dexId, level).ifEmpty { listOf(TACKLE_ID) }
+    val moveset =
+        moveIds.map { PokemonMove(it.toShort(), (moves.get(it)?.pp ?: FALLBACK_PP).toByte()) } +
+            List(MAX_MOVE_SLOTS - moveIds.size) { PokemonMove(0, 0) }
     val mon =
         Pokemon(
             id = entityIds.newMonsterId(),
@@ -55,13 +59,7 @@ constructor(
             xp = ExpCurves.totalXpFor(def.growthRate, level),
             eVs = EVs(),
             iVs = ivs,
-            moves =
-                listOf(
-                    PokemonMove(TACKLE_ID.toShort(), tacklePp),
-                    PokemonMove(0, 0),
-                    PokemonMove(0, 0),
-                    PokemonMove(0, 0),
-                ),
+            moves = moveset,
             isShiny = false,
             hasHiddenAbility = false,
             isAlpha = false,

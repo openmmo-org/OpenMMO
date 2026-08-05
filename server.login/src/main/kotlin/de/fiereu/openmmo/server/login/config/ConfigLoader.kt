@@ -1,6 +1,10 @@
 package de.fiereu.openmmo.server.login.config
 
+import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+
+private fun Config.stringOrNull(path: String): String? =
+    if (hasPath(path)) getString(path) else null
 
 object ConfigLoader {
   fun load(): LoginServerConfig {
@@ -12,6 +16,8 @@ object ConfigLoader {
         port = config.getInt("server.port"),
         checksumSize = config.getInt("server.checksumSize"),
         rootKeyResource = config.getString("server.rootKeyResource"),
+        rootKey = config.stringOrNull("server.rootKey"),
+        rootKeyFile = config.stringOrNull("server.rootKeyFile"),
         sessionSecret = secret.toByteArray(Charsets.UTF_8),
         db =
             DbConfig(

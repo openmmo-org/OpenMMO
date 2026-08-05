@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  push:
+    branches: [ "master" ]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Prepare release
+    runs-on: ubuntu-latest
+    outputs:
+      released: ${{ steps.release.outputs.releases_created }}
+      tag: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          # A PAT is needed for CI to run on the release pull request.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  publish:
+    name: Publish server distributions
+    needs: release-please
+    if: needs.release-please.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the release tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-please.outputs.tag }}
+          submodules: recursive
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # No ROMs on the runner, so dialog ids are placeholders.
+      - name: Build distributions
+        run: ./gradlew :server.login:assembleDist :server.game:assembleDist
+
+      - name: Check no keys are bundled
+        run: |
+          found=$(tar -tf server.login/build/distributions/*.tar \
+                  && tar -tf server.game/build/distributions/*.tar)
+          if grep -q '\.pem$' <<<"$found"; then
+            echo "::error::a distribution bundles a key"
+            grep '\.pem$' <<<"$found"
+            exit 1
+          fi
+          echo "No keys in the distributions."
+
+      - name: Attach distributions to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ needs.release-please.outputs.tag }}" \
+            server.login/build/distributions/* \
+            server.game/build/distributions/* \
+            --clobber

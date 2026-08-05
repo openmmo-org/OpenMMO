@@ -7,6 +7,8 @@ data class LoginServerConfig(
     val rootKeyResource: String,
     val sessionSecret: ByteArray,
     val db: DbConfig = DbConfig(),
+    val rootKey: String? = null,
+    val rootKeyFile: String? = null,
 ) {
   override fun equals(other: Any?): Boolean =
       other is LoginServerConfig &&
@@ -14,6 +16,8 @@ data class LoginServerConfig(
           port == other.port &&
           checksumSize == other.checksumSize &&
           rootKeyResource == other.rootKeyResource &&
+          rootKey == other.rootKey &&
+          rootKeyFile == other.rootKeyFile &&
           sessionSecret.contentEquals(other.sessionSecret) &&
           db == other.db
 
@@ -22,6 +26,8 @@ data class LoginServerConfig(
     h = h * 31 + port
     h = h * 31 + checksumSize
     h = h * 31 + rootKeyResource.hashCode()
+    h = h * 31 + rootKey.hashCode()
+    h = h * 31 + rootKeyFile.hashCode()
     h = h * 31 + sessionSecret.contentHashCode()
     h = h * 31 + db.hashCode()
     return h

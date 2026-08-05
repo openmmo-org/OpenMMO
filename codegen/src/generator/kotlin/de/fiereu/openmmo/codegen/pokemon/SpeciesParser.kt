@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.codegen.pokemon
 
+import de.fiereu.openmmo.codegen.defineTable
 import java.io.File
 
 class SpeciesParser(private val rootDir: File) {
@@ -86,11 +87,7 @@ class SpeciesParser(private val rootDir: File) {
   private fun readDefineTable(path: String, prefix: String): Map<String, Int> {
     val file = File(rootDir, path)
     require(file.exists()) { "Missing $prefix table at ${file.path}" }
-    val regex = Regex("""^#define\s+($prefix\w+)\s+(\d+)\s*$""")
-    return file
-        .readLines()
-        .mapNotNull { regex.find(it.trim()) }
-        .associate { it.groupValues[1] to it.groupValues[2].toInt() }
+    return defineTable(file, prefix)
   }
 
   private fun braceList(value: String): List<String> =
