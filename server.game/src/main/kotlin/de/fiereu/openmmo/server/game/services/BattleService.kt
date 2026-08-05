@@ -12,6 +12,8 @@ import de.fiereu.openmmo.net.game.packets.SocialListEntryAddPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleActionSelectPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleListEventDetail
 import de.fiereu.openmmo.net.game.packets.battle.BattleListEventPacket
+import de.fiereu.openmmo.net.game.packets.battle.moves.MoveLearnPromptPacket
+import de.fiereu.openmmo.net.game.packets.battle.moves.MoveLearnReplyPacket
 import de.fiereu.openmmo.pokemon.SpeciesRegistry
 import de.fiereu.openmmo.server.game.battle.BattleInstance
 import de.fiereu.openmmo.server.game.battle.BattleMonState
@@ -30,6 +32,7 @@ import de.fiereu.openmmo.server.game.storage.CharacterStore
 import de.fiereu.openmmo.server.game.world.interest.InterestManager
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDateTime
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -46,6 +49,9 @@ private const val MIN_WILD_LEVEL = 2
 private const val MAX_WILD_LEVEL = 100
 
 private const val POKE_BALL_ITEM: Short = 5004
+
+/** A prompt waiting for its answer, kept after the battle ends. */
+private data class PendingMoveLearn(val entityId: Long, val offered: List<Short>)
 
 /**
  * Orchestrates wild battles: builds the battle state from the party and a rolled wild monster,
@@ -68,6 +74,8 @@ constructor(
     private val moveRegistry: MoveRegistry,
 ) {
 
+  private val pendingLearns = ConcurrentHashMap<Long, PendingMoveLearn>()
+
   fun onBattlePacket(event: PacketEvent<*>) {
     log.info { "Battle packet ${event.packet::class.simpleName} received: ${event.packet}" }
   }
@@ -86,6 +94,27 @@ constructor(
       BattleAction.SWITCH -> switchMon(battle, action.moveOrItemId)
       BattleAction.RUN -> flee(battle)
     }
+  }
+
+  /** Applies the moveset the player picked after a level up. */
+  fun onMoveLearnReply(event: PacketEvent<MoveLearnReplyPacket>) {
+    val charId = event.session.attributes[PLAYER_STATE]?.characterId ?: return
+    val reply = event.packet
+    val pending = pendingLearns[charId] ?: return
+    if (pending.entityId != reply.entityId) return
+    pendingLearns.remove(charId)
+    val stored =
+        characterStore.getCharacter(charId)?.pokemon?.firstOrNull { it.id == reply.entityId }
+            ?: return
+    val moves = stored.moves.toMutableList()
+    if (!moveLearner.apply(moves, reply.moveIds, pending.offered)) {
+      log.warn { "char=$charId picked an invalid moveset for ${reply.entityId}: ${reply.moveIds}" }
+      return
+    }
+    if (moves == stored.moves) return
+    characterStore.updatePokemon(charId, stored.copy(moves = moves))
+    characterStore.flushCharacterAsync(charId)
+    event.session.send(emitter.moveSlotsDelta(reply.entityId, moves.map { it.id to it.pp }, 0))
   }
 
   fun onChatSend(event: PacketEvent<ChatMessageSendPacket>) {
@@ -110,6 +139,7 @@ constructor(
   /** Ends a running battle when the player disconnects, keeping the last hp and pp state. */
   fun onDisconnect(session: SessionContext) {
     val charId = session.attributes[PLAYER_STATE]?.characterId ?: return
+    pendingLearns.remove(charId)
     val battle = battles.byChar(charId) ?: return
     persistParty(battle)
     finishBattle(battle, BattleResult.DISCONNECTED)
@@ -328,11 +358,16 @@ constructor(
       "char=${battle.charId} won: +${reward.xpGained} xp, level ${winner.level} -> ${reward.newLevel}"
     }
     winner.currentHp = reward.newCurrentHp
-    val learned =
+    val outcome =
         moveLearner.learn(winner.moves, winner.source.dexId, winner.level, reward.newLevel)
     emitter.sendVictoryDelta(battle, winner.entityId, reward)
-    for (move in learned) {
+    for (move in outcome.learned) {
       emitter.sendNotice(battle, "${winner.species.name} learned ${move.name}!")
+    }
+    if (outcome.offered.isNotEmpty()) {
+      val offered = outcome.offered.map { it.moveId.toShort() }
+      pendingLearns[battle.charId] = PendingMoveLearn(winner.entityId, offered)
+      battle.session.send(MoveLearnPromptPacket(winner.entityId, offered))
     }
     characterStore.updatePokemon(
         battle.charId,

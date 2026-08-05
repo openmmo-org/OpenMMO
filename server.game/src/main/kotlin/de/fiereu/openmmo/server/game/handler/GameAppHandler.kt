@@ -36,7 +36,6 @@ import de.fiereu.openmmo.net.game.packets.battle.BattleCancelRequestPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleChallengeRequestPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleChatMessagePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleLeavePacket
-import de.fiereu.openmmo.net.game.packets.battle.BattleMoveUsePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattlePartySlotSelectPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattlePartySwitchPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleReadyPacket
@@ -50,6 +49,7 @@ import de.fiereu.openmmo.net.game.packets.battle.BattleTeamPreviewConfirmPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleTierSelectPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleTransitionReadyPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleUseItemPacket
+import de.fiereu.openmmo.net.game.packets.battle.moves.MoveLearnReplyPacket
 import de.fiereu.openmmo.net.game.packets.dialog.DialogActionResponsePacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildActivityLogPageRequestPacket
 import de.fiereu.openmmo.net.game.packets.guild.GuildCreatePacket
@@ -132,7 +132,7 @@ constructor(
     on<GuildRankLabelUpdatePacket> { event -> guildService.onRankLabelUpdate(event) }
     on<GuildActivityLogPageRequestPacket> { event -> guildService.onActivityLogPageRequest(event) }
 
-    on<BattleMoveUsePacket> { event -> battleService.onBattlePacket(event) }
+    on<MoveLearnReplyPacket> { event -> battleService.onMoveLearnReply(event) }
     on<BattlePartySwitchPacket> { event -> battleService.onBattlePacket(event) }
     on<BattleActionPacket> { event -> battleService.onBattlePacket(event) }
     on<BattleActionSelectPacket> { event -> battleService.onBattleAction(event) }
