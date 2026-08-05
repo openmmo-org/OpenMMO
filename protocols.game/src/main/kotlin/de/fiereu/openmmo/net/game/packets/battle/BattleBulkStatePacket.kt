@@ -167,11 +167,16 @@ internal val BattleSerializedEntryCodec: Codec<BattleSerializedEntry> =
       }
     }
 
+// TODO Take money off the player when they lose a trainer battle
+//  The only captured loss is against a story NPC, who takes nothing, so the field carrying the
+//  deduction is unknown. [valueB] sits next to the payout and is zero in every capture, which
+//  makes it the first thing to check. Capture a loss to a normal trainer, then deduct it on defeat.
 data class BattleBulkStatePacket(
     val phase: Byte,
     val firstGroup: List<BattleSerializedEntry>,
     val secondGroup: List<BattleSerializedEntry>,
-    val valueA: Int,
+    /** What the player won, on a trainer battle. Zero for a wild one. */
+    val prizeMoney: Int,
     val valueB: Int,
     val flag: Byte,
     val thirdGroup: List<BattleSerializedEntry>,
@@ -185,7 +190,7 @@ data class BattleBulkStatePacket(
             phase = 0,
             firstGroup = listOf(NullSerializedEntry),
             secondGroup = listOf(NullSerializedEntry),
-            valueA = 0,
+            prizeMoney = 0,
             valueB = 0,
             flag = 2,
             thirdGroup = emptyList(),
@@ -197,7 +202,7 @@ data class BattleBulkStatePacket(
             phase = -1,
             firstGroup = emptyList(),
             secondGroup = emptyList(),
-            valueA = 0,
+            prizeMoney = 0,
             valueB = 0,
             flag = 2,
             thirdGroup = emptyList(),
@@ -210,10 +215,11 @@ object BattleBulkStatePacketCodec : PacketCodec<BattleBulkStatePacket>() {
     val phase = field(S8) { it.phase }
     val firstGroup = field(BattleSerializedEntryCodec.listPrefixed(U8)) { it.firstGroup }
     val secondGroup = field(BattleSerializedEntryCodec.listPrefixed(U8)) { it.secondGroup }
-    val valueA = field(S32LE) { it.valueA }
+    val prizeMoney = field(S32LE) { it.prizeMoney }
     val valueB = field(S32LE) { it.valueB }
     val flag = field(S8) { it.flag }
     val thirdGroup = field(BattleSerializedEntryCodec.listPrefixed(U8)) { it.thirdGroup }
-    return BattleBulkStatePacket(phase, firstGroup, secondGroup, valueA, valueB, flag, thirdGroup)
+    return BattleBulkStatePacket(
+        phase, firstGroup, secondGroup, prizeMoney, valueB, flag, thirdGroup)
   }
 }
