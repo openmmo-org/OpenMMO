@@ -12,4 +12,30 @@ enum class TileBehavior {
   JUMP_WEST,
   JUMP_NORTH,
   JUMP_SOUTH,
+  DOOR,
+  /** Ladders, escalators and warp pads, which warp as soon as the player steps on them. */
+  LADDER,
+  STAIR_WARP_EAST,
+  STAIR_WARP_WEST,
+  /** Arrow warps are named after the direction the player walks to use them. */
+  NORTH_ARROW_WARP,
+  SOUTH_ARROW_WARP,
+  EAST_ARROW_WARP,
+  WEST_ARROW_WARP;
+
+  /** The direction the player must walk while standing here to be warped. */
+  val warpsWhenWalking: Direction?
+    get() =
+        when (this) {
+          STAIR_WARP_EAST,
+          EAST_ARROW_WARP -> Direction.RIGHT
+          STAIR_WARP_WEST,
+          WEST_ARROW_WARP -> Direction.LEFT
+          NORTH_ARROW_WARP -> Direction.UP
+          SOUTH_ARROW_WARP -> Direction.DOWN
+          else -> null
+        }
+
+  val warpsOnStep: Boolean
+    get() = this == LADDER
 }

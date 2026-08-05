@@ -83,7 +83,8 @@ private constructor(
       )
     }
 
-    // Only the behaviors we act on are mapped, everything else stays NORMAL.
+    // Only the behaviors we act on are mapped, everything else stays NORMAL. The two games give
+    // the same tile different names, so this matches on names and not on numbers.
     private fun classify(name: String): TileBehavior? =
         when (name) {
           "MB_TALL_GRASS" -> TileBehavior.TALL_GRASS
@@ -92,6 +93,26 @@ private constructor(
           "MB_JUMP_WEST" -> TileBehavior.JUMP_WEST
           "MB_JUMP_NORTH" -> TileBehavior.JUMP_NORTH
           "MB_JUMP_SOUTH" -> TileBehavior.JUMP_SOUTH
+          "MB_ANIMATED_DOOR",
+          "MB_NON_ANIMATED_DOOR",
+          "MB_WARP_DOOR",
+          "MB_CAVE_DOOR" -> TileBehavior.DOOR
+          // What the decomp's IsWarpMetatileBehavior accepts.
+          "MB_LADDER",
+          "MB_UP_ESCALATOR",
+          "MB_DOWN_ESCALATOR",
+          "MB_WARP_PAD",
+          "MB_FALL_WARP",
+          "MB_UNION_ROOM_WARP" -> TileBehavior.LADDER
+          "MB_UP_RIGHT_STAIR_WARP",
+          "MB_DOWN_RIGHT_STAIR_WARP" -> TileBehavior.STAIR_WARP_EAST
+          "MB_UP_LEFT_STAIR_WARP",
+          "MB_DOWN_LEFT_STAIR_WARP" -> TileBehavior.STAIR_WARP_WEST
+          "MB_NORTH_ARROW_WARP" -> TileBehavior.NORTH_ARROW_WARP
+          "MB_SOUTH_ARROW_WARP",
+          "MB_WATER_SOUTH_ARROW_WARP" -> TileBehavior.SOUTH_ARROW_WARP
+          "MB_EAST_ARROW_WARP" -> TileBehavior.EAST_ARROW_WARP
+          "MB_WEST_ARROW_WARP" -> TileBehavior.WEST_ARROW_WARP
           else -> null
         }
 

@@ -39,12 +39,13 @@ constructor(
 
     val knownOverride =
         WarpExitRules.getKnownOverride(sourceMap, destMap, warp.targetX, warp.targetY)
+    val destBehavior = destMap?.tileAt(warp.targetX, warp.targetY)?.behavior
 
     val warpFacing =
         warp.exitFacing
             ?: knownOverride?.facing
             ?: WarpExitRules.inferExitFacing(
-                destTileBehavior = null,
+                destTileBehavior = destBehavior,
                 destMap = destMap,
                 destX = warp.targetX,
                 destY = warp.targetY,
@@ -58,7 +59,11 @@ constructor(
 
     val shouldAutoStepOffWarp =
         knownOverride?.autoStep
-            ?: WarpExitRules.shouldAutoStep(sourceMap = sourceMap, destMap = destMap)
+            ?: WarpExitRules.shouldAutoStep(
+                sourceMap = sourceMap,
+                destMap = destMap,
+                destTileBehavior = destBehavior,
+            )
     if (shouldAutoStepOffWarp && destMap != null) {
       val destWarp = destMap.warps.find { it.x == offsetX && it.y == offsetY }
       if (destWarp != null) {
