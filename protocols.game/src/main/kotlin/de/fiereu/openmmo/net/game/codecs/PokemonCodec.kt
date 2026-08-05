@@ -27,7 +27,7 @@ private const val TAIL_A_REST = "00000100000000000000040502ffffffff0300"
 // value is written back for now.
 private const val TRAILER_B_LONG = 0x200000L
 // Record end: unknown bytes closed by a U8 list count, which is zero (empty list) in every capture.
-private const val TRAILER = "00ffff00"
+private const val TRAILER = "00ffff0000"
 
 private fun packRarity(p: Pokemon): Int =
     (if (p.isShiny) PokemonRarityFlag.SHINY.mask else 0) or
@@ -53,9 +53,9 @@ private fun evsFromWire(hp: Int, atk: Int, def: Int, spd: Int, spAtk: Int, spDef
 private fun ivsFromBits(bits: Int): IVs = decompressIVs(bits)
 
 /**
- * The 148-byte party/PC monster record. The named fields are decoded from real captures. The
- * reserved segments hold species metadata and still-unlabelled structure kept as reference bytes,
- * so the layout round-trips exactly.
+ * The party/PC monster record. The named fields are decoded from real captures. The reserved
+ * segments hold species metadata and still-unlabelled structure kept as reference bytes, so the
+ * layout round-trips exactly.
  */
 object PokemonCodec : PacketCodec<Pokemon>() {
   override fun CodecScope<Pokemon>.body(): Pokemon {
