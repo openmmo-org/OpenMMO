@@ -41,6 +41,8 @@ private const val PLAYER_SIDE: Byte = 1
 
 // The target move short the live server sends for each event. Meaning unknown, but it is fixed per
 // event type in every capture: a hit carries 0x0200, other events carry 0.
+private const val DELTA_MOVE_SLOTS = 0x4
+
 private const val HP_TARGET_MOVE: Short = 0x0200
 private const val DEFAULT_TARGET_MOVE: Short = 0
 
@@ -219,6 +221,14 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
   fun broadcast(battle: BattleInstance, packet: Any) {
     interestManager.broadcast(battle.key, packet)
   }
+
+  /** The delta that tells the client a monster's moveset changed. */
+  fun moveSlotsDelta(
+      entityId: Long,
+      moveSlots: List<Pair<Short, Byte>>,
+      ppUps: Byte,
+  ): BattleEntityDeltaPacket =
+      delta(entityId, DELTA_MOVE_SLOTS).copy(moveSlots = moveSlots, ppUps = ppUps)
 
   fun delta(
       entityId: Long,
