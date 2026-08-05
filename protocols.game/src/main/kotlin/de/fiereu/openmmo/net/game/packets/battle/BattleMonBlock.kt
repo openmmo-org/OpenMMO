@@ -1,6 +1,7 @@
 package de.fiereu.openmmo.net.game.packets.battle
 
 import de.fiereu.bytecodec.*
+import de.fiereu.openmmo.common.MAX_MOVE_SLOTS
 
 /**
  * One monster as the battle packets carry it, shared by the field state and the switch-in. The
@@ -27,7 +28,7 @@ data class BattleMonBlock(
   }
 
   companion object {
-    const val MOVE_SLOTS = 4
+    const val MOVE_SLOTS = MAX_MOVE_SLOTS
   }
 }
 

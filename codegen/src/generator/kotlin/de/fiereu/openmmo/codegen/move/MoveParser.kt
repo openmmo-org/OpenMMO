@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.codegen.move
 
+import de.fiereu.openmmo.codegen.defineTable
 import java.io.File
 
 class MoveParser(private val rootDir: File) {
@@ -35,11 +36,7 @@ class MoveParser(private val rootDir: File) {
       "Decomp not initialized at $rootDir (missing ${file.path}). " +
           "Run: git submodule update --init --recursive"
     }
-    val regex = Regex("""^#define\s+(MOVE_\w+)\s+(\d+)\s*$""")
-    return file
-        .readLines()
-        .mapNotNull { regex.find(it.trim()) }
-        .associate { it.groupValues[1] to it.groupValues[2].toInt() }
+    return defineTable(file, "MOVE_")
   }
 
   private fun readMoveNames(): Map<String, String> {

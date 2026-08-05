@@ -1,6 +1,7 @@
 package de.fiereu.openmmo.server.game.battle
 
 import de.fiereu.openmmo.moves.MoveRegistry
+import de.fiereu.openmmo.pokemon.LearnsetRegistry
 import de.fiereu.openmmo.pokemon.SpeciesRegistry
 import de.fiereu.openmmo.server.game.storage.EntityIdService
 import io.kotest.core.spec.style.FunSpec
@@ -11,7 +12,8 @@ import io.kotest.matchers.shouldBe
 
 class WildMonFactoryTest :
     FunSpec({
-      val factory = WildMonFactory(SpeciesRegistry(), MoveRegistry(), EntityIdService())
+      val factory =
+          WildMonFactory(SpeciesRegistry(), MoveRegistry(), LearnsetRegistry(), EntityIdService())
 
       test("the same seed rolls the same monster") {
         val a = factory.create(19, 3, BattleRng(seed = 42))!!
@@ -31,11 +33,17 @@ class WildMonFactoryTest :
         }
       }
 
-      test("the moveset is Tackle with its registry pp") {
+      test("the moveset is the level up moveset with registry pp") {
+        // Bulbasaur knows Tackle at level 1 and Growl at level 4.
         val mon = factory.create(1, 5, BattleRng(seed = 7))!!
-        mon.moves[0].id shouldBe 33.toShort()
+        mon.moves.map { it.id.toInt() } shouldBe listOf(33, 45, 0, 0)
         mon.moves[0].pp shouldBe MoveRegistry().get(33)!!.pp.toByte()
-        mon.moves.drop(1).all { it.id == 0.toShort() } shouldBe true
+        mon.moves[1].pp shouldBe MoveRegistry().get(45)!!.pp.toByte()
+      }
+
+      test("a high level monster keeps only the last four moves") {
+        val mon = factory.create(1, 100, BattleRng(seed = 7))!!
+        mon.moves.map { it.id.toInt() } shouldBe listOf(230, 74, 235, 76)
       }
 
       test("xp matches the species growth curve at the rolled level") {

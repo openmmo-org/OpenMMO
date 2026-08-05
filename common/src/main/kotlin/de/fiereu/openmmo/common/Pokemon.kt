@@ -6,6 +6,8 @@ import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.common.enums.PokemonNature
 import java.time.LocalDateTime
 
+const val MAX_MOVE_SLOTS = 4
+
 data class Pokemon(
     val id: Long,
     val ownerId: Long,
@@ -36,7 +38,7 @@ data class Pokemon(
       PokemonNature.entries[((seed.toLong() and 0xFFFFFFFFL) % PokemonNature.entries.size).toInt()]
 
   init {
-    require(moves.size <= 4) { "A Pokemon can't have more than 4 moves" }
+    require(moves.size <= MAX_MOVE_SLOTS) { "A Pokemon can't have more than $MAX_MOVE_SLOTS moves" }
   }
 }
 

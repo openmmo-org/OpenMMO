@@ -21,10 +21,12 @@ import de.fiereu.openmmo.net.game.packets.battle.BattleFieldStatePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleQueuedEventPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleSidePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleTileMapPacket
+import de.fiereu.openmmo.pokemon.LearnsetRegistry
 import de.fiereu.openmmo.pokemon.SpeciesRegistry
 import de.fiereu.openmmo.server.game.battle.BattlePacketEmitter
 import de.fiereu.openmmo.server.game.battle.BattleRegistry
 import de.fiereu.openmmo.server.game.battle.BattleRewards
+import de.fiereu.openmmo.server.game.battle.MoveLearner
 import de.fiereu.openmmo.server.game.battle.TurnEngine
 import de.fiereu.openmmo.server.game.battle.WildMonFactory
 import de.fiereu.openmmo.server.game.storage.CharacterStore
@@ -84,9 +86,12 @@ private class Fixture(scope: CoroutineScope) {
           characterStore = store,
           battles = registry,
           engine = TurnEngine(MoveRegistry(), TypeChart()),
-          wildMons = WildMonFactory(SpeciesRegistry(), MoveRegistry(), EntityIdService()),
+          wildMons =
+              WildMonFactory(
+                  SpeciesRegistry(), MoveRegistry(), LearnsetRegistry(), EntityIdService()),
           emitter = BattlePacketEmitter(interestManager),
           rewards = BattleRewards(),
+          moveLearner = MoveLearner(LearnsetRegistry(), MoveRegistry()),
           interestManager = interestManager,
           speciesRegistry = SpeciesRegistry(),
           moveRegistry = MoveRegistry(),
