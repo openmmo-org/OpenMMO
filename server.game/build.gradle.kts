@@ -8,10 +8,6 @@ plugins {
   alias(libs.plugins.ksp)
 }
 
-group = "de.fiereu.openmmo"
-
-version = "0.1.0"
-
 application { mainClass.set("de.fiereu.openmmo.server.game.MainKt") }
 
 jooqDb { packageName = "de.fiereu.openmmo.db.game" }

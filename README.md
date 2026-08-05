@@ -6,6 +6,7 @@
 - [Description](#description)
 - [Building](#building)
 - [Configuration](#configuration)
+- [Releases](#releases)
 - [Documentation](#wiki)
 - [License](LICENSE)
 - [Disclaimer](#disclaimer)
@@ -32,6 +33,19 @@ git submodule update --init --recursive
 Without the submodules the `:maps` build fails, because the generator has no
 decomp data to read.
 
+### ROMs
+
+A dialog id is a file offset into the retail GBA ROM. The decomp is byte-identical
+to it, so the generator encodes a text from the decomp, finds those bytes in the
+ROM, and packs the offset into the id. The decomp alone has no offsets.
+
+Put the Emerald (`BPEE`, Hoenn) and FireRed (`BPRE`, Kanto) ROMs in `roms/`.
+Filenames do not matter, each is identified by the game code in its GBA header.
+The folder is **gitignored**, this project ships no ROMs.
+
+Without them the build still succeeds and every dialog id is `0`, so CI passes but
+the client shows the wrong text.
+
 ## Configuration
 
 All local configuration and secrets live in a `.env` file at the repository
@@ -48,6 +62,31 @@ For local-only tweaks to the container setup, create a
 `docker-compose.override.yml` (also gitignored). 
 Docker Compose merges it automatically on `docker compose up`. 
 For deployment,supply a proper `.env` and run `docker compose -f docker-compose.yml up -d` to skip any override.
+
+### Server key
+
+Both servers share one private key. A local build generates it, so development
+needs no setup.
+
+Released archives ship no keys. Generate a pair with
+`./gradlew :keys:generateGame` and pass the private key to both servers through
+`OPENMMO_GAME_PRIVATE_KEY` (the PEM) or `OPENMMO_GAME_PRIVATE_KEY_FILE` (a path
+to it). Clients need a patched build carrying the matching public key.
+
+## Releases
+
+[release-please](https://github.com/googleapis/release-please) cuts releases from
+the commit history. Pull requests are squash merged, so their titles become the
+commit messages it reads and must follow
+[Conventional Commits](https://www.conventionalcommits.org/). CI rejects titles
+that do not.
+
+`feat` bumps the minor version, `fix` the patch version. Below `1.0.0` a
+breaking change bumps the minor version instead of jumping to `1.0.0`.
+
+Every push to `master` opens or updates a release pull request. Merging it tags
+the release and attaches the server archives. The version lives in
+`gradle.properties` and applies to every module, do not edit it by hand.
 
 ## Wiki
 

@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.codegen.pokemon
 
+import de.fiereu.openmmo.codegen.defineTable
 import java.io.File
 
 /**
@@ -10,21 +11,14 @@ import java.io.File
 object NationalDex {
 
   fun read(rootDir: File): Map<Int, Int> {
-    val internalBySuffix = defineTable(File(rootDir, "include/constants/species.h"), "SPECIES_")
+    val internalBySuffix =
+        defineTable(File(rootDir, "include/constants/species.h"), "SPECIES_").mapKeys {
+          it.key.removePrefix("SPECIES_")
+        }
     val nationalBySuffix = enumTable(File(rootDir, "include/constants/pokedex.h"), "NATIONAL_DEX_")
     return internalBySuffix
         .mapNotNull { (suffix, internal) -> nationalBySuffix[suffix]?.let { internal to it } }
         .toMap()
-  }
-
-  // #define SPECIES_<suffix> <n>
-  private fun defineTable(file: File, prefix: String): Map<String, Int> {
-    if (!file.exists()) return emptyMap()
-    val re = Regex("""^#define\s+$prefix(\w+)\s+(\d+)\s*$""")
-    return file
-        .readLines()
-        .mapNotNull { re.find(it.trim()) }
-        .associate { it.groupValues[1] to it.groupValues[2].toInt() }
   }
 
   // A plain enum where each NATIONAL_DEX_<suffix> takes the next value, starting at NONE = 0.

@@ -17,6 +17,11 @@ data class LearnedMoveSlot(
     val appearance: LearnedMoveAppearance?,
 )
 
+// TODO Decide how a monster stores the moves it has learned
+//  Nothing sends LearnedMovesetPacket (S2C 0x7A) or reads SetActiveMovesetPacket (C2S 0x3C), and
+//  ByteDex holds no capture of either. Both shapes suggest the client keeps every learned move and
+//  picks four active ones, which Pokemon cannot hold today because it caps moves at four. Capture
+//  the flow, then either move to a learned pool or drop the packets.
 data class LearnedMovesetPacket(
     val moves: List<LearnedMoveSlot>,
 )

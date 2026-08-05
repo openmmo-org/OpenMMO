@@ -6,7 +6,7 @@ import dagger.Module
 import dagger.Provides
 import de.fiereu.openmmo.common.auth.SessionTokenVerifier
 import de.fiereu.openmmo.common.io.PemKeyLoader
-import de.fiereu.openmmo.common.io.resource
+import de.fiereu.openmmo.common.io.pemStream
 import de.fiereu.openmmo.server.game.config.GameServerConfig
 import de.fiereu.openmmo.server.game.script.ScriptRegistry
 import de.fiereu.openmmo.server.game.storage.CharacterRepository
@@ -34,7 +34,8 @@ object GameServerModule {
   @Provides
   @Singleton
   fun rootKey(config: GameServerConfig): ECPrivateKey =
-      PemKeyLoader.loadEcPrivate(resource(config.rootKeyResource))
+      PemKeyLoader.loadEcPrivate(
+          pemStream(config.rootKey, config.rootKeyFile, config.rootKeyResource))
 
   @Provides
   @Singleton

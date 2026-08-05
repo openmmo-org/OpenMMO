@@ -7,7 +7,7 @@ import dagger.Module
 import dagger.Provides
 import de.fiereu.openmmo.common.auth.SessionTokenIssuer
 import de.fiereu.openmmo.common.io.PemKeyLoader
-import de.fiereu.openmmo.common.io.resource
+import de.fiereu.openmmo.common.io.pemStream
 import de.fiereu.openmmo.server.login.auth.JooqUserStore
 import de.fiereu.openmmo.server.login.auth.UserService
 import de.fiereu.openmmo.server.login.config.LoginServerConfig
@@ -35,7 +35,8 @@ abstract class LoginServerModule {
     @Provides
     @Singleton
     fun rootKey(config: LoginServerConfig): ECPrivateKey =
-        PemKeyLoader.loadEcPrivate(resource(config.rootKeyResource))
+        PemKeyLoader.loadEcPrivate(
+            pemStream(config.rootKey, config.rootKeyFile, config.rootKeyResource))
 
     @Provides
     @Singleton

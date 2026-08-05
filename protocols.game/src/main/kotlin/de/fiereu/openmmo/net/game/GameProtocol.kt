@@ -6,6 +6,7 @@ import de.fiereu.network.c2s
 import de.fiereu.network.s2c
 import de.fiereu.openmmo.net.game.packets.*
 import de.fiereu.openmmo.net.game.packets.battle.*
+import de.fiereu.openmmo.net.game.packets.battle.moves.*
 import de.fiereu.openmmo.net.game.packets.dialog.*
 import de.fiereu.openmmo.net.game.packets.guild.*
 
@@ -38,7 +39,7 @@ object GameProtocol : Protocol() {
 
     bidi<ChatMessagePacket>(0x09u, ChatMessagePacketCodec)
 
-    c2s<BattleMoveUsePacket>(0x0Au, BattleMoveUsePacketCodec)
+    c2s<MoveLearnReplyPacket>(0x0Au, MoveLearnReplyPacketCodec)
     s2c<WorldFlagTableResetPacket>(0x0Au, WorldFlagTableResetPacketCodec)
 
     c2s<EvolutionPromptResponsePacket>(0x0Bu, EvolutionPromptResponsePacketCodec)
@@ -73,7 +74,7 @@ object GameProtocol : Protocol() {
     s2c<BattleEntityDeltaPacket>(0x16u, BattleEntityDeltaPacketCodec)
 
     c2s<StorageBoxClosePacket>(0x17u, StorageBoxClosePacketCodec)
-    s2c<SocialEntryFlagSetPacket>(0x17u, SocialEntryFlagSetPacketCodec)
+    s2c<MoveLearnPromptPacket>(0x17u, MoveLearnPromptPacketCodec)
 
     c2s<MonsterStatusConditionPacket>(0x18u, MonsterStatusConditionPacketCodec)
     s2c<SocialEntryPresencePacket>(0x18u, SocialEntryPresencePacketCodec)
