@@ -128,8 +128,11 @@ constructor(
     // Walking off the edge of a map hands the player to the neighbouring map, if there is one.
     if (toX !in 0 until currentMap.width || toY !in 0 until currentMap.height) {
       val connection = currentMap.connections.find { it.direction == msg.direction }
+      // Connections stay inside one region.
       val targetMap =
-          connection?.let { mapManager.getMap(1, it.targetBank.toByte(), it.targetMap.toByte()) }
+          connection?.let {
+            mapManager.getMap(currentMap.regionId, it.targetBank.toByte(), it.targetMap.toByte())
+          }
       if (connection == null || targetMap == null) {
         sendPositionReset(ctx, charId, currentMap, fromX, fromY, msg.direction)
         return
@@ -146,7 +149,15 @@ constructor(
             Direction.DOWN -> 0
             else -> (fromY - connection.unknown).coerceIn(0, targetMap.height - 1)
           }
-      edgeTransition(ctx, charId, connection, entryX.toByte(), entryY.toByte(), msg.direction)
+      edgeTransition(
+          ctx,
+          charId,
+          currentMap.regionId,
+          connection,
+          entryX.toByte(),
+          entryY.toByte(),
+          msg.direction,
+      )
       return
     }
 
@@ -262,6 +273,7 @@ constructor(
   private fun edgeTransition(
       ctx: SessionContext,
       charId: Long,
+      regionId: Byte,
       connection: MapData.GbaConnection,
       targetX: Byte,
       targetY: Byte,
@@ -269,7 +281,7 @@ constructor(
   ) {
     val targetBank = connection.targetBank.toByte()
     val targetMap = connection.targetMap.toByte()
-    val map = mapManager.getMap(1, targetBank, targetMap) ?: return
+    val map = mapManager.getMap(regionId, targetBank, targetMap) ?: return
 
     val state = ctx.attributes[PLAYER_STATE]
     if (state != null) {
@@ -289,7 +301,7 @@ constructor(
     presenceService.refresh(ctx)
 
     mapLoadService.preloadConnectedMaps(ctx, map, depth = 1)
-    npcService.spawnNpcsForMap(ctx, targetBank.toInt(), targetMap.toInt(), state?.regionId ?: 1)
+    npcService.spawnNpcsForMap(ctx, targetBank.toInt(), targetMap.toInt(), regionId.toInt())
 
     ctx.send(gbaMovePacket(charId, map, targetX.toInt(), targetY.toInt(), direction))
 

@@ -4,8 +4,9 @@ import de.fiereu.bytecodec.*
 
 data class NpcSpawnPacket(
     val entityId: Long,
-    val unk1: Int,
-    val unk2: Int,
+    /** Which region's sprite table [graphicsId] is looked up in. */
+    val spriteRegionId: Int,
+    val graphicsId: Int,
     val unk3: Int,
     val unk4: Int,
     val regionId: Int,
@@ -21,8 +22,8 @@ data class NpcSpawnPacket(
 object NpcSpawnPacketCodec : PacketCodec<NpcSpawnPacket>() {
   override fun CodecScope<NpcSpawnPacket>.body(): NpcSpawnPacket {
     val entityId = field(S64LE) { it.entityId }
-    val unk1 = field(U8) { it.unk1 }
-    val unk2 = field(U16LE) { it.unk2 }
+    val spriteRegionId = field(U8) { it.spriteRegionId }
+    val graphicsId = field(U16LE) { it.graphicsId }
     val unk3 = field(U16LE) { it.unk3 }
     val unk4 = field(U16LE) { it.unk4 }
     val regionId = field(U8) { it.regionId }
@@ -34,6 +35,18 @@ object NpcSpawnPacketCodec : PacketCodec<NpcSpawnPacket>() {
     val facing = field(U8) { it.facing }
     val unk6 = field(U16LE) { it.unk6 }
     return NpcSpawnPacket(
-        entityId, unk1, unk2, unk3, unk4, regionId, bankId, mapId, x, y, facing, unk5, unk6)
+        entityId,
+        spriteRegionId,
+        graphicsId,
+        unk3,
+        unk4,
+        regionId,
+        bankId,
+        mapId,
+        x,
+        y,
+        facing,
+        unk5,
+        unk6)
   }
 }

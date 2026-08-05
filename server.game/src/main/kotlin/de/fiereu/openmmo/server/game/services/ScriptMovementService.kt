@@ -45,7 +45,12 @@ constructor(
         mapManager.getMap(info.positionRegionId, info.positionBankId, info.positionMapId) ?: return
     val npc = map.npcs.firstOrNull { it.entityIdx == localId } ?: return
     val entityId =
-        npcService.entityIdFor(info.positionBankId.toInt(), info.positionMapId.toInt(), localId)
+        npcService.entityIdFor(
+            info.positionRegionId.toInt(),
+            info.positionBankId.toInt(),
+            info.positionMapId.toInt(),
+            localId,
+        )
     drive(session, entityId, Pose(npc.x, npc.y, npc.facing), steps)
   }
 
@@ -63,7 +68,11 @@ constructor(
         paths.mapNotNull { (localId, steps) ->
           if (map.npcs.none { it.entityIdx == localId }) return@mapNotNull null
           npcService.entityIdFor(
-              info.positionBankId.toInt(), info.positionMapId.toInt(), localId) to steps
+              info.positionRegionId.toInt(),
+              info.positionBankId.toInt(),
+              info.positionMapId.toInt(),
+              localId,
+          ) to steps
         }
     resolved.forEach { (entityId, steps) -> sendActions(session, entityId, steps) }
     delay(resolved.maxOfOrNull { (_, steps) -> durationMs(steps) } ?: 0)
@@ -84,7 +93,11 @@ constructor(
         paths.mapNotNull { (localId, steps) ->
           if (map.npcs.none { it.entityIdx == localId }) return@mapNotNull null
           npcService.entityIdFor(
-              info.positionBankId.toInt(), info.positionMapId.toInt(), localId) to steps
+              info.positionRegionId.toInt(),
+              info.positionBankId.toInt(),
+              info.positionMapId.toInt(),
+              localId,
+          ) to steps
         }
     sendActions(session, info.id, selfSteps)
     resolved.forEach { (entityId, steps) -> sendActions(session, entityId, steps) }
@@ -106,7 +119,13 @@ constructor(
   fun showNpc(session: SessionContext, state: PlayerState, localId: Int) {
     val charId = state.characterId ?: return
     val info = characterStore.getCharacter(charId)?.info ?: return
-    npcService.spawnNpc(session, info.positionBankId.toInt(), info.positionMapId.toInt(), localId)
+    npcService.spawnNpc(
+        session,
+        info.positionRegionId.toInt(),
+        info.positionBankId.toInt(),
+        info.positionMapId.toInt(),
+        localId,
+    )
   }
 
   /** Show a normally hidden map npc at an overridden cutscene position. */
@@ -114,7 +133,14 @@ constructor(
     val charId = state.characterId ?: return
     val info = characterStore.getCharacter(charId)?.info ?: return
     npcService.spawnNpcAt(
-        session, info.positionBankId.toInt(), info.positionMapId.toInt(), localId, x, y)
+        session,
+        info.positionRegionId.toInt(),
+        info.positionBankId.toInt(),
+        info.positionMapId.toInt(),
+        localId,
+        x,
+        y,
+    )
   }
 
   /** Relocate an npc that the normal map spawn already created. */
@@ -122,7 +148,14 @@ constructor(
     val charId = state.characterId ?: return
     val info = characterStore.getCharacter(charId)?.info ?: return
     npcService.repositionNpc(
-        session, info.positionBankId.toInt(), info.positionMapId.toInt(), localId, x, y)
+        session,
+        info.positionRegionId.toInt(),
+        info.positionBankId.toInt(),
+        info.positionMapId.toInt(),
+        localId,
+        x,
+        y,
+    )
   }
 
   /** Repositions the player and synchronizes server state. */
@@ -156,14 +189,25 @@ constructor(
   fun removeNpc(session: SessionContext, state: PlayerState, localId: Int) {
     val charId = state.characterId ?: return
     val info = characterStore.getCharacter(charId)?.info ?: return
-    npcService.despawnNpc(session, info.positionBankId.toInt(), info.positionMapId.toInt(), localId)
+    npcService.despawnNpc(
+        session,
+        info.positionRegionId.toInt(),
+        info.positionBankId.toInt(),
+        info.positionMapId.toInt(),
+        localId,
+    )
   }
 
   /** Resolves local NPC ids to entity ids. */
   fun npcEntityId(state: PlayerState, localId: Int): Long? {
     val charId = state.characterId ?: return null
     val info = characterStore.getCharacter(charId)?.info ?: return null
-    return npcService.entityIdFor(info.positionBankId.toInt(), info.positionMapId.toInt(), localId)
+    return npcService.entityIdFor(
+        info.positionRegionId.toInt(),
+        info.positionBankId.toInt(),
+        info.positionMapId.toInt(),
+        localId,
+    )
   }
 
   /** Returns the created player's gender. */

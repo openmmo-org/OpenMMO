@@ -94,7 +94,7 @@ class MapTransitionScriptTest :
           val npcs = NpcService(mapManager, store)
           val movement = ScriptMovementService(mapManager, npcs, store)
           val ctx = ScriptContext(session, state, entityId = -1, DialogService(), story, movement)
-          val momEntityId = npcs.entityIdFor(51, 3, 13)
+          val momEntityId = npcs.entityIdFor(1, 51, 3, 13)
 
           val cutscene = launch { setWallClock(ctx, female = true) }
           advanceUntilIdle()
@@ -277,8 +277,8 @@ class MapTransitionScriptTest :
           val npcs = NpcService(mapManager, store)
           val movement = ScriptMovementService(mapManager, npcs, store)
           val ctx = ScriptContext(session, state, entityId = -1, DialogService(), story, movement)
-          val birchId = npcs.entityIdFor(50, 16, 1)
-          val zigzagoonId = npcs.entityIdFor(50, 16, 3)
+          val birchId = npcs.entityIdFor(1, 50, 16, 1)
+          val zigzagoonId = npcs.entityIdFor(1, 50, 16, 3)
 
           val cutscene = launch { Route101_EventScript_StartBirchRescue.run(ctx) }
           advanceUntilIdle()
@@ -321,7 +321,7 @@ class MapTransitionScriptTest :
               ScriptContext(
                   session,
                   state,
-                  entityId = npcs.entityIdFor(51, 1, 14),
+                  entityId = npcs.entityIdFor(1, 51, 1, 14),
                   dialog,
                   story,
                   movement,

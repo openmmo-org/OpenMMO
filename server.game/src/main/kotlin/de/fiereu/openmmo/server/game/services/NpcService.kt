@@ -29,74 +29,15 @@ constructor(
   private val npcEntityIdCounter = AtomicLong(0x1A69000000000000L)
   private val npcEntityIds = mutableMapOf<String, Long>()
 
-  fun getNpcEntityId(bankId: Int, mapId: Int, entityIdx: Int): Long? {
-    return npcEntityIds["$bankId:$mapId:$entityIdx"]
+  fun getNpcEntityId(regionId: Int, bankId: Int, mapId: Int, entityIdx: Int): Long? {
+    return npcEntityIds[key(regionId, bankId, mapId, entityIdx)]
   }
 
-  fun spawnNpcsForMap(ctx: SessionContext, bankId: Int, mapId: Int, regionId: Int = 1) {
+  fun spawnNpcsForMap(ctx: SessionContext, bankId: Int, mapId: Int, regionId: Int) {
     val map = mapManager.getMap(regionId, bankId, mapId) ?: return
     val stored = ctx.attributes[PLAYER_STATE]?.characterId?.let(characterStore::getCharacter)
     val storyFlags = stored?.storyFlags.orEmpty()
     val storyVars = stored?.storyVars.orEmpty()
-
-    // Generated Petalburg data now supplies these NPCs.
-    if (regionId == 1 && USE_LEGACY_PETALBURG_SPAWNS && bankId == 74 && mapId == 11) {
-      data class NpcEntry(
-          val entityIdx: Int,
-          val x: Int,
-          val y: Int,
-          val gfx: Int,
-          val unk1: Int,
-          val unk3: Int,
-          val unk4: Int,
-          val facing: Int,
-          val unk6: Int,
-      )
-      val all16 =
-          listOf(
-              NpcEntry(7, 15, 19, 9, 1, 768, 513, 0, 8),
-              NpcEntry(6, 4, 8, 59, 1, 256, 0, 0, 8),
-              NpcEntry(5, 35, 20, 59, 1, 2048, 0, 0, 8),
-              NpcEntry(4, 45, 7, 59, 1, 2048, 0, 0, 8),
-              NpcEntry(3, 26, 20, 23, 1, 256, 0, 0, 0),
-              NpcEntry(2, 26, 17, 117, 1, 2563, 0, 3, 0),
-              NpcEntry(1, 19, 11, 82, 1, 256, 0, 0, 8),
-              NpcEntry(0, 19, 10, 82, 1, 256, 0, 0, 8),
-              NpcEntry(15, 16, 24, 0, 10, 25600, 0, 0, 8),
-              NpcEntry(14, 15, 24, 600, 10, 0, 0, 0, 0),
-              NpcEntry(13, 36, 23, 246, 10, 0, 0, 0, 8),
-              NpcEntry(12, 33, 5, 10, 1, 256, 257, 0, 8),
-              NpcEntry(11, 4, 26, 59, 1, 256, 257, 0, 8),
-              NpcEntry(10, 30, 34, 13, 1, 512, 258, 0, 8),
-              NpcEntry(9, 4, 14, 36, 1, 5121, 0, 1, 9),
-              NpcEntry(8, 7, 32, 36, 1, 5632, 0, 0, 8),
-          )
-      val baseEntityId = 0x000000000001E000L
-      for (npc in all16) {
-        val entityId = baseEntityId or npc.entityIdx.toLong()
-        log.info {
-          ">> Petalburg NpcSpawn[${npc.entityIdx}] entId=0x${entityId.toString(16)} pos=(${npc.x},${npc.y}) gfx=${npc.gfx}"
-        }
-        val spawnPacket =
-            NpcSpawnPacket(
-                entityId = entityId,
-                unk1 = npc.unk1,
-                unk2 = npc.gfx,
-                unk3 = npc.unk3,
-                unk4 = npc.unk4,
-                regionId = 1,
-                bankId = bankId,
-                mapId = mapId,
-                x = npc.x,
-                y = npc.y,
-                facing = npc.facing,
-                unk5 = 2,
-                unk6 = npc.unk6,
-            )
-        ctx.send(spawnPacket)
-      }
-      return
-    }
 
     for (npc in map.npcs) {
       // Decoration slots are not normal NPCs.
@@ -107,25 +48,31 @@ constructor(
       val resolved =
           resolveDynamicGraphics(
               ctx, applyStoryPlacement(bankId, mapId, npc, storyFlags, storyVars))
-      ctx.send(buildSpawnPacket(resolved, entityIdFor(bankId, mapId, npc.entityIdx), bankId, mapId))
+      ctx.send(
+          buildSpawnPacket(
+              resolved,
+              entityIdFor(regionId, bankId, mapId, npc.entityIdx),
+              regionId,
+              bankId,
+              mapId,
+          ))
     }
   }
 
   /** Allocate (or return) the stable entity id for a map npc by its decomp local id. */
-  fun entityIdFor(bankId: Int, mapId: Int, entityIdx: Int): Long =
-      npcEntityIds.getOrPut("$bankId:$mapId:$entityIdx") { npcEntityIdCounter.incrementAndGet() }
+  fun entityIdFor(regionId: Int, bankId: Int, mapId: Int, entityIdx: Int): Long =
+      npcEntityIds.getOrPut(key(regionId, bankId, mapId, entityIdx)) {
+        npcEntityIdCounter.incrementAndGet()
+      }
 
   /** Spawn a single npc (including a normally hidden one) for one player, for cutscenes. */
-  fun spawnNpc(ctx: SessionContext, bankId: Int, mapId: Int, localId: Int) {
-    val npc = mapManager.getMap(1, bankId, mapId)?.npcs?.firstOrNull { it.entityIdx == localId }
-    if (npc == null) {
-      log.warn { "spawnNpc: npc $localId not found on $bankId:$mapId" }
-      return
-    }
+  fun spawnNpc(ctx: SessionContext, regionId: Int, bankId: Int, mapId: Int, localId: Int) {
+    val npc = findNpc(regionId, bankId, mapId, localId) ?: return
     ctx.send(
         buildSpawnPacket(
             resolveDynamicGraphics(ctx, npc),
-            entityIdFor(bankId, mapId, localId),
+            entityIdFor(regionId, bankId, mapId, localId),
+            regionId,
             bankId,
             mapId,
         ))
@@ -134,21 +81,19 @@ constructor(
   /** Spawns an NPC at a cutscene position. */
   fun spawnNpcAt(
       ctx: SessionContext,
+      regionId: Int,
       bankId: Int,
       mapId: Int,
       localId: Int,
       x: Int,
       y: Int,
   ) {
-    val npc = mapManager.getMap(1, bankId, mapId)?.npcs?.firstOrNull { it.entityIdx == localId }
-    if (npc == null) {
-      log.warn { "spawnNpcAt: npc $localId not found on $bankId:$mapId" }
-      return
-    }
+    val npc = findNpc(regionId, bankId, mapId, localId) ?: return
     ctx.send(
         buildSpawnPacket(
             resolveDynamicGraphics(ctx, npc.copy(x = x, y = y)),
-            entityIdFor(bankId, mapId, localId),
+            entityIdFor(regionId, bankId, mapId, localId),
+            regionId,
             bankId,
             mapId,
         ))
@@ -157,21 +102,18 @@ constructor(
   /** Repositions an existing NPC. */
   fun repositionNpc(
       ctx: SessionContext,
+      regionId: Int,
       bankId: Int,
       mapId: Int,
       localId: Int,
       x: Int,
       y: Int,
   ) {
-    val npc = mapManager.getMap(1, bankId, mapId)?.npcs?.firstOrNull { it.entityIdx == localId }
-    if (npc == null) {
-      log.warn { "repositionNpc: npc $localId not found on $bankId:$mapId" }
-      return
-    }
+    val npc = findNpc(regionId, bankId, mapId, localId) ?: return
     ctx.send(
         NpcUpdatePacket(
-            entityId = entityIdFor(bankId, mapId, localId),
-            regionId = 1,
+            entityId = entityIdFor(regionId, bankId, mapId, localId),
+            regionId = regionId,
             bankId = bankId,
             mapId = mapId,
             x = x,
@@ -183,18 +125,30 @@ constructor(
   }
 
   /** Removes a cutscene NPC. */
-  fun despawnNpc(ctx: SessionContext, bankId: Int, mapId: Int, localId: Int) {
-    val entityId = getNpcEntityId(bankId, mapId, localId) ?: return
+  fun despawnNpc(ctx: SessionContext, regionId: Int, bankId: Int, mapId: Int, localId: Int) {
+    val entityId = getNpcEntityId(regionId, bankId, mapId, localId) ?: return
     ctx.send(EntityLeavePacket(entityId))
   }
+
+  private fun findNpc(regionId: Int, bankId: Int, mapId: Int, localId: Int): NpcDef? {
+    val npc =
+        mapManager.getMap(regionId, bankId, mapId)?.npcs?.firstOrNull { it.entityIdx == localId }
+    if (npc == null) log.warn { "npc $localId not found on $regionId:$bankId:$mapId" }
+    return npc
+  }
+
+  private fun key(regionId: Int, bankId: Int, mapId: Int, entityIdx: Int) =
+      "$regionId:$bankId:$mapId:$entityIdx"
 
   private fun buildSpawnPacket(
       npc: NpcDef,
       entityId: Long,
+      regionId: Int,
       bankId: Int,
       mapId: Int,
   ): NpcSpawnPacket {
-    val movementId = npc.movementType.forRegion(Region.HOENN).id
+    val region = requireNotNull(Region.byId(regionId)) { "Unknown region id $regionId" }
+    val movementId = npc.movementType.forRegion(region).id
     val unk3 = ((movementId and 0xFF) shl 8) or 0x02
     val unk4 =
         if (movementId in 1..6 || (movementId in 25..52)) {
@@ -204,11 +158,11 @@ constructor(
         }
     return NpcSpawnPacket(
         entityId = entityId,
-        unk1 = 1,
-        unk2 = npc.graphicsId,
+        spriteRegionId = regionId,
+        graphicsId = npc.graphicsId,
         unk3 = unk3,
         unk4 = unk4,
-        regionId = 1,
+        regionId = regionId,
         bankId = bankId,
         mapId = mapId,
         x = npc.x,
@@ -268,7 +222,6 @@ constructor(
 
   private companion object {
     const val DECORATION_FLAG_PREFIX = "FLAG_DECORATION_"
-    const val USE_LEGACY_PETALBURG_SPAWNS = false
     const val DYNAMIC_GFX_VAR_0 = 240
     const val RIVAL_BRENDAN_NORMAL = 100
     const val RIVAL_MAY_NORMAL = 105

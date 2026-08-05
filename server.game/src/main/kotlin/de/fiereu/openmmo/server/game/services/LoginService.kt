@@ -290,6 +290,10 @@ constructor(
   ) {
     val map = mapManager.getMap(info.positionRegionId, info.positionBankId, info.positionMapId)
     if (map != null) {
+      log.info {
+        "Placing '${info.name}' at ${info.positionRegionId}:${info.positionBankId}:" +
+            "${info.positionMapId} (${info.positionX}, ${info.positionY})"
+      }
       ctx.send(mapManager.createLoadMapPacket(map, reloadPlayer = true, deleteCache = true))
       mapLoadService.preloadConnectedMaps(ctx, map)
     } else {
