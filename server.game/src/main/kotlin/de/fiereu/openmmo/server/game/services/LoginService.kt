@@ -34,6 +34,7 @@ import de.fiereu.openmmo.net.game.packets.ViewScalePacket
 import de.fiereu.openmmo.net.game.packets.WorldFlagTableResetPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleRatingBulkPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleStateBytePacket
+import de.fiereu.openmmo.server.game.session.PENDING_MAP_LOAD
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.session.PlayerState
 import de.fiereu.openmmo.server.game.session.SessionRegistry
@@ -335,6 +336,8 @@ constructor(
       return
     }
     val info = stored.info
+    // The client asks for its player once a map transition is done, so the warp ends here.
+    state.justWarped = false
 
     log.info { "Sending LoadEntity for character '${info.name}'" }
     val facing = state.facingDirection
@@ -366,6 +369,7 @@ constructor(
     }
 
     socialService.sendFriendList(ctx)
+    ctx.attributes.remove(PENDING_MAP_LOAD)?.complete(Unit)
 
     log.info { "Player $charId spawned in bank=$bankId map=$mapId" }
   }

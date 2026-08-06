@@ -23,8 +23,6 @@ constructor(
     private val mapLoadService: MapLoadService,
     private val mapManager: MapManager,
     private val characterStore: CharacterStore,
-    private val presenceService: PresenceService,
-    private val mapScriptService: MapScriptService,
 ) {
 
   fun executeWarp(ctx: SessionContext, charId: Long, warp: WarpTile) {
@@ -111,6 +109,7 @@ constructor(
       state.y = offsetY.toShort()
     }
 
+    // Only fade out and send the map. onRequestPlayer does the arrival and fades back in.
     ctx.send(MapTransitionPacket())
     ctx.send(RenderScreenPacket(false))
     ctx.send(MapTransitionAckPacket(2))
@@ -122,16 +121,9 @@ constructor(
       log.warn {
         "Map not found for warp target ${warp.targetRegionId}:${warp.targetBankId}:${warp.targetMapId}"
       }
+      // No arrival will follow, so fade back in here.
+      ctx.send(RenderScreenPacket(true))
     }
-
-    // Release the fade after loading the destination.
-    ctx.send(mapLoadService.createLoadEntity(newInfo, warpFacing, playerZ))
-
-    presenceService.refresh(ctx)
-
-    if (state != null && destMap != null) mapScriptService.onMapEnter(ctx, state, destMap)
-
-    ctx.send(RenderScreenPacket(true))
 
     log.info { "Player $charId warped to bank=${warp.targetBankId} map=${warp.targetMapId}" }
   }

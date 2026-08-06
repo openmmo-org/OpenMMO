@@ -95,9 +95,8 @@ constructor(
     val atServerTile = msg.x == fromX && msg.y == fromY
 
     if (state.justWarped) {
-      // Drop movement packets sent before the warp completed.
-      if (!atServerTile) return
-      state.justWarped = false
+      // Drop steps left over from the old map, else one can fire a second warp by chance.
+      return
     } else if (!atServerTile) {
       log.debug {
         "DESYNC: char=$charId claims (${msg.x}, ${msg.y}), server has ($fromX, $fromY), resetting"
