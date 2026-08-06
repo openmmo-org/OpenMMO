@@ -13,6 +13,8 @@ enum class TileBehavior {
   JUMP_NORTH,
   JUMP_SOUTH,
   DOOR,
+  /** Cave and water doors. They look like doors but warp like a ladders. */
+  NON_ANIMATED_DOOR,
   /** Ladders, escalators and warp pads, which warp as soon as the player steps on them. */
   LADDER,
   STAIR_WARP_EAST,
@@ -37,5 +39,5 @@ enum class TileBehavior {
         }
 
   val warpsOnStep: Boolean
-    get() = this == LADDER
+    get() = this == LADDER || this == NON_ANIMATED_DOOR
 }

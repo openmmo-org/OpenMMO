@@ -7,8 +7,9 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 private const val KANTO = 0
-private const val PALLET_TOWN_BANK = 3
+private const val TOWNS_AND_ROUTES_BANK = 3
 private const val PALLET_TOWN_MAP = 0
+private const val ROUTE_4_MAP = 22
 private const val INDOOR_PALLET_BANK = 4
 private const val PLAYERS_HOUSE_1F = 0
 private const val PLAYERS_HOUSE_2F = 1
@@ -18,7 +19,7 @@ class WarpTileBehaviorTest :
       val maps = MapManager()
 
       test("Kanto doors and stairs are classified from the decomp") {
-        val town = maps.getMap(KANTO, PALLET_TOWN_BANK, PALLET_TOWN_MAP)!!
+        val town = maps.getMap(KANTO, TOWNS_AND_ROUTES_BANK, PALLET_TOWN_MAP)!!
         town.tileAt(6, 7)!!.behavior shouldBe TileBehavior.DOOR
 
         // Right goes up, left comes back down.
@@ -41,7 +42,7 @@ class WarpTileBehaviorTest :
       }
 
       test("a door drops the player out facing down and off the tile") {
-        val town = maps.getMap(KANTO, PALLET_TOWN_BANK, PALLET_TOWN_MAP)!!
+        val town = maps.getMap(KANTO, TOWNS_AND_ROUTES_BANK, PALLET_TOWN_MAP)!!
         val house = maps.getMap(KANTO, INDOOR_PALLET_BANK, PLAYERS_HOUSE_1F)!!
 
         WarpExitRules.inferExitFacing(
@@ -53,6 +54,15 @@ class WarpTileBehaviorTest :
         ) shouldBe Direction.DOWN
         WarpExitRules.shouldAutoStep(house, town, TileBehavior.DOOR) shouldBe true
         TileBehavior.DOOR.warpsWhenWalking shouldBe null
+      }
+
+      test("a cave entrance warps on the step, in any direction") {
+        val route4 = maps.getMap(KANTO, TOWNS_AND_ROUTES_BANK, ROUTE_4_MAP)!!
+        val entrance = route4.tileAt(19, 5)!!.behavior
+
+        entrance shouldBe TileBehavior.NON_ANIMATED_DOOR
+        entrance.warpsOnStep shouldBe true
+        entrance.warpsWhenWalking shouldBe null
       }
 
       test("stairs leave the player standing on the tile") {

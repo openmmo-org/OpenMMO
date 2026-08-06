@@ -23,7 +23,8 @@ object WarpExitRules {
 
     // The tile itself is exact, so it wins over the guesses below.
     when (destTileBehavior) {
-      TileBehavior.DOOR -> return Direction.DOWN
+      TileBehavior.DOOR,
+      TileBehavior.NON_ANIMATED_DOOR -> return Direction.DOWN
       TileBehavior.NORTH_ARROW_WARP -> return Direction.DOWN
       TileBehavior.SOUTH_ARROW_WARP -> return Direction.UP
       TileBehavior.WEST_ARROW_WARP -> return Direction.RIGHT
@@ -109,9 +110,10 @@ object WarpExitRules {
   ): Boolean {
     if (sourceMap == null || destMap == null) return false
 
-    // A door drops the player below it, stairs and ladders leave them on the tile.
+    // An animated door drops the player below it, every other warp tile keeps them on it.
     when (destTileBehavior) {
       TileBehavior.DOOR -> return true
+      TileBehavior.NON_ANIMATED_DOOR,
       TileBehavior.LADDER,
       TileBehavior.STAIR_WARP_EAST,
       TileBehavior.STAIR_WARP_WEST -> return false
