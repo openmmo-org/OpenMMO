@@ -225,7 +225,7 @@ class BattleServiceTest :
           // The level 2 Rattata yields its base experience scaled by level over seven.
           session.sent
               .filterIsInstance<BattleEntityDeltaPacket>()
-              .any { it.fieldMask and 0x1 != 0 }
+              .any { it.experience != null }
               .shouldBeTrue()
           val saved = fx.repo.saved[charId].shouldNotBeNull()
           saved.pokemon.single().moves[0].pp shouldBe (35 - rounds).toByte()
