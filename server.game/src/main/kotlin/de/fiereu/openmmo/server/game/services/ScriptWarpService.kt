@@ -70,10 +70,19 @@ constructor(
     session.send(mapManager.createLoadMapPacket(map, reloadPlayer = true, deleteCache = true))
     mapLoadService.preloadConnectedMaps(session, map, depth = 1, reloadPlayer = true)
 
-    if (withTimeoutOrNull(MAP_LOAD_TIMEOUT) { loaded.await() } == null) {
-      session.attributes.remove(PENDING_MAP_LOAD)
-      log.warn { "Character $characterId did not load ${destination.bankId}:${destination.mapId}" }
-      session.send(RenderScreenPacket(true))
+    try {
+      if (withTimeoutOrNull(MAP_LOAD_TIMEOUT) { loaded.await() } == null) {
+        log.warn {
+          "Character $characterId did not load ${destination.bankId}:${destination.mapId}"
+        }
+        // No arrival will follow, so end the warp here.
+        state.justWarped = false
+        session.send(RenderScreenPacket(true))
+      }
+    } finally {
+      if (session.attributes[PENDING_MAP_LOAD] === loaded) {
+        session.attributes.remove(PENDING_MAP_LOAD)
+      }
     }
   }
 }

@@ -361,13 +361,14 @@ constructor(
     state.x = info.positionX
     state.y = info.positionY
 
-    presenceService.enter(ctx)
+    presenceService.refresh(ctx)
 
-    ctx.send(RenderScreenPacket(true))
-
+    // Entry scripts run before the fade so a cutscene keeps control of the screen.
     mapManager.getMap(info.positionRegionId, info.positionBankId, info.positionMapId)?.let { map ->
       mapScriptService.onMapEnter(ctx, state, map)
     }
+
+    ctx.send(RenderScreenPacket(true))
 
     socialService.sendFriendList(ctx)
     ctx.attributes.remove(PENDING_MAP_LOAD)?.complete(Unit)

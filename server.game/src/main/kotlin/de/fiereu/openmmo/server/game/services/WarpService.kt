@@ -28,8 +28,8 @@ constructor(
 
   fun executeWarp(ctx: SessionContext, charId: Long, warp: WarpTile) {
     val state = ctx.attributes[PLAYER_STATE]
-    state?.justWarped = true
     val stored = characterStore.getCharacter(charId) ?: return
+    state?.justWarped = true
 
     val destMap = mapManager.getMap(warp.targetRegionId, warp.targetBankId, warp.targetMapId)
     val sourceMap =
@@ -123,7 +123,8 @@ constructor(
       log.warn {
         "Map not found for warp target ${warp.targetRegionId}:${warp.targetBankId}:${warp.targetMapId}"
       }
-      // No arrival will follow, so fade back in here.
+      // No arrival will follow, so end the warp here.
+      state?.justWarped = false
       ctx.send(RenderScreenPacket(true))
     }
 

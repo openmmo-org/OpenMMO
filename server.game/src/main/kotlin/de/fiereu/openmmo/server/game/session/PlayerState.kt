@@ -5,7 +5,7 @@ import de.fiereu.openmmo.common.enums.Direction
 data class PlayerState(
     val userId: Int,
     var characterId: Long? = null,
-    var justWarped: Boolean = false,
+    @field:Volatile var justWarped: Boolean = false,
     var facingDirection: Direction = Direction.DOWN,
     var inDialog: Boolean = false,
     var dialogNpcEntityId: Long = 0,
