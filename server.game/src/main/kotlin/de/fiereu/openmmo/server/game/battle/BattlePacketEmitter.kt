@@ -2,6 +2,7 @@ package de.fiereu.openmmo.server.game.battle
 
 import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.enums.ChatType
+import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.Language
 import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.net.game.packets.ChatMessagePacket
@@ -19,6 +20,7 @@ import de.fiereu.openmmo.net.game.packets.battle.BattleQueuedEventPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleSidePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleSlotEventEnumPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleSlotFlagEventPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleStatCountersPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleSwitchInPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleTileMapPacket
 import de.fiereu.openmmo.server.game.world.interest.InterestManager
@@ -42,6 +44,10 @@ private const val PLAYER_SIDE: Byte = 1
 // The target move short the live server sends for each event. Meaning unknown, but it is fixed per
 // event type in every capture: a hit carries 0x0200, other events carry 0.
 private const val DELTA_MOVE_SLOTS = 0x4
+
+// The real server sends the experience alone, then a second delta on a level up.
+private const val DELTA_EXPERIENCE = 0x1
+private const val DELTA_LEVEL_UP = 0x2 or 0x8 or 0x80
 
 private const val HP_TARGET_MOVE: Short = 0x0200
 private const val DEFAULT_TARGET_MOVE: Short = 0
@@ -184,20 +190,42 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
   }
 
   fun sendVictoryDelta(battle: BattleInstance, entityId: Long, reward: RewardResult) {
-    var mask = 0x1
-    if (reward.leveled) mask = mask or 0x2 or 0x8
     broadcast(
         battle,
         delta(
             entityId = entityId,
-            mask = mask,
+            mask = DELTA_EXPERIENCE,
             experienceLevel = reward.newLevel.toByte(),
             experiencePoints = reward.newXp,
-            statValues = if (reward.leveled) reward.newStats.asWireList() else null,
-            currentHp = if (reward.leveled) reward.newCurrentHp.toShort() else null,
         ),
     )
+    // The delta above moves the bar, the reward text reads its number from here.
+    broadcast(battle, experienceReward(entityId, reward.xpGained))
+    if (!reward.leveled) return
+    broadcast(
+        battle,
+        delta(
+                entityId = entityId,
+                mask = DELTA_LEVEL_UP,
+                statValues = reward.newStats.asWireList(),
+                currentHp = reward.newCurrentHp.toShort(),
+            )
+            .copy(evValues = reward.newEvs.asWireList()),
+    )
   }
+
+  // The other six counters are rewards we do not award yet.
+  private fun experienceReward(entityId: Long, gained: Int): BattleStatCountersPacket =
+      BattleStatCountersPacket(
+          entityId = entityId,
+          baseCounter = gained,
+          counter1 = null,
+          counter2 = null,
+          counter3 = null,
+          counter4 = null,
+          counter5 = null,
+          counter6 = null,
+      )
 
   fun sendNotice(battle: BattleInstance, message: String) {
     battle.session.send(notice(message))
@@ -239,45 +267,14 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
       currentHp: Short? = null,
       faintFlag: Byte? = null,
   ): BattleEntityDeltaPacket =
-      BattleEntityDeltaPacket(
+      entityDelta(
           entityId = entityId,
-          fieldMask = mask,
+          mask = mask,
           experienceLevel = experienceLevel,
           experiencePoints = experiencePoints,
           statValues = statValues,
-          moveSlots = null,
-          ppUps = null,
           currentHp = currentHp,
           faintFlag = faintFlag,
-          speciesId = null,
-          forme = null,
-          listType = null,
-          sortKey = null,
-          evValues = null,
-          level = null,
-          happiness = null,
-          shininessSeed = null,
-          experience = null,
-          flagA = null,
-          flagB = null,
-          encounterType = null,
-          statusFlagsValue = null,
-          warnA = null,
-          warnB = null,
-          natureId = null,
-          ribbons = null,
-          packedIvs = null,
-          effortValues = null,
-          originalSpecies = null,
-          originalTrainerName = null,
-          originalTrainerId = null,
-          shininessType = null,
-          gender = null,
-          ivs = null,
-          caughtBall = null,
-          statusFlags2 = null,
-          statusList = null,
-          status = null,
       )
 
   // The decomp battle stat order. Not verified against the live client yet.
@@ -294,9 +291,13 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
 }
 
 // The decomp in-game stat order. Not verified against the live client yet.
-private fun ComputedStats.asWireList(): List<Short> =
+private fun statOrder(hp: Int, atk: Int, def: Int, spd: Int, spAtk: Int, spDef: Int): List<Short> =
     listOf(
         hp.toShort(), atk.toShort(), def.toShort(), spd.toShort(), spAtk.toShort(), spDef.toShort())
+
+internal fun ComputedStats.asWireList(): List<Short> = statOrder(hp, atk, def, spd, spAtk, spDef)
+
+private fun EVs.asWireList(): List<Short> = statOrder(hp, atk, def, spd, spAtk, spDef)
 
 fun notice(message: String): ChatMessagePacket =
     ChatMessagePacket(
