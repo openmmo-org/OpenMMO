@@ -113,7 +113,7 @@ constructor(
 
     ctx.send(MapTransitionPacket())
     ctx.send(RenderScreenPacket(false))
-    ctx.send(MapTransitionAckPacket(2))
+    ctx.send(MapTransitionAckPacket(1))
 
     if (destMap != null) {
       mapLoadService.resetClientCache(ctx, destMap)
