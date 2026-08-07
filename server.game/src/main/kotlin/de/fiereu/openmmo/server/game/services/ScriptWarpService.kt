@@ -53,6 +53,7 @@ constructor(
     session.send(MapTransitionPacket())
     session.send(RenderScreenPacket(false))
     session.send(MapTransitionAckPacket(2))
+    mapLoadService.resetClientCache(session, map)
     session.send(mapManager.createLoadMapPacket(map, reloadPlayer = true, deleteCache = true))
     mapLoadService.preloadConnectedMaps(session, map, depth = 1, reloadPlayer = true)
     session.send(mapLoadService.createLoadEntity(info, destination.facing))

@@ -294,6 +294,7 @@ constructor(
         "Placing '${info.name}' at ${info.positionRegionId}:${info.positionBankId}:" +
             "${info.positionMapId} (${info.positionX}, ${info.positionY})"
       }
+      mapLoadService.resetClientCache(ctx, map)
       ctx.send(mapManager.createLoadMapPacket(map, reloadPlayer = true, deleteCache = true))
       mapLoadService.preloadConnectedMaps(ctx, map)
     } else {
