@@ -58,6 +58,19 @@ private fun warpTo(bankId: Byte, mapId: Byte) =
         targetY = 8,
     )
 
+// What codegen emits for a MAP_DYNAMIC tile. Every target is a placeholder.
+private fun dynamicWarpTile() =
+    WarpTile(
+        x = 4,
+        y = 2,
+        targetRegionId = 0,
+        targetBankId = 0,
+        targetMapId = 0,
+        targetX = 0,
+        targetY = 0,
+        dynamic = true,
+    )
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class WarpArrivalTest :
     FunSpec({
@@ -176,6 +189,45 @@ class WarpArrivalTest :
           session.state().justWarped shouldBe false
           session.state().mapId shouldBe 3
           store.getCharacter(charId)!!.info.positionMapId shouldBe before.positionMapId
+          session.sent shouldBe emptyList()
+        }
+      }
+
+      test("a dynamic warp goes where the script pointed it, not to its placeholder target") {
+        runTest {
+          val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
+          val charId = store.player()
+          val session =
+              FakeSession(characterId = charId, bankId = 75, mapId = 40).useScope(backgroundScope)
+          val f = Fixture(store)
+          val target = store.getCharacter(charId)!!.info.dynamicWarp!!
+
+          f.warps.executeWarp(session, charId, dynamicWarpTile())
+          runCurrent()
+
+          val info = store.getCharacter(charId)!!.info
+          info.positionRegionId shouldBe target.regionId
+          info.positionBankId shouldBe target.bankId
+          info.positionMapId shouldBe target.mapId
+          info.positionX shouldBe target.x
+          info.positionY shouldBe target.y
+          session.state().facingDirection shouldBe target.facing
+        }
+      }
+
+      test("a dynamic warp with no destination set leaves the player where it was") {
+        runTest {
+          val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
+          val charId = store.createCharacter(1, "Red", CharacterGender.MALE, Region.KANTO).info.id
+          val session = FakeSession(characterId = charId).useScope(backgroundScope)
+          val f = Fixture(store)
+          val before = store.getCharacter(charId)!!.info
+
+          f.warps.executeWarp(session, charId, dynamicWarpTile())
+          advanceUntilIdle()
+
+          session.state().justWarped shouldBe false
+          store.getCharacter(charId)!!.info shouldBe before
           session.sent shouldBe emptyList()
         }
       }
