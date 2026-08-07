@@ -44,11 +44,12 @@ constructor(
             stored.info.positionBankId,
             stored.info.positionMapId,
         ) ?: return
+    val regionId = stored.info.positionRegionId.toInt()
     val bankId = stored.info.positionBankId.toInt()
     val mapId = stored.info.positionMapId.toInt()
 
     for (npc in currentMap.npcs) {
-      if (npcService.getNpcEntityId(bankId, mapId, npc.entityIdx) == npcEntityId) {
+      if (npcService.getNpcEntityId(regionId, bankId, mapId, npc.entityIdx) == npcEntityId) {
         val script = scriptRegistry.forLabel(npc.script)
         if (script != null) {
           runScript(session, state, script, npcEntityId)

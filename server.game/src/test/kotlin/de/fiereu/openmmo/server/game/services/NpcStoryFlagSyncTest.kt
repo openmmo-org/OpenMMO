@@ -25,18 +25,18 @@ class NpcStoryFlagSyncTest :
           val session = FakeSession(characterId = character.info.id, bankId = 50, mapId = 9)
           val npcs = NpcService(MapManager(), store)
 
-          npcs.spawnNpcsForMap(session, bankId = 50, mapId = 9)
+          npcs.spawnNpcsForMap(session, bankId = 50, mapId = 9, regionId = 1)
 
           // Only Brendan's truck starts visible.
-          (npcs.getNpcEntityId(50, 9, 4) != null) shouldBe true
-          npcs.getNpcEntityId(50, 9, 5) shouldBe null
-          npcs.getNpcEntityId(50, 9, 3) shouldBe null
+          (npcs.getNpcEntityId(1, 50, 9, 4) != null) shouldBe true
+          npcs.getNpcEntityId(1, 50, 9, 5) shouldBe null
+          npcs.getNpcEntityId(1, 50, 9, 3) shouldBe null
 
           StoryService(store)
               .clearFlag(character.info.id, HoennFlags.FLAG_HIDE_LITTLEROOT_TOWN_MOM_OUTSIDE)
-          npcs.spawnNpcsForMap(session, bankId = 50, mapId = 9)
+          npcs.spawnNpcsForMap(session, bankId = 50, mapId = 9, regionId = 1)
 
-          (npcs.getNpcEntityId(50, 9, 3) != null) shouldBe true
+          (npcs.getNpcEntityId(1, 50, 9, 3) != null) shouldBe true
         }
       }
 
@@ -47,10 +47,10 @@ class NpcStoryFlagSyncTest :
           val session = FakeSession(characterId = character.info.id, bankId = 51, mapId = 3)
           val npcs = NpcService(MapManager(), store)
 
-          npcs.spawnNpcsForMap(session, bankId = 51, mapId = 3)
+          npcs.spawnNpcsForMap(session, bankId = 51, mapId = 3, regionId = 1)
 
           // Decoration slots are not normal NPCs.
-          (1..12).forEach { localId -> npcs.getNpcEntityId(51, 3, localId) shouldBe null }
+          (1..12).forEach { localId -> npcs.getNpcEntityId(1, 51, 3, localId) shouldBe null }
         }
       }
 
@@ -63,9 +63,9 @@ class NpcStoryFlagSyncTest :
           story.setVar(character.info.id, HoennVars.VAR_LITTLEROOT_TOWN_STATE, 1)
           val npcs = NpcService(MapManager(), store)
 
-          npcs.spawnNpcsForMap(session, bankId = 50, mapId = 9)
+          npcs.spawnNpcsForMap(session, bankId = 50, mapId = 9, regionId = 1)
 
-          val twinId = npcs.getNpcEntityId(50, 9, 0)
+          val twinId = npcs.getNpcEntityId(1, 50, 9, 0)
           val twin =
               session.sent.filterIsInstance<NpcSpawnPacket>().single { it.entityId == twinId }
           twin.x shouldBe 10
@@ -83,12 +83,12 @@ class NpcStoryFlagSyncTest :
           StoryService(femaleStore).clearFlag(female.info.id, HoennFlags.FLAG_HIDE_ROUTE_103_RIVAL)
           val femaleSession = FakeSession(characterId = female.info.id, bankId = 50, mapId = 18)
           val femaleNpcs = NpcService(mapManager, femaleStore)
-          femaleNpcs.spawnNpcsForMap(femaleSession, bankId = 50, mapId = 18)
-          val brendanId = femaleNpcs.getNpcEntityId(50, 18, 1)
+          femaleNpcs.spawnNpcsForMap(femaleSession, bankId = 50, mapId = 18, regionId = 1)
+          val brendanId = femaleNpcs.getNpcEntityId(1, 50, 18, 1)
           femaleSession.sent
               .filterIsInstance<NpcSpawnPacket>()
               .single { it.entityId == brendanId }
-              .unk2 shouldBe 100
+              .graphicsId shouldBe 100
 
           val maleStore =
               CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
@@ -96,12 +96,12 @@ class NpcStoryFlagSyncTest :
           StoryService(maleStore).clearFlag(male.info.id, HoennFlags.FLAG_HIDE_ROUTE_103_RIVAL)
           val maleSession = FakeSession(characterId = male.info.id, bankId = 50, mapId = 18)
           val maleNpcs = NpcService(mapManager, maleStore)
-          maleNpcs.spawnNpcsForMap(maleSession, bankId = 50, mapId = 18)
-          val mayId = maleNpcs.getNpcEntityId(50, 18, 1)
+          maleNpcs.spawnNpcsForMap(maleSession, bankId = 50, mapId = 18, regionId = 1)
+          val mayId = maleNpcs.getNpcEntityId(1, 50, 18, 1)
           maleSession.sent
               .filterIsInstance<NpcSpawnPacket>()
               .single { it.entityId == mayId }
-              .unk2 shouldBe 105
+              .graphicsId shouldBe 105
         }
       }
 
@@ -113,9 +113,9 @@ class NpcStoryFlagSyncTest :
           val session = FakeSession(characterId = character.info.id, bankId = 50, mapId = 16)
           val npcs = NpcService(MapManager(), store)
 
-          npcs.spawnNpcsForMap(session, bankId = 50, mapId = 16)
+          npcs.spawnNpcsForMap(session, bankId = 50, mapId = 16, regionId = 1)
 
-          npcs.getNpcEntityId(50, 16, 3) shouldBe null
+          npcs.getNpcEntityId(1, 50, 16, 3) shouldBe null
         }
       }
     })

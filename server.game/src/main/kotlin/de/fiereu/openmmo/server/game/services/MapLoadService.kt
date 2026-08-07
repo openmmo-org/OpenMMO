@@ -56,7 +56,8 @@ constructor(
       for (conn in connections) {
         val key = "${conn.targetBank}:${conn.targetMap}"
         if (!loaded.add(key)) continue
-        val connected = mapManager.getMap(1, conn.targetBank, conn.targetMap)
+        // Connections stay inside one region.
+        val connected = mapManager.getMap(map.regionId.toInt(), conn.targetBank, conn.targetMap)
         if (connected != null) {
           ctx.send(
               mapManager.createLoadMapPacket(
