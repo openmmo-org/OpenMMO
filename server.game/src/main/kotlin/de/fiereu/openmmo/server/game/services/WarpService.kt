@@ -13,6 +13,7 @@ import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.session.PlayerState
 import de.fiereu.openmmo.server.game.session.SCRIPT_SCOPE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
+import de.fiereu.openmmo.server.game.storage.StoredCharacter
 import de.fiereu.openmmo.server.game.world.WarpExitRules
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
@@ -40,9 +41,11 @@ constructor(
     private val presenceService: PresenceService,
 ) {
 
-  fun executeWarp(ctx: SessionContext, charId: Long, warp: WarpTile) {
+  fun executeWarp(ctx: SessionContext, charId: Long, tile: WarpTile) {
     val state = ctx.attributes[PLAYER_STATE]
     val stored = characterStore.getCharacter(charId) ?: return
+
+    val warp = if (!tile.dynamic) tile else resolveDynamicWarp(stored) ?: return
 
     // Check the map first. Moving the player onto one we do not have would strand it there.
     val destMap = mapManager.getMap(warp.targetRegionId, warp.targetBankId, warp.targetMapId)
@@ -147,6 +150,28 @@ constructor(
     if (state != null) awaitArrival(ctx, state, charId)
 
     log.info { "Player $charId warped to bank=${warp.targetBankId} map=${warp.targetMapId}" }
+  }
+
+  /**
+   * Builds the real warp for a MAP_DYNAMIC tile, whose target fields are placeholders, from the
+   * destination a script set on the player.
+   */
+  private fun resolveDynamicWarp(stored: StoredCharacter): WarpTile? {
+    val d = stored.info.dynamicWarp
+    if (d == null) {
+      log.warn { "Dynamic warp tile stepped on but no dynamic warp is set for ${stored.info.id}" }
+      return null
+    }
+    return WarpTile(
+        x = 0,
+        y = 0,
+        targetRegionId = d.regionId,
+        targetBankId = d.bankId,
+        targetMapId = d.mapId,
+        targetX = d.x.toInt(),
+        targetY = d.y.toInt(),
+        exitFacing = d.facing,
+    )
   }
 
   /**

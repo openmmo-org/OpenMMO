@@ -6,7 +6,6 @@ import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.TileBehavior
 import de.fiereu.openmmo.maps.MapDef
 import de.fiereu.openmmo.maps.MapManager
-import de.fiereu.openmmo.maps.WarpTile
 import de.fiereu.openmmo.net.game.packets.EntityFaceTurnPacket
 import de.fiereu.openmmo.net.game.packets.FaceDirectionPacket
 import de.fiereu.openmmo.net.game.packets.GbaEntityMovePacket
@@ -14,7 +13,6 @@ import de.fiereu.openmmo.net.game.packets.MapData
 import de.fiereu.openmmo.net.game.packets.MovementPacket
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
-import de.fiereu.openmmo.server.game.storage.StoredCharacter
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -163,11 +161,7 @@ constructor(
     val warp = if (!stepsIntoWarp) null else currentMap.warps.find { w -> w.x == toX && w.y == toY }
     if (warp != null) {
       log.info { "WARP at ($toX, $toY) facing ${msg.direction}" }
-      // A MAP_DYNAMIC warp (the truck exit) resolves to the destination a script set on the player.
-      val resolved =
-          if (warp.dynamic) resolveDynamicWarp(characterStore.getCharacter(charId) ?: stored)
-          else warp
-      if (resolved != null) warpService.executeWarp(ctx, charId, resolved)
+      warpService.executeWarp(ctx, charId, warp)
       return
     }
 
@@ -191,27 +185,6 @@ constructor(
     if (!mapScriptService.onStep(ctx, state, currentMap, toX, toY)) {
       encounterService.onStep(ctx, charId, currentMap, toX, toY)
     }
-  }
-
-  /**
-   * Builds the real warp for a MAP_DYNAMIC tile from the destination a script set on the player.
-   */
-  private fun resolveDynamicWarp(stored: StoredCharacter): WarpTile? {
-    val d = stored.info.dynamicWarp
-    if (d == null) {
-      log.warn { "Dynamic warp tile stepped on but no dynamic warp is set for ${stored.info.id}" }
-      return null
-    }
-    return WarpTile(
-        x = 0,
-        y = 0,
-        targetRegionId = d.regionId,
-        targetBankId = d.bankId,
-        targetMapId = d.mapId,
-        targetX = d.x.toInt(),
-        targetY = d.y.toInt(),
-        exitFacing = d.facing,
-    )
   }
 
   /** Snap the client back to the position the server considers authoritative. */
