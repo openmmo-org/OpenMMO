@@ -25,6 +25,7 @@ dependencies {
   implementation(libs.kotlin.logging)
   implementation(libs.logback)
 
+  testImplementation(project(":common.test"))
   testImplementation(libs.bundles.kotest)
   testImplementation(libs.kotlinx.coroutines.test)
 }

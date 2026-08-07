@@ -1,8 +1,9 @@
-package de.fiereu.bytecodec.test
+package de.fiereu.openmmo.common.test
 
 import de.fiereu.bytecodec.ByteArrayReadBuffer
 import de.fiereu.bytecodec.Codec
 import de.fiereu.bytecodec.GrowableWriteBuffer
+import de.fiereu.openmmo.common.utils.toHex
 
 private fun contentEqual(a: Any?, b: Any?): Boolean =
     when {
@@ -43,5 +44,3 @@ fun <T> Codec<T>.assertBytesRoundtrip(bytes: ByteArray) {
     )
   }
 }
-
-private fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it.toInt() and 0xFF) }

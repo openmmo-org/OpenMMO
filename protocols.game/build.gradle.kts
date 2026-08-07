@@ -7,5 +7,6 @@ plugins {
 dependencies {
   api(project(":network"))
   api(project(":common"))
+  testImplementation(project(":common.test"))
   testImplementation(libs.bundles.kotest)
 }

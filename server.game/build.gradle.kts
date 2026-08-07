@@ -27,6 +27,7 @@ dependencies {
   implementation(libs.logback)
   implementation(libs.kotlinx.serialization.json)
 
+  testImplementation(project(":common.test"))
   testImplementation(libs.bundles.kotest)
   testImplementation(libs.kotlinx.coroutines.test)
 }

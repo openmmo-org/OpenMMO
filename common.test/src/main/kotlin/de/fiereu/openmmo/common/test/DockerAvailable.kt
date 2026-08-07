@@ -1,4 +1,4 @@
-package de.fiereu.openmmo.server.game.testsupport
+package de.fiereu.openmmo.common.test
 
 import io.kotest.core.annotation.Condition
 import io.kotest.core.spec.Spec
