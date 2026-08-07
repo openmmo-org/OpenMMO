@@ -8,6 +8,7 @@ import de.fiereu.openmmo.net.game.packets.*
 import de.fiereu.openmmo.net.game.packets.battle.*
 import de.fiereu.openmmo.net.game.packets.battle.moves.*
 import de.fiereu.openmmo.net.game.packets.dialog.*
+import de.fiereu.openmmo.net.game.packets.gtl.*
 import de.fiereu.openmmo.net.game.packets.guild.*
 
 object GameProtocol : Protocol() {
@@ -309,7 +310,7 @@ object GameProtocol : Protocol() {
 
     s2c<NamedCategoryEntriesPacket>(0x6Fu, NamedCategoryEntriesPacketCodec)
 
-    c2s<StorageBoxRequestPacket>(0x70u, StorageBoxRequestPacketCodec)
+    c2s<GtlMarketListingsRequestPacket>(0x70u, GtlMarketListingsRequestPacketCodec)
     s2c<GtlMarketListingsPacket>(0x70u, GtlMarketListingsPacketCodec)
 
     c2s<GtlPurchaseListingPacket>(0x71u, GtlPurchaseListingPacketCodec)
@@ -426,8 +427,8 @@ object GameProtocol : Protocol() {
     c2s<CreateMarketListingPacket>(0x9Au, CreateMarketListingPacketCodec)
     s2c<BattleSlotAnimationResetPacket>(0x9Au, BattleSlotAnimationResetPacketCodec)
 
-    c2s<GtlSellPokemonListingPacket>(0x9Bu, GtlSellPokemonListingPacketCodec)
-    s2c<BattleActionOutcomePacket>(0x9Bu, BattleActionOutcomePacketCodec)
+    c2s<GtlSearchPageRequestPacket>(0x9Bu, GtlSearchPageRequestPacketCodec)
+    s2c<GtlSearchPagePacket>(0x9Bu, GtlSearchPagePacketCodec)
 
     c2s<GtlConfirmPurchasePacket>(0x9Cu, GtlConfirmPurchasePacketCodec)
     s2c<BattleDisconnectMessagePacket>(0x9Cu, BattleDisconnectMessagePacketCodec)
@@ -565,7 +566,7 @@ object GameProtocol : Protocol() {
 
     c2s<BattleRewardSelectPacket>(0xE3u, BattleRewardSelectPacketCodec)
 
-    c2s<BattleChallengeRequestPacket>(0xE4u, BattleChallengeRequestPacketCodec)
+    c2s<GtlListingsPageRequestPacket>(0xE4u, GtlListingsPageRequestPacketCodec)
     s2c<EntityMovePacket>(0xE4u, EntityMovePacketCodec)
 
     s2c<GbaEntityMovePacket>(0xEAu, GbaEntityMovePacketCodec)

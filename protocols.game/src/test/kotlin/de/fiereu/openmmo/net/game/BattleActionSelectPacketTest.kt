@@ -1,8 +1,9 @@
 package de.fiereu.openmmo.net.game
 
-import de.fiereu.bytecodec.test.decodeBytes
-import de.fiereu.bytecodec.test.encodeToBytes
 import de.fiereu.openmmo.common.enums.BattleAction
+import de.fiereu.openmmo.common.test.decodeBytes
+import de.fiereu.openmmo.common.test.encodeToBytes
+import de.fiereu.openmmo.common.test.fixture
 import de.fiereu.openmmo.net.game.packets.battle.BattleActionSelectPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleActionSelectPacketCodec
 import io.kotest.core.spec.style.FunSpec
@@ -11,7 +12,7 @@ import io.kotest.matchers.shouldBe
 class BattleActionSelectPacketTest :
     FunSpec({
       test("decodes a captured move selection") {
-        val bytes = byteArrayOf(0x00, 0x00, 0x2B, 0x00, 0x00)
+        val bytes = fixture("game/c2s/32/move_selection.bin")
         val decoded = BattleActionSelectPacketCodec.decodeBytes(bytes)
         decoded shouldBe
             BattleActionSelectPacket(
@@ -25,21 +26,7 @@ class BattleActionSelectPacketTest :
       }
 
       test("decodes a captured item throw") {
-        val bytes =
-            byteArrayOf(
-                0x00,
-                0x01,
-                0x8C.toByte(),
-                0x13,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0x00,
-                0xFF.toByte())
+        val bytes = fixture("game/c2s/32/item_throw.bin")
         val decoded = BattleActionSelectPacketCodec.decodeBytes(bytes)
         decoded shouldBe
             BattleActionSelectPacket(
@@ -53,7 +40,7 @@ class BattleActionSelectPacketTest :
       }
 
       test("decodes a run selection with no tail") {
-        val bytes = byteArrayOf(0x00, 0x03)
+        val bytes = fixture("game/c2s/32/run.bin")
         val decoded = BattleActionSelectPacketCodec.decodeBytes(bytes)
         decoded shouldBe
             BattleActionSelectPacket(
@@ -67,7 +54,7 @@ class BattleActionSelectPacketTest :
       }
 
       test("decodes a captured switch to a party index") {
-        val bytes = byteArrayOf(0x00, 0x02, 0x01, 0x00)
+        val bytes = fixture("game/c2s/32/switch.bin")
         val decoded = BattleActionSelectPacketCodec.decodeBytes(bytes)
         decoded shouldBe
             BattleActionSelectPacket(

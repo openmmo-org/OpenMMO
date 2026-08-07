@@ -1,22 +1,18 @@
 package de.fiereu.openmmo.net.game
 
-import de.fiereu.bytecodec.test.decodeBytes
-import de.fiereu.bytecodec.test.encodeToBytes
+import de.fiereu.openmmo.common.test.decodeBytes
+import de.fiereu.openmmo.common.test.encodeToBytes
+import de.fiereu.openmmo.common.test.fixture
 import de.fiereu.openmmo.net.game.packets.battle.BattleFieldStatePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleFieldStatePacketCodec
 import de.fiereu.openmmo.net.game.packets.battle.BattleMonBlock
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import java.util.Base64
-
-// A two-monster party wild encounter (Snivy active, Patrat benched), scrubbed of capture data.
-private const val CAPTURED_TWO_PARTY =
-    "AgAAAAAAAAAAAAAAAP8AAAAAABYAAAD/ACAABlQAZQBzAHQAAAAAAJABAAAAAAD/AAJMAxqsDwADgAGkAAQAAAAAAAECAAABAMABAAAAAADvAQYAAAAAAAAWABYAAAAA/wMBQQAhACsAAAAAAAABAQDAAgAAAAAA+AECAAABAAAADgAOAAAAAP8DATIAIQAAAAAAAAABAADvAQYAAAAAAAAD/wAAAABmZmZmAQYAAAAAAAEBAAABAMADAAAAAAD4AQIAAAEAAAAOAA4AAAAA/wMAAQAA+AECAAAAAAEAA/8AAAAAZmZmZgAAAAA="
 
 class BattleFieldStatePacketTest :
     FunSpec({
       test("round-trips a two-party wild field state byte for byte") {
-        val bytes = Base64.getDecoder().decode(CAPTURED_TWO_PARTY)
+        val bytes = fixture("game/s2c/30/wild_two_party_scrubbed.bin")
         val decoded = BattleFieldStatePacketCodec.decodeBytes(bytes)
         decoded.playerName shouldBe "Test"
         decoded.playerParty.size shouldBe 2
@@ -25,7 +21,7 @@ class BattleFieldStatePacketTest :
       }
 
       test("decodes the structured mon fields from the capture") {
-        val bytes = Base64.getDecoder().decode(CAPTURED_TWO_PARTY)
+        val bytes = fixture("game/s2c/30/wild_two_party_scrubbed.bin")
         val decoded = BattleFieldStatePacketCodec.decodeBytes(bytes)
 
         val snivy = decoded.playerParty[0]

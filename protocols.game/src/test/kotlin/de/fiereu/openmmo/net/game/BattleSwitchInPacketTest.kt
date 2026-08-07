@@ -1,7 +1,8 @@
 package de.fiereu.openmmo.net.game
 
-import de.fiereu.bytecodec.test.decodeBytes
-import de.fiereu.bytecodec.test.encodeToBytes
+import de.fiereu.openmmo.common.test.decodeBytes
+import de.fiereu.openmmo.common.test.encodeToBytes
+import de.fiereu.openmmo.common.test.fixture
 import de.fiereu.openmmo.common.utils.toHex
 import de.fiereu.openmmo.net.game.packets.battle.BattleMonBlock
 import de.fiereu.openmmo.net.game.packets.battle.BattleSwitchInPacket
@@ -48,7 +49,7 @@ class BattleSwitchInPacketTest :
                 fullBlock = false,
             )
         val bytes = BattleSwitchInPacketCodec.encodeToBytes(packet)
-        bytes.toHex() shouldBe "000000010000ef010600000000000003ff0000000066666666"
+        bytes.toHex() shouldBe fixture("game/s2c/35/return_switch_in.bin").toHex()
       }
 
       // A benched monster coming out carries its full block then its active detail. The block
