@@ -33,7 +33,6 @@ import de.fiereu.openmmo.net.game.packets.battle.BattleActionSelectPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleActionSubmitPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleAppearancePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleCancelRequestPacket
-import de.fiereu.openmmo.net.game.packets.battle.BattleChallengeRequestPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleChatMessagePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleLeavePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattlePartySlotSelectPacket
@@ -153,7 +152,6 @@ constructor(
     on<BattleTransitionReadyPacket> { event -> battleService.onBattlePacket(event) }
     on<BattleTeamPreviewConfirmPacket> { event -> battleService.onBattlePacket(event) }
     on<BattleRewardSelectPacket> { event -> battleService.onBattlePacket(event) }
-    on<BattleChallengeRequestPacket> { event -> battleService.onBattlePacket(event) }
     on<MapLoadedAckPacket> { event -> battleService.onClientReady(event) }
 
     // The client sends an empty heartbeat packet.

@@ -1,8 +1,8 @@
 package de.fiereu.openmmo.net.game
 
-import de.fiereu.bytecodec.test.decodeBytes
-import de.fiereu.bytecodec.test.encodeToBytes
 import de.fiereu.openmmo.common.enums.Direction
+import de.fiereu.openmmo.common.test.decodeBytes
+import de.fiereu.openmmo.common.test.encodeToBytes
 import de.fiereu.openmmo.net.game.packets.DialogStatePacket
 import de.fiereu.openmmo.net.game.packets.DialogStatePacketCodec
 import de.fiereu.openmmo.net.game.packets.EntityLeavePacket

@@ -1,8 +1,8 @@
 package de.fiereu.openmmo.net.game
 
-import de.fiereu.bytecodec.test.decodeBytes
-import de.fiereu.bytecodec.test.encodeToBytes
-import de.fiereu.openmmo.common.utils.hexToBytes
+import de.fiereu.openmmo.common.test.decodeBytes
+import de.fiereu.openmmo.common.test.encodeToBytes
+import de.fiereu.openmmo.common.test.fixture
 import de.fiereu.openmmo.common.utils.toHex
 import de.fiereu.openmmo.net.game.packets.dialog.CreatureDataArg
 import de.fiereu.openmmo.net.game.packets.dialog.DialogActionPacketCodec
@@ -12,26 +12,25 @@ import io.kotest.matchers.shouldBe
 
 class DialogActionPacketTest :
     FunSpec({
-      // Every case is a real 0x21 dialog action from the NPC interaction capture.
       val captures =
           listOf(
-              "0c2e0d00b52903e008bf86c4c01ab004000000",
-              "006400000000ffffffffffffffff0000000000",
-              "0e04f90600010ae008bf86c4c01ab004000000",
-              "0d04f80600010ae008bf86c4c01ab004000001000992d00300",
+              "flags_0c_type_2e",
+              "flags_00_type_64",
+              "flags_0e_type_04",
+              "creature_arg",
+              "species_arg",
           )
 
       test("round-trips every captured dialog action byte for byte") {
-        captures.forEach { hex ->
-          val packet = DialogActionPacketCodec.decodeBytes(hex.hexToBytes())
-          DialogActionPacketCodec.encodeToBytes(packet).toHex() shouldBe hex
+        captures.forEach { name ->
+          val bytes = fixture("game/s2c/21/$name.bin")
+          val packet = DialogActionPacketCodec.decodeBytes(bytes)
+          DialogActionPacketCodec.encodeToBytes(packet).toHex() shouldBe bytes.toHex()
         }
       }
 
       test("decodes the fields of a dialog action carrying a creature arg") {
-        val packet =
-            DialogActionPacketCodec.decodeBytes(
-                "0d04f80600010ae008bf86c4c01ab004000001000992d00300".hexToBytes())
+        val packet = DialogActionPacketCodec.decodeBytes(fixture("game/s2c/21/creature_arg.bin"))
         packet.flags shouldBe 0x0d.toByte()
         packet.actionType shouldBe 0x04.toByte()
         packet.textId shouldBe 0x010006f8
@@ -41,7 +40,7 @@ class DialogActionPacketTest :
       }
 
       test("species-name argument uses the captured party slot variable and species order") {
-        val bytes = "000400000000ffffffffffffffff0000000001020101ff0000".hexToBytes()
+        val bytes = fixture("game/s2c/21/species_arg.bin")
         val packet = DialogActionPacketCodec.decodeBytes(bytes)
 
         packet.messageArgs shouldBe listOf(TextPokemonSpeciesArg(1, 1, 255))
