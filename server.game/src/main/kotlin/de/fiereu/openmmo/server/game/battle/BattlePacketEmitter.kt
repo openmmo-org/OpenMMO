@@ -23,6 +23,8 @@ import de.fiereu.openmmo.net.game.packets.battle.BattleSlotFlagEventPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleStatCountersPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleSwitchInPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleTileMapPacket
+import de.fiereu.openmmo.net.game.packets.battle.Experience
+import de.fiereu.openmmo.net.game.packets.battle.MoveSlots
 import de.fiereu.openmmo.server.game.world.interest.InterestManager
 import de.fiereu.openmmo.typechart.TypeChart
 import javax.inject.Inject
@@ -43,12 +45,6 @@ private const val PLAYER_SIDE: Byte = 1
 
 // The target move short the live server sends for each event. Meaning unknown, but it is fixed per
 // event type in every capture: a hit carries 0x0200, other events carry 0.
-private const val DELTA_MOVE_SLOTS = 0x4
-
-// The real server sends the experience alone, then a second delta on a level up.
-private const val DELTA_EXPERIENCE = 0x1
-private const val DELTA_LEVEL_UP = 0x2 or 0x8 or 0x80
-
 private const val HP_TARGET_MOVE: Short = 0x0200
 private const val DEFAULT_TARGET_MOVE: Short = 0
 
@@ -192,11 +188,9 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
   fun sendVictoryDelta(battle: BattleInstance, entityId: Long, reward: RewardResult) {
     broadcast(
         battle,
-        delta(
+        BattleEntityDeltaPacket(
             entityId = entityId,
-            mask = DELTA_EXPERIENCE,
-            experienceLevel = reward.newLevel.toByte(),
-            experiencePoints = reward.newXp,
+            experience = Experience(reward.newLevel.toByte(), reward.newXp),
         ),
     )
     // The delta above moves the bar, the reward text reads its number from here.
@@ -204,13 +198,12 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
     if (!reward.leveled) return
     broadcast(
         battle,
-        delta(
-                entityId = entityId,
-                mask = DELTA_LEVEL_UP,
-                statValues = reward.newStats.asWireList(),
-                currentHp = reward.newCurrentHp.toShort(),
-            )
-            .copy(evValues = reward.newEvs.asWireList()),
+        BattleEntityDeltaPacket(
+            entityId = entityId,
+            statValues = reward.newStats.asWireList(),
+            currentHp = reward.newCurrentHp.toShort(),
+            evValues = reward.newEvs.asWireList(),
+        ),
     )
   }
 
@@ -256,26 +249,7 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
       moveSlots: List<Pair<Short, Byte>>,
       ppUps: Byte,
   ): BattleEntityDeltaPacket =
-      delta(entityId, DELTA_MOVE_SLOTS).copy(moveSlots = moveSlots, ppUps = ppUps)
-
-  fun delta(
-      entityId: Long,
-      mask: Int,
-      experienceLevel: Byte? = null,
-      experiencePoints: Int? = null,
-      statValues: List<Short>? = null,
-      currentHp: Short? = null,
-      faintFlag: Byte? = null,
-  ): BattleEntityDeltaPacket =
-      entityDelta(
-          entityId = entityId,
-          mask = mask,
-          experienceLevel = experienceLevel,
-          experiencePoints = experiencePoints,
-          statValues = statValues,
-          currentHp = currentHp,
-          faintFlag = faintFlag,
-      )
+      BattleEntityDeltaPacket(entityId = entityId, moves = MoveSlots(moveSlots, ppUps))
 
   // The decomp battle stat order. Not verified against the live client yet.
   private fun statIndex(stat: BattleStat): Byte =
