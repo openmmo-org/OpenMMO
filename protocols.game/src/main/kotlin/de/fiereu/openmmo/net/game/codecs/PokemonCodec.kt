@@ -53,9 +53,9 @@ private fun evsFromWire(hp: Int, atk: Int, def: Int, spd: Int, spAtk: Int, spDef
 private fun ivsFromBits(bits: Int): IVs = decompressIVs(bits)
 
 /**
- * The party/PC monster record. The named fields are decoded from real captures. The reserved
- * segments hold species metadata and still-unlabelled structure kept as reference bytes, so the
- * layout round-trips exactly.
+ * The monster record. The named fields are decoded from real captures. The reserved segments hold
+ * species metadata and still-unlabelled structure kept as reference bytes, so the layout
+ * round-trips exactly.
  */
 object PokemonCodec : PacketCodec<Pokemon>() {
   override fun CodecScope<Pokemon>.body(): Pokemon {
