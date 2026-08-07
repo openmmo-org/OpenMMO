@@ -4,6 +4,7 @@ import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.packets.MapTransitionAckPacket
+import de.fiereu.openmmo.net.game.packets.MapTransitionKind
 import de.fiereu.openmmo.net.game.packets.MapTransitionPacket
 import de.fiereu.openmmo.net.game.packets.RenderScreenPacket
 import de.fiereu.openmmo.server.game.session.PENDING_MAP_LOAD
@@ -64,7 +65,8 @@ constructor(
 
     session.send(MapTransitionPacket())
     session.send(RenderScreenPacket(false))
-    session.send(MapTransitionAckPacket(2))
+    session.send(MapTransitionAckPacket(MapTransitionKind.WARP))
+    mapLoadService.resetClientCache(session, map)
     session.send(mapManager.createLoadMapPacket(map, reloadPlayer = true, deleteCache = true))
     mapLoadService.preloadConnectedMaps(session, map, depth = 1, reloadPlayer = true)
 

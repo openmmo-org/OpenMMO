@@ -148,15 +148,7 @@ constructor(
             Direction.DOWN -> 0
             else -> (fromY - connection.unknown).coerceIn(0, targetMap.height - 1)
           }
-      edgeTransition(
-          ctx,
-          charId,
-          currentMap.regionId,
-          connection,
-          entryX.toByte(),
-          entryY.toByte(),
-          msg.direction,
-      )
+      edgeTransition(ctx, charId, currentMap.regionId, connection, entryX.toByte(), entryY.toByte())
       return
     }
 
@@ -277,7 +269,6 @@ constructor(
       connection: MapData.GbaConnection,
       targetX: Byte,
       targetY: Byte,
-      direction: Direction,
   ) {
     val targetBank = connection.targetBank.toByte()
     val targetMap = connection.targetMap.toByte()
@@ -302,8 +293,6 @@ constructor(
 
     mapLoadService.preloadConnectedMaps(ctx, map, depth = 1)
     npcService.spawnNpcsForMap(ctx, targetBank.toInt(), targetMap.toInt(), regionId.toInt())
-
-    ctx.send(gbaMovePacket(charId, map, targetX.toInt(), targetY.toInt(), direction))
 
     if (state != null) mapScriptService.onMapEnter(ctx, state, map)
 

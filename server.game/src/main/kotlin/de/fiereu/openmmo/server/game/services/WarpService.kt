@@ -5,6 +5,7 @@ import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.maps.WarpTile
 import de.fiereu.openmmo.net.game.packets.MapTransitionAckPacket
+import de.fiereu.openmmo.net.game.packets.MapTransitionKind
 import de.fiereu.openmmo.net.game.packets.MapTransitionPacket
 import de.fiereu.openmmo.net.game.packets.RenderScreenPacket
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
@@ -112,9 +113,10 @@ constructor(
     // Only fade out and send the map. onRequestPlayer does the arrival and fades back in.
     ctx.send(MapTransitionPacket())
     ctx.send(RenderScreenPacket(false))
-    ctx.send(MapTransitionAckPacket(2))
+    ctx.send(MapTransitionAckPacket(MapTransitionKind.WARP))
 
     if (destMap != null) {
+      mapLoadService.resetClientCache(ctx, destMap)
       ctx.send(mapManager.createLoadMapPacket(destMap, reloadPlayer = true, deleteCache = true))
       mapLoadService.preloadConnectedMaps(ctx, destMap, depth = 1, reloadPlayer = true)
     } else {
