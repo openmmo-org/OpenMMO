@@ -30,6 +30,7 @@ constructor(
     private val mapManager: MapManager,
     private val mapLoadService: MapLoadService,
     private val characterStore: CharacterStore,
+    private val presenceService: PresenceService,
 ) {
   /** Warps and waits until the client has loaded the destination, so the script can go on. */
   suspend fun warp(
@@ -39,8 +40,13 @@ constructor(
   ) {
     val characterId = state.characterId ?: return
     val stored = characterStore.getCharacter(characterId) ?: return
-    val map =
-        mapManager.getMap(destination.regionId, destination.bankId, destination.mapId) ?: return
+    val map = mapManager.getMap(destination.regionId, destination.bankId, destination.mapId)
+    if (map == null) {
+      log.warn {
+        "Map not found for scripted warp ${destination.regionId}:${destination.bankId}:${destination.mapId}"
+      }
+      return
+    }
     val info =
         stored.info.copy(
             positionRegionId = destination.regionId,
@@ -53,6 +59,8 @@ constructor(
     characterStore.updateCharacter(info)
     characterStore.flushCharacterAsync(characterId)
     state.justWarped = true
+    // Leave now, so the old map's observers do not keep a ghost for the whole transition.
+    presenceService.leave(session)
     state.regionId = destination.regionId.toInt()
     state.bankId = destination.bankId.toInt()
     state.mapId = destination.mapId.toInt()
@@ -75,9 +83,10 @@ constructor(
         log.warn {
           "Character $characterId did not load ${destination.bankId}:${destination.mapId}"
         }
-        // No arrival will follow, so end the warp here.
+        // No arrival will follow, so give the screen and the map group back here.
         state.justWarped = false
         session.send(RenderScreenPacket(true))
+        presenceService.enter(session)
       }
     } finally {
       if (session.attributes[PENDING_MAP_LOAD] === loaded) {

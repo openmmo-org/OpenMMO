@@ -8,14 +8,24 @@ import de.fiereu.openmmo.net.game.packets.MapTransitionAckPacket
 import de.fiereu.openmmo.net.game.packets.MapTransitionKind
 import de.fiereu.openmmo.net.game.packets.MapTransitionPacket
 import de.fiereu.openmmo.net.game.packets.RenderScreenPacket
+import de.fiereu.openmmo.server.game.session.PENDING_MAP_LOAD
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
+import de.fiereu.openmmo.server.game.session.PlayerState
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import de.fiereu.openmmo.server.game.world.WarpExitRules
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 private val log = KotlinLogging.logger {}
+
+// A player must not stay gated if the client never answers the transition.
+private val ARRIVAL_TIMEOUT = 10.seconds
 
 @Singleton
 class WarpService
@@ -24,12 +34,16 @@ constructor(
     private val mapLoadService: MapLoadService,
     private val mapManager: MapManager,
     private val characterStore: CharacterStore,
+    private val presenceService: PresenceService,
+    private val scope: CoroutineScope,
 ) {
 
   fun executeWarp(ctx: SessionContext, charId: Long, warp: WarpTile) {
     val state = ctx.attributes[PLAYER_STATE]
     val stored = characterStore.getCharacter(charId) ?: return
     state?.justWarped = true
+    // Leave now, so the old map's observers do not keep a ghost for the whole transition.
+    presenceService.leave(ctx)
 
     val destMap = mapManager.getMap(warp.targetRegionId, warp.targetBankId, warp.targetMapId)
     val sourceMap =
@@ -119,15 +133,38 @@ constructor(
       mapLoadService.resetClientCache(ctx, destMap)
       ctx.send(mapManager.createLoadMapPacket(destMap, reloadPlayer = true, deleteCache = true))
       mapLoadService.preloadConnectedMaps(ctx, destMap, depth = 1, reloadPlayer = true)
+      if (state != null) awaitArrival(ctx, state, charId)
     } else {
       log.warn {
         "Map not found for warp target ${warp.targetRegionId}:${warp.targetBankId}:${warp.targetMapId}"
       }
-      // No arrival will follow, so end the warp here.
-      state?.justWarped = false
-      ctx.send(RenderScreenPacket(true))
+      abandonWarp(ctx, state)
     }
 
     log.info { "Player $charId warped to bank=${warp.targetBankId} map=${warp.targetMapId}" }
+  }
+
+  /**
+   * Releases the player if the client never asks for it. Without this a lost RequestPlayer leaves
+   * the player faded out and unable to move for the rest of the session.
+   */
+  private fun awaitArrival(ctx: SessionContext, state: PlayerState, charId: Long) {
+    val loaded = CompletableDeferred<Unit>()
+    ctx.attributes[PENDING_MAP_LOAD] = loaded
+    scope.launch {
+      if (withTimeoutOrNull(ARRIVAL_TIMEOUT) { loaded.await() } != null) return@launch
+      // A newer warp owns the gate now, leave it to its own deadline.
+      if (ctx.attributes[PENDING_MAP_LOAD] !== loaded) return@launch
+      ctx.attributes.remove(PENDING_MAP_LOAD)
+      log.warn { "Character $charId never asked for its player after a warp" }
+      abandonWarp(ctx, state)
+    }
+  }
+
+  /** Give a player that will get no arrival its screen and its map group back. */
+  private fun abandonWarp(ctx: SessionContext, state: PlayerState?) {
+    state?.justWarped = false
+    ctx.send(RenderScreenPacket(true))
+    presenceService.enter(ctx)
   }
 }

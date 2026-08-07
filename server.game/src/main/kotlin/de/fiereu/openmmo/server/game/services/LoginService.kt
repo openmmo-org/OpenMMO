@@ -331,14 +331,18 @@ constructor(
       log.warn { "RequestPlayer without active character" }
       return
     }
+    // The client asks for its player once a map transition is done, so the warp ends here. Take the
+    // waiter now, an entry script below may start its own warp and install a new one.
+    state.justWarped = false
+    val pendingLoad = ctx.attributes.remove(PENDING_MAP_LOAD)
+
     val stored = characterStore.getCharacter(charId)
     if (stored == null) {
       log.warn { "RequestPlayer for unknown character $charId" }
+      pendingLoad?.complete(Unit)
       return
     }
     val info = stored.info
-    // The client asks for its player once a map transition is done, so the warp ends here.
-    state.justWarped = false
 
     log.info { "Sending LoadEntity for character '${info.name}'" }
     val facing = state.facingDirection
@@ -361,17 +365,18 @@ constructor(
     state.x = info.positionX
     state.y = info.positionY
 
-    presenceService.refresh(ctx)
+    // The client dropped its entities with the map cache, so always re-exchange snapshots.
+    presenceService.enter(ctx)
 
-    // Entry scripts run before the fade so a cutscene keeps control of the screen.
+    ctx.send(RenderScreenPacket(true))
+
+    // An entry script may fade back out, so it runs after the fade this arrival owns.
     mapManager.getMap(info.positionRegionId, info.positionBankId, info.positionMapId)?.let { map ->
       mapScriptService.onMapEnter(ctx, state, map)
     }
 
-    ctx.send(RenderScreenPacket(true))
-
     socialService.sendFriendList(ctx)
-    ctx.attributes.remove(PENDING_MAP_LOAD)?.complete(Unit)
+    pendingLoad?.complete(Unit)
 
     log.info { "Player $charId spawned in bank=$bankId map=$mapId" }
   }
