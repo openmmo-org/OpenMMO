@@ -10,6 +10,8 @@ import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.codecs.SkinSet
 import de.fiereu.openmmo.net.game.packets.LoadEntityPacket
 import de.fiereu.openmmo.net.game.packets.MapData
+import de.fiereu.openmmo.server.game.session.PLAYER_STATE
+import de.fiereu.openmmo.server.game.session.mapCacheKey
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -43,21 +45,32 @@ constructor(
     )
   }
 
+  /**
+   * Forget what the client has cached. Call this alongside a LoadMap that carries deleteCache,
+   * since the client throws its own cache away when it sees that flag.
+   */
+  fun resetClientCache(ctx: SessionContext, map: MapDef) {
+    val state = ctx.attributes[PLAYER_STATE] ?: return
+    state.loadedMaps.clear()
+    state.loadedMaps.add(mapCacheKey(map.regionId.toInt(), map.bankId.toInt(), map.mapId.toInt()))
+  }
+
   fun preloadConnectedMaps(
       ctx: SessionContext,
       map: MapDef,
       depth: Int = 2,
       reloadPlayer: Boolean = false,
   ) {
-    val loaded = mutableSetOf<String>()
-    loaded.add("${map.bankId}:${map.mapId}")
+    val loaded = ctx.attributes[PLAYER_STATE]?.loadedMaps ?: mutableSetOf()
+    val regionId = map.regionId.toInt()
+    loaded.add(mapCacheKey(regionId, map.bankId.toInt(), map.mapId.toInt()))
     fun preload(connections: List<MapData.GbaConnection>, remaining: Int) {
       if (remaining <= 0) return
       for (conn in connections) {
-        val key = "${conn.targetBank}:${conn.targetMap}"
+        val key = mapCacheKey(regionId, conn.targetBank, conn.targetMap)
         if (!loaded.add(key)) continue
         // Connections stay inside one region.
-        val connected = mapManager.getMap(map.regionId.toInt(), conn.targetBank, conn.targetMap)
+        val connected = mapManager.getMap(regionId, conn.targetBank, conn.targetMap)
         if (connected != null) {
           ctx.send(
               mapManager.createLoadMapPacket(

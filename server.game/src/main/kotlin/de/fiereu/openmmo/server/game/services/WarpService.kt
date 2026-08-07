@@ -116,6 +116,7 @@ constructor(
     ctx.send(MapTransitionAckPacket(2))
 
     if (destMap != null) {
+      mapLoadService.resetClientCache(ctx, destMap)
       ctx.send(mapManager.createLoadMapPacket(destMap, reloadPlayer = true, deleteCache = true))
       mapLoadService.preloadConnectedMaps(ctx, destMap, depth = 1, reloadPlayer = true)
     } else {
