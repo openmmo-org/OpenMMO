@@ -2,10 +2,19 @@
 
 package de.fiereu.openmmo.codegen.dialog
 
+import de.fiereu.openmmo.common.enums.Region
 import java.io.File
 
-// GBA dialog ids carry the retail ROM file offset in the low bits with the mode-1 resolver on top.
-private const val GBA_MODE = 0x10000000
+// A GBA dialog id is the retail ROM file offset with the region on top, which is how the client
+// knows the ROM to resolve it in. Captured Kanto ids carry 0 there and Hoenn ids carry 1.
+private const val REGION_SHIFT = 28
+
+private fun regionMode(region: String): Int {
+  val known =
+      Region.entries.find { it.name.equals(region, ignoreCase = true) }
+          ?: error("unknown region '$region', its dialog ids cannot be built")
+  return known.wireValue.toInt() shl REGION_SHIFT
+}
 
 fun main(args: Array<String>) {
   require(args.size >= 5) {
@@ -48,6 +57,7 @@ private fun generateRegion(
   }
 
   val charmap = Charmap.load(File(decompDir, "charmap.txt"))
+  val mode = regionMode(region)
 
   var unencodable = 0
   var notFound = 0
@@ -63,7 +73,7 @@ private fun generateRegion(
           notFound++
           return@mapNotNull null
         }
-        DialogLine(t.label, GBA_MODE or offset, RenderUtil.preview(t.content))
+        DialogLine(t.label, mode or offset, RenderUtil.preview(t.content))
       }
 
   println(
