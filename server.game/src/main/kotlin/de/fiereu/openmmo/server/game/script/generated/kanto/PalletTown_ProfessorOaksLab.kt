@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.server.game.script.generated.kanto
 
+import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.dialog.generated.kanto.PalletTown_ProfessorOaksLab
 import de.fiereu.openmmo.items.generated.Items
 import de.fiereu.openmmo.server.game.battle.BattleResult
@@ -266,8 +267,11 @@ private suspend fun receiveDexScene(ctx: ScriptContext) {
 
   // The rival shouts from outside before he walks in.
   ctx.sign(PalletTown_ProfessorOaksLab.RivalGramps)
-  ctx.showNpcAt(LOCALID_RIVAL, 6, 10)
+  // A player facing Oak stands in the middle column, so the rival comes up the one beside it.
+  val facing = ctx.facingDirection
+  ctx.showNpcAt(LOCALID_RIVAL, if (facing == Direction.UP) 5 else 6, 10)
   ctx.moveNpc(LOCALID_RIVAL, *List(6) { WALK_UP }.toTypedArray())
+  if (facing != Direction.DOWN) ctx.moveSelf(FACE_DOWN)
   ctx.sayNpc(LOCALID_RIVAL, PalletTown_ProfessorOaksLab.RivalWhatDidYouCallMeFor)
   ctx.sayNpc(LOCALID_PROF_OAK, PalletTown_ProfessorOaksLab.OakHaveRequestForYouTwo)
 
