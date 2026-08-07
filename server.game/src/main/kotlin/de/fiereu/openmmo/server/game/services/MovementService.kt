@@ -66,7 +66,6 @@ constructor(
     val state = ctx.attributes[PLAYER_STATE] ?: return
     val charId = state.characterId ?: return
     val msg = event.packet
-    state.facingDirection = msg.direction
     log.debug { "Movement: char=$charId from (${msg.x}, ${msg.y}) dir=${msg.direction}" }
 
     val stored = characterStore.getCharacter(charId) ?: return
@@ -92,17 +91,26 @@ constructor(
 
     val atServerTile = msg.x == fromX && msg.y == fromY
 
-    if (state.justWarped) {
+    when {
       // Drop every step until the client asks for its player, else one left over from the old map
       // can fire a second warp.
-      return
-    } else if (!atServerTile) {
-      log.debug {
-        "DESYNC: char=$charId claims (${msg.x}, ${msg.y}), server has ($fromX, $fromY), resetting"
+      state.justWarped -> return
+      // A script owns the player, like the decomp's lockall.
+      state.inDialog -> {
+        sendPositionReset(ctx, charId, currentMap, fromX, fromY, state.facingDirection)
+        return
       }
-      sendPositionReset(ctx, charId, currentMap, fromX, fromY, state.facingDirection)
-      return
+      !atServerTile -> {
+        log.debug {
+          "DESYNC: char=$charId claims (${msg.x}, ${msg.y}), server has ($fromX, $fromY), resetting"
+        }
+        sendPositionReset(ctx, charId, currentMap, fromX, fromY, msg.direction)
+        return
+      }
     }
+
+    // Only once the step is accepted, so a locked player keeps the facing its script left.
+    state.facingDirection = msg.direction
 
     var toX = fromX + msg.direction.dx
     var toY = fromY + msg.direction.dy
@@ -221,6 +229,26 @@ constructor(
     val ctx = event.session
     val state = ctx.attributes[PLAYER_STATE] ?: return
     val charId = state.characterId ?: return
+    if (state.inDialog) {
+      // The client already turned itself, so put it back. A face turn is only ever sent about
+      // other entities, so the correction rides on the same packet a blocked step uses.
+      val stored = characterStore.getCharacter(charId) ?: return
+      val map =
+          mapManager.getMap(
+              stored.info.positionRegionId,
+              stored.info.positionBankId,
+              stored.info.positionMapId,
+          ) ?: return
+      sendPositionReset(
+          ctx,
+          charId,
+          map,
+          stored.info.positionX.toInt(),
+          stored.info.positionY.toInt(),
+          state.facingDirection,
+      )
+      return
+    }
     val msg = event.packet
     state.facingDirection = msg.direction
 
