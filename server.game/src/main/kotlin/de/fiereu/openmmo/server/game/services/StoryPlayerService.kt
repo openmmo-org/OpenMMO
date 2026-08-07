@@ -13,6 +13,7 @@ import de.fiereu.openmmo.pokemon.SpeciesRegistry
 import de.fiereu.openmmo.server.game.battle.BattleRng
 import de.fiereu.openmmo.server.game.battle.StatCalculator
 import de.fiereu.openmmo.server.game.battle.WildMonFactory
+import de.fiereu.openmmo.server.game.battle.acquiredMonsterDelta
 import de.fiereu.openmmo.server.game.session.PlayerState
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import javax.inject.Inject
@@ -52,6 +53,14 @@ constructor(
     characters.addPokemon(characterId, pokemon)
     // Send the granted Pokemon's full record.
     session.send(SocialListEntryAddPacket(pokemon))
+    species.get(dexId)?.let { session.send(acquiredMonsterDelta(pokemon, it)) }
+    session.send(
+        PokemonContainerPacket(
+            container = PokemonContainer.PARTY,
+            hasChange = true,
+            delete = false,
+            pokemon = characters.getCharacter(characterId)?.pokemon ?: listOf(pokemon),
+        ))
     return pokemon
   }
 

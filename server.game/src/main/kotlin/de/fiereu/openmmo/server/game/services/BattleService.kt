@@ -26,6 +26,7 @@ import de.fiereu.openmmo.server.game.battle.MoveLearner
 import de.fiereu.openmmo.server.game.battle.StatCalculator
 import de.fiereu.openmmo.server.game.battle.TurnEngine
 import de.fiereu.openmmo.server.game.battle.WildMonFactory
+import de.fiereu.openmmo.server.game.battle.acquiredMonsterDelta
 import de.fiereu.openmmo.server.game.battle.notice
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
@@ -338,6 +339,7 @@ constructor(
     // The caught monster is sent as a full 148-byte record on opcode 0x14 before the ball-throw
     // event, so the client can resolve the monster when the throw lands.
     battle.session.send(SocialListEntryAddPacket(caught))
+    battle.session.send(acquiredMonsterDelta(caught, battle.wild.species))
     // "Player threw a Poke Ball" event.
     battle.session.send(
         BattleListEventPacket(
