@@ -10,6 +10,7 @@ import de.fiereu.openmmo.net.game.packets.EntityLeavePacket
 import de.fiereu.openmmo.net.game.packets.LoadMapPacket
 import de.fiereu.openmmo.net.game.packets.RenderScreenPacket
 import de.fiereu.openmmo.server.game.session.PENDING_MAP_LOAD
+import de.fiereu.openmmo.server.game.session.SCRIPT_SCOPE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import de.fiereu.openmmo.server.game.storage.EntityIdService
 import de.fiereu.openmmo.server.game.testsupport.FakeCharacterRepository
@@ -21,6 +22,8 @@ import io.kotest.matchers.shouldBe
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -59,14 +62,17 @@ private fun warpTo(bankId: Byte, mapId: Byte) =
 class WarpArrivalTest :
     FunSpec({
       /** Every service a warp touches, sharing one interest manager. */
-      class Fixture(store: CharacterStore, scope: CoroutineScope) {
+      class Fixture(store: CharacterStore) {
         val mapManager = MapManager()
         val mapLoad = MapLoadService(mapManager)
         val presence =
             PresenceService(InterestManager(), PassThroughInterestPolicy(), mapLoad, store)
-        val warps = WarpService(mapLoad, mapManager, store, presence, scope)
+        val warps = WarpService(mapLoad, mapManager, store, presence)
         val scriptWarps = ScriptWarpService(mapManager, mapLoad, store, presence)
       }
+
+      /** The warp deadline runs on the session's scope, which a disconnect cancels. */
+      fun FakeSession.useScope(scope: CoroutineScope) = also { attributes[SCRIPT_SCOPE] = scope }
 
       suspend fun CharacterStore.player(name: String = "May") =
           createCharacter(1, name, CharacterGender.FEMALE, Region.HOENN).info.id
@@ -75,8 +81,9 @@ class WarpArrivalTest :
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
           val charId = store.player()
-          val session = FakeSession(characterId = charId, bankId = 51, mapId = 3)
-          val f = Fixture(store, backgroundScope)
+          val session =
+              FakeSession(characterId = charId, bankId = 51, mapId = 3).useScope(backgroundScope)
+          val f = Fixture(store)
 
           f.warps.executeWarp(session, charId, warpTo(50, 9))
           runCurrent()
@@ -91,8 +98,9 @@ class WarpArrivalTest :
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
           val charId = store.player()
-          val session = FakeSession(characterId = charId, bankId = 51, mapId = 3)
-          val f = Fixture(store, backgroundScope)
+          val session =
+              FakeSession(characterId = charId, bankId = 51, mapId = 3).useScope(backgroundScope)
+          val f = Fixture(store)
 
           f.warps.executeWarp(session, charId, warpTo(50, 9))
           advanceTimeBy(ARRIVAL_DEADLINE_PASSED)
@@ -109,8 +117,9 @@ class WarpArrivalTest :
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
           val charId = store.player()
-          val session = FakeSession(characterId = charId, bankId = 51, mapId = 3)
-          val f = Fixture(store, backgroundScope)
+          val session =
+              FakeSession(characterId = charId, bankId = 51, mapId = 3).useScope(backgroundScope)
+          val f = Fixture(store)
 
           f.warps.executeWarp(session, charId, warpTo(50, 9))
           runCurrent()
@@ -129,8 +138,9 @@ class WarpArrivalTest :
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
           val charId = store.player()
-          val session = FakeSession(characterId = charId, bankId = 51, mapId = 3)
-          val f = Fixture(store, backgroundScope)
+          val session =
+              FakeSession(characterId = charId, bankId = 51, mapId = 3).useScope(backgroundScope)
+          val f = Fixture(store)
 
           f.warps.executeWarp(session, charId, warpTo(50, 9))
           runCurrent()
@@ -150,28 +160,31 @@ class WarpArrivalTest :
         }
       }
 
-      test("a warp to a map that is not loaded does not leave the player gated") {
+      test("a warp to a map that is not loaded leaves the player where it was") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
           val charId = store.player()
-          val session = FakeSession(characterId = charId, bankId = 51, mapId = 3)
-          val f = Fixture(store, backgroundScope)
+          val session =
+              FakeSession(characterId = charId, bankId = 51, mapId = 3).useScope(backgroundScope)
+          val f = Fixture(store)
           f.mapManager.getMap(1, MISSING_BANK, MISSING_MAP) shouldBe null
+          val before = store.getCharacter(charId)!!.info
 
           f.warps.executeWarp(session, charId, warpTo(MISSING_BANK, MISSING_MAP))
           advanceUntilIdle()
 
           session.state().justWarped shouldBe false
-          session.sent.filterIsInstance<RenderScreenPacket>().last() shouldBe
-              RenderScreenPacket(true)
+          session.state().mapId shouldBe 3
+          store.getCharacter(charId)!!.info.positionMapId shouldBe before.positionMapId
+          session.sent shouldBe emptyList()
         }
       }
 
       test("a warp for an unknown character does not gate movement") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-          val session = FakeSession(characterId = 404)
-          val f = Fixture(store, backgroundScope)
+          val session = FakeSession(characterId = 404).useScope(backgroundScope)
+          val f = Fixture(store)
 
           f.warps.executeWarp(session, 404, warpTo(50, 9))
           advanceUntilIdle()
@@ -181,13 +194,54 @@ class WarpArrivalTest :
         }
       }
 
+      test("a disconnect during the transition cancels the deadline") {
+        runTest {
+          val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
+          val charId = store.player()
+          val scope = CoroutineScope(backgroundScope.coroutineContext + Job())
+          val session = FakeSession(characterId = charId, bankId = 51, mapId = 3).useScope(scope)
+          val f = Fixture(store)
+
+          f.warps.executeWarp(session, charId, warpTo(50, 9))
+          runCurrent()
+          // What onInactive does.
+          scope.cancel()
+          session.sent.clear()
+          advanceTimeBy(ARRIVAL_DEADLINE_PASSED)
+          runCurrent()
+
+          session.sent shouldBe emptyList()
+        }
+      }
+
+      test("a warp carries the elevation of its destination to the arrival") {
+        runTest {
+          val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
+          val charId = store.player()
+          val session =
+              FakeSession(characterId = charId, bankId = 51, mapId = 3).useScope(backgroundScope)
+          val f = Fixture(store)
+          val stairs = f.mapManager.getMap(1, 51, 3)!!.warps.first()
+
+          f.warps.executeWarp(
+              session,
+              charId,
+              warpTo(51, 3).copy(targetX = stairs.x, targetY = stairs.y, targetElevation = 3),
+          )
+          runCurrent()
+
+          session.state().elevation shouldBe (stairs.elevation)
+        }
+      }
+
       test("warping despawns the player from the map it left right away") {
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
           val charId = store.player("May")
-          val session = FakeSession(characterId = charId, bankId = 51, mapId = 3)
+          val session =
+              FakeSession(characterId = charId, bankId = 51, mapId = 3).useScope(backgroundScope)
           val watcher = FakeSession(characterId = store.player("Brendan"), bankId = 51, mapId = 3)
-          val f = Fixture(store, backgroundScope)
+          val f = Fixture(store)
           f.presence.enter(session)
           f.presence.enter(watcher)
           watcher.sent.clear()
@@ -203,9 +257,10 @@ class WarpArrivalTest :
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
           val charId = store.player("May")
-          val session = FakeSession(characterId = charId, bankId = 51, mapId = 3)
+          val session =
+              FakeSession(characterId = charId, bankId = 51, mapId = 3).useScope(backgroundScope)
           val watcher = FakeSession(characterId = store.player("Brendan"), bankId = 51, mapId = 3)
-          val f = Fixture(store, backgroundScope)
+          val f = Fixture(store)
           f.presence.enter(session)
           f.presence.enter(watcher)
           session.sent.clear()
@@ -221,8 +276,9 @@ class WarpArrivalTest :
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
           val charId = store.player()
-          val session = FakeSession(characterId = charId, bankId = 51, mapId = 3)
-          val f = Fixture(store, backgroundScope)
+          val session =
+              FakeSession(characterId = charId, bankId = 51, mapId = 3).useScope(backgroundScope)
+          val f = Fixture(store)
 
           val cutscene = launch { f.scriptWarps.warp(session, session.state(), littlerootTown()) }
           // Not advanceUntilIdle, that would run the clock past the load timeout.
@@ -245,8 +301,9 @@ class WarpArrivalTest :
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
           val charId = store.player()
-          val session = FakeSession(characterId = charId, bankId = 51, mapId = 3)
-          val f = Fixture(store, backgroundScope)
+          val session =
+              FakeSession(characterId = charId, bankId = 51, mapId = 3).useScope(backgroundScope)
+          val f = Fixture(store)
 
           val cutscene = launch { f.scriptWarps.warp(session, session.state(), littlerootTown()) }
           advanceUntilIdle()
@@ -263,8 +320,9 @@ class WarpArrivalTest :
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
           val charId = store.player()
-          val session = FakeSession(characterId = charId, bankId = 51, mapId = 3)
-          val f = Fixture(store, backgroundScope)
+          val session =
+              FakeSession(characterId = charId, bankId = 51, mapId = 3).useScope(backgroundScope)
+          val f = Fixture(store)
 
           f.scriptWarps.warp(
               session,

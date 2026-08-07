@@ -331,22 +331,22 @@ constructor(
       log.warn { "RequestPlayer without active character" }
       return
     }
-    // The client asks for its player once a map transition is done, so the warp ends here. Take the
-    // waiter now, an entry script below may start its own warp and install a new one.
+    // The client asks for its player once a map transition is done, so the warp ends here. The
+    // waiter is only cleared at the end, so a throw in between leaves the deadline to rescue it.
     state.justWarped = false
-    val pendingLoad = ctx.attributes.remove(PENDING_MAP_LOAD)
+    val pendingLoad = ctx.attributes[PENDING_MAP_LOAD]
 
     val stored = characterStore.getCharacter(charId)
     if (stored == null) {
       log.warn { "RequestPlayer for unknown character $charId" }
-      pendingLoad?.complete(Unit)
       return
     }
     val info = stored.info
 
     log.info { "Sending LoadEntity for character '${info.name}'" }
     val facing = state.facingDirection
-    val loadEntity = mapLoadService.createLoadEntity(info, facing, party = stored.pokemon)
+    val loadEntity =
+        mapLoadService.createLoadEntity(info, facing, state.elevation, party = stored.pokemon)
     ctx.send(loadEntity)
 
     npcService.spawnNpcsForMap(
@@ -376,6 +376,7 @@ constructor(
     }
 
     socialService.sendFriendList(ctx)
+    if (ctx.attributes[PENDING_MAP_LOAD] === pendingLoad) ctx.attributes.remove(PENDING_MAP_LOAD)
     pendingLoad?.complete(Unit)
 
     log.info { "Player $charId spawned in bank=$bankId map=$mapId" }

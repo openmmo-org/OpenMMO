@@ -66,6 +66,7 @@ constructor(
     state.mapId = destination.mapId.toInt()
     state.x = destination.x
     state.y = destination.y
+    state.elevation = map.tileAt(destination.x.toInt(), destination.y.toInt())?.elevation ?: 0
     state.facingDirection = destination.facing
 
     val loaded = CompletableDeferred<Unit>()
