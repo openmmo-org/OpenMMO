@@ -184,7 +184,7 @@ internal constructor(
               regionId.toByte(), bankId.toByte(), mapId.toByte(), x.toShort(), y.toShort(), facing))
 
   /** Warps the player without door movement. */
-  fun warp(regionId: Int, bankId: Int, mapId: Int, x: Int, y: Int, facing: Direction) {
+  suspend fun warp(regionId: Int, bankId: Int, mapId: Int, x: Int, y: Int, facing: Direction) {
     checkNotNull(warp) { "Script warp service is unavailable" }
         .warp(
             session,

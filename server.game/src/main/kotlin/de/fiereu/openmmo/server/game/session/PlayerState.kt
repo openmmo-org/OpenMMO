@@ -1,24 +1,30 @@
 package de.fiereu.openmmo.server.game.session
 
 import de.fiereu.openmmo.common.enums.Direction
+import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * Per-session player state. Scripts run on their own coroutine while packets are answered on the
+ * mailbox coroutine, and both threads touch every field here, so all of them are volatile.
+ */
 data class PlayerState(
     val userId: Int,
-    var characterId: Long? = null,
-    var justWarped: Boolean = false,
-    var facingDirection: Direction = Direction.DOWN,
-    var inDialog: Boolean = false,
-    var dialogNpcEntityId: Long = 0,
-    var dialogSeqId: Int = 0,
-    var regionId: Int = 1,
-    var bankId: Int = 51,
-    var mapId: Int = 3,
-    var x: Short = 4,
-    var y: Short = 2,
+    @field:Volatile var characterId: Long? = null,
+    @field:Volatile var justWarped: Boolean = false,
+    @field:Volatile var facingDirection: Direction = Direction.DOWN,
+    @field:Volatile var inDialog: Boolean = false,
+    @field:Volatile var dialogNpcEntityId: Long = 0,
+    @field:Volatile var dialogSeqId: Int = 0,
+    @field:Volatile var regionId: Int = 1,
+    @field:Volatile var bankId: Int = 51,
+    @field:Volatile var mapId: Int = 3,
+    @field:Volatile var x: Short = 4,
+    @field:Volatile var y: Short = 2,
+    @field:Volatile var elevation: Int = 0,
     /** Trusts one source tile after scripted movement. */
-    var acceptNextMoveSource: Boolean = false,
+    @field:Volatile var acceptNextMoveSource: Boolean = false,
     /** Maps the client already holds. A warp sends deleteCache, which empties this. */
-    val loadedMaps: MutableSet<Int> = mutableSetOf(),
+    val loadedMaps: MutableSet<Int> = ConcurrentHashMap.newKeySet(),
 )
 
 /** Packs a map address into one key for [PlayerState.loadedMaps]. */

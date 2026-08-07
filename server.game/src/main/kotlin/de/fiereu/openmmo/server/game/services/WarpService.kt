@@ -8,14 +8,27 @@ import de.fiereu.openmmo.net.game.packets.MapTransitionAckPacket
 import de.fiereu.openmmo.net.game.packets.MapTransitionKind
 import de.fiereu.openmmo.net.game.packets.MapTransitionPacket
 import de.fiereu.openmmo.net.game.packets.RenderScreenPacket
+import de.fiereu.openmmo.server.game.session.PENDING_MAP_LOAD
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
+import de.fiereu.openmmo.server.game.session.PlayerState
+import de.fiereu.openmmo.server.game.session.SCRIPT_SCOPE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import de.fiereu.openmmo.server.game.world.WarpExitRules
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 private val log = KotlinLogging.logger {}
+
+// A player must not stay gated if the client never answers the transition.
+private val ARRIVAL_TIMEOUT = 10.seconds
 
 @Singleton
 class WarpService
@@ -25,22 +38,32 @@ constructor(
     private val mapManager: MapManager,
     private val characterStore: CharacterStore,
     private val presenceService: PresenceService,
-    private val mapScriptService: MapScriptService,
 ) {
 
   fun executeWarp(ctx: SessionContext, charId: Long, warp: WarpTile) {
     val state = ctx.attributes[PLAYER_STATE]
-    state?.justWarped = true
     val stored = characterStore.getCharacter(charId) ?: return
 
+    // Check the map first. Moving the player onto one we do not have would strand it there.
     val destMap = mapManager.getMap(warp.targetRegionId, warp.targetBankId, warp.targetMapId)
+    if (destMap == null) {
+      log.warn {
+        "Map not found for warp target ${warp.targetRegionId}:${warp.targetBankId}:${warp.targetMapId}"
+      }
+      return
+    }
+
+    state?.justWarped = true
+    // Leave now, so the old map's observers do not keep a ghost for the whole transition.
+    presenceService.leave(ctx)
+
     val sourceMap =
         mapManager.getMap(
             stored.info.positionRegionId, stored.info.positionBankId, stored.info.positionMapId)
 
     val knownOverride =
         WarpExitRules.getKnownOverride(sourceMap, destMap, warp.targetX, warp.targetY)
-    val destBehavior = destMap?.tileAt(warp.targetX, warp.targetY)?.behavior
+    val destBehavior = destMap.tileAt(warp.targetX, warp.targetY)?.behavior
 
     val warpFacing =
         warp.exitFacing
@@ -65,7 +88,7 @@ constructor(
                 destMap = destMap,
                 destTileBehavior = destBehavior,
             )
-    if (shouldAutoStepOffWarp && destMap != null) {
+    if (shouldAutoStepOffWarp) {
       val destWarp = destMap.warps.find { it.x == offsetX && it.y == offsetY }
       if (destWarp != null) {
         offsetX +=
@@ -86,11 +109,11 @@ constructor(
     }
 
     val playerZ =
-        destMap?.warps?.find { it.x == warp.targetX && it.y == warp.targetY }?.elevation
+        destMap.warps.find { it.x == warp.targetX && it.y == warp.targetY }?.elevation
             ?: warp.targetElevation
 
     log.info {
-      "WARP EXIT: source=${sourceMap?.bankId}:${sourceMap?.mapId} dest=${destMap?.bankId}:${destMap?.mapId} target=(${warp.targetX},${warp.targetY}) final=($offsetX,$offsetY) z=$playerZ facing=$warpFacing autoStep=$shouldAutoStepOffWarp"
+      "WARP EXIT: source=${sourceMap?.bankId}:${sourceMap?.mapId} dest=${destMap.bankId}:${destMap.mapId} target=(${warp.targetX},${warp.targetY}) final=($offsetX,$offsetY) z=$playerZ facing=$warpFacing autoStep=$shouldAutoStepOffWarp"
     }
 
     val newInfo =
@@ -110,31 +133,44 @@ constructor(
       state.mapId = warp.targetMapId.toInt()
       state.x = offsetX.toShort()
       state.y = offsetY.toShort()
+      state.elevation = playerZ
     }
 
+    // Only fade out and send the map. onRequestPlayer does the arrival and fades back in.
     ctx.send(MapTransitionPacket())
     ctx.send(RenderScreenPacket(false))
     ctx.send(MapTransitionAckPacket(MapTransitionKind.WARP))
 
-    if (destMap != null) {
-      mapLoadService.resetClientCache(ctx, destMap)
-      ctx.send(mapManager.createLoadMapPacket(destMap, reloadPlayer = true, deleteCache = true))
-      mapLoadService.preloadConnectedMaps(ctx, destMap, depth = 1, reloadPlayer = true)
-    } else {
-      log.warn {
-        "Map not found for warp target ${warp.targetRegionId}:${warp.targetBankId}:${warp.targetMapId}"
-      }
-    }
-
-    // Release the fade after loading the destination.
-    ctx.send(mapLoadService.createLoadEntity(newInfo, warpFacing, playerZ))
-
-    presenceService.refresh(ctx)
-
-    if (state != null && destMap != null) mapScriptService.onMapEnter(ctx, state, destMap)
-
-    ctx.send(RenderScreenPacket(true))
+    mapLoadService.resetClientCache(ctx, destMap)
+    ctx.send(mapManager.createLoadMapPacket(destMap, reloadPlayer = true, deleteCache = true))
+    mapLoadService.preloadConnectedMaps(ctx, destMap, depth = 1, reloadPlayer = true)
+    if (state != null) awaitArrival(ctx, state, charId)
 
     log.info { "Player $charId warped to bank=${warp.targetBankId} map=${warp.targetMapId}" }
+  }
+
+  /**
+   * Releases the player if the client never asks for it. Without this a lost RequestPlayer leaves
+   * the player faded out and unable to move for the rest of the session.
+   */
+  private fun awaitArrival(ctx: SessionContext, state: PlayerState, charId: Long) {
+    val loaded = CompletableDeferred<Unit>()
+    ctx.attributes[PENDING_MAP_LOAD] = loaded
+    // The session's own scope, so a disconnect cancels this instead of reviving a dead session.
+    val scope =
+        ctx.attributes.getOrPut(SCRIPT_SCOPE) {
+          CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        }
+    scope.launch {
+      if (withTimeoutOrNull(ARRIVAL_TIMEOUT) { loaded.await() } != null) return@launch
+      // A newer warp owns the gate now, leave it to its own deadline.
+      if (ctx.attributes[PENDING_MAP_LOAD] !== loaded) return@launch
+      if (!ctx.channel.isActive) return@launch
+      ctx.attributes.remove(PENDING_MAP_LOAD)
+      log.warn { "Character $charId never asked for its player after a warp" }
+      state.justWarped = false
+      ctx.send(RenderScreenPacket(true))
+      presenceService.enter(ctx)
+    }
   }
 }

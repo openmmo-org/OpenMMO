@@ -34,6 +34,7 @@ import de.fiereu.openmmo.net.game.packets.ViewScalePacket
 import de.fiereu.openmmo.net.game.packets.WorldFlagTableResetPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleRatingBulkPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleStateBytePacket
+import de.fiereu.openmmo.server.game.session.PENDING_MAP_LOAD
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.session.PlayerState
 import de.fiereu.openmmo.server.game.session.SessionRegistry
@@ -330,6 +331,11 @@ constructor(
       log.warn { "RequestPlayer without active character" }
       return
     }
+    // The client asks for its player once a map transition is done, so the warp ends here. The
+    // waiter is only cleared at the end, so a throw in between leaves the deadline to rescue it.
+    state.justWarped = false
+    val pendingLoad = ctx.attributes[PENDING_MAP_LOAD]
+
     val stored = characterStore.getCharacter(charId)
     if (stored == null) {
       log.warn { "RequestPlayer for unknown character $charId" }
@@ -339,7 +345,8 @@ constructor(
 
     log.info { "Sending LoadEntity for character '${info.name}'" }
     val facing = state.facingDirection
-    val loadEntity = mapLoadService.createLoadEntity(info, facing, party = stored.pokemon)
+    val loadEntity =
+        mapLoadService.createLoadEntity(info, facing, state.elevation, party = stored.pokemon)
     ctx.send(loadEntity)
 
     npcService.spawnNpcsForMap(
@@ -358,15 +365,19 @@ constructor(
     state.x = info.positionX
     state.y = info.positionY
 
+    // The client dropped its entities with the map cache, so always re-exchange snapshots.
     presenceService.enter(ctx)
 
     ctx.send(RenderScreenPacket(true))
 
+    // An entry script may fade back out, so it runs after the fade this arrival owns.
     mapManager.getMap(info.positionRegionId, info.positionBankId, info.positionMapId)?.let { map ->
       mapScriptService.onMapEnter(ctx, state, map)
     }
 
     socialService.sendFriendList(ctx)
+    if (ctx.attributes[PENDING_MAP_LOAD] === pendingLoad) ctx.attributes.remove(PENDING_MAP_LOAD)
+    pendingLoad?.complete(Unit)
 
     log.info { "Player $charId spawned in bank=$bankId map=$mapId" }
   }
