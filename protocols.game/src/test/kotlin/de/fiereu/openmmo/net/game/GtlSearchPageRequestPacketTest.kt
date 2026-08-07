@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.net.game
 
+import de.fiereu.openmmo.common.test.fixtureBuffer
 import de.fiereu.openmmo.net.game.packets.gtl.GtlFilterKind
 import de.fiereu.openmmo.net.game.packets.gtl.GtlListKind
 import de.fiereu.openmmo.net.game.packets.gtl.GtlSearchPageRequestPacketCodec
@@ -10,7 +11,7 @@ import io.kotest.matchers.shouldBe
 class GtlSearchPageRequestPacketTest :
     FunSpec({
       test("an unfiltered search carries no filters") {
-        val buf = fixture("game/c2s/9b/own_listings_request_31914.bin")
+        val buf = fixtureBuffer("game/c2s/9b/own_listings_request_31914.bin")
         val request = GtlSearchPageRequestPacketCodec.read(buf)
 
         request.requestId shouldBe 3.toByte()
@@ -22,7 +23,7 @@ class GtlSearchPageRequestPacketTest :
       }
 
       test("a search filtered to one species carries its dex id") {
-        val buf = fixture("game/c2s/9b/one_species_filter_32710.bin")
+        val buf = fixtureBuffer("game/c2s/9b/one_species_filter_32710.bin")
         val request = GtlSearchPageRequestPacketCodec.read(buf)
 
         request.requestId shouldBe 4.toByte()
@@ -31,7 +32,7 @@ class GtlSearchPageRequestPacketTest :
       }
 
       test("a search filtered to thirteen species carries all of them") {
-        val buf = fixture("game/c2s/9b/thirteen_species_filter_32710.bin")
+        val buf = fixtureBuffer("game/c2s/9b/thirteen_species_filter_32710.bin")
         val request = GtlSearchPageRequestPacketCodec.read(buf)
 
         request.listKind shouldBe GtlListKind.ITEM
@@ -42,7 +43,7 @@ class GtlSearchPageRequestPacketTest :
       }
 
       test("a filtered search carries one entry per filter") {
-        val buf = fixture("game/c2s/9b/eleven_filters_32710.bin")
+        val buf = fixtureBuffer("game/c2s/9b/eleven_filters_32710.bin")
         val request = GtlSearchPageRequestPacketCodec.read(buf)
 
         request.filters.size shouldBe 11

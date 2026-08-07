@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.net.game
 
+import de.fiereu.openmmo.common.test.fixtureBuffer
 import de.fiereu.openmmo.net.game.packets.gtl.GtlItemListing
 import de.fiereu.openmmo.net.game.packets.gtl.GtlListKind
 import de.fiereu.openmmo.net.game.packets.gtl.GtlPokemonListing
@@ -10,7 +11,7 @@ import io.kotest.matchers.shouldBe
 class GtlSearchPagePacketTest :
     FunSpec({
       test("a captured item page is consumed to the last byte") {
-        val buf = fixture("game/s2c/9b/item_page_32710.bin")
+        val buf = fixtureBuffer("game/s2c/9b/item_page_32710.bin")
         val page = GtlSearchPagePacketCodec.read(buf)
 
         page.requestId shouldBe 7.toByte()
@@ -30,7 +31,7 @@ class GtlSearchPagePacketTest :
       }
 
       test("a captured monster page is consumed to the last byte") {
-        val buf = fixture("game/s2c/9b/monster_page_32710.bin")
+        val buf = fixtureBuffer("game/s2c/9b/monster_page_32710.bin")
         val page = GtlSearchPagePacketCodec.read(buf)
 
         page.requestId shouldBe 1.toByte()
@@ -53,7 +54,7 @@ class GtlSearchPagePacketTest :
       }
 
       test("a page that is not an item board carries no quote strip") {
-        val buf = fixture("game/s2c/9b/own_listings_page_31914.bin")
+        val buf = fixtureBuffer("game/s2c/9b/own_listings_page_31914.bin")
         val page = GtlSearchPagePacketCodec.read(buf)
 
         page.listKind shouldBe GtlListKind.OWN_LISTINGS

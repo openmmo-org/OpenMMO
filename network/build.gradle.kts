@@ -9,6 +9,7 @@ dependencies {
   api(libs.netty)
   api(libs.kotlinx.coroutines)
   implementation(libs.kotlin.logging)
+  testImplementation(project(":common.test"))
   testImplementation(libs.bundles.kotest)
   testImplementation(libs.kotlinx.coroutines.test)
   testRuntimeOnly(libs.logback)

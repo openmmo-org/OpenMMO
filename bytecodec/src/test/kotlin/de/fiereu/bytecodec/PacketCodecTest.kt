@@ -1,8 +1,8 @@
 package de.fiereu.bytecodec
 
-import de.fiereu.bytecodec.test.assertBytesRoundtrip
-import de.fiereu.bytecodec.test.assertValueRoundtrip
-import de.fiereu.bytecodec.test.encodeToBytes
+import de.fiereu.openmmo.common.test.assertBytesRoundtrip
+import de.fiereu.openmmo.common.test.assertValueRoundtrip
+import de.fiereu.openmmo.common.test.encodeToBytes
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 

@@ -1,8 +1,8 @@
 package de.fiereu.openmmo.net.game.codecs
 
-import de.fiereu.bytecodec.test.decodeBytes
-import de.fiereu.bytecodec.test.encodeToBytes
 import de.fiereu.openmmo.common.CharacterInfo
+import de.fiereu.openmmo.common.test.decodeBytes
+import de.fiereu.openmmo.common.test.encodeToBytes
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.time.LocalDateTime

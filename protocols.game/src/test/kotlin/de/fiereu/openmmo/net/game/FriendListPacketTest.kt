@@ -1,7 +1,7 @@
 package de.fiereu.openmmo.net.game
 
-import de.fiereu.bytecodec.test.decodeBytes
-import de.fiereu.bytecodec.test.encodeToBytes
+import de.fiereu.openmmo.common.test.decodeBytes
+import de.fiereu.openmmo.common.test.encodeToBytes
 import de.fiereu.openmmo.net.game.packets.FriendListEntry
 import de.fiereu.openmmo.net.game.packets.FriendListPacket
 import de.fiereu.openmmo.net.game.packets.FriendListPacketCodec

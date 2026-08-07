@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.net.game
 
+import de.fiereu.openmmo.common.test.fixtureBuffer
 import de.fiereu.openmmo.net.game.packets.gtl.GtlListKind
 import de.fiereu.openmmo.net.game.packets.gtl.GtlListingsPagePacketCodec
 import de.fiereu.openmmo.net.game.packets.gtl.GtlListingsPageRequestPacketCodec
@@ -9,7 +10,7 @@ import io.kotest.matchers.shouldBe
 class GtlListingsPagePacketTest :
     FunSpec({
       test("a captured price list request round trips") {
-        val buf = fixture("game/c2s/e4/price_list_request_31914.bin")
+        val buf = fixtureBuffer("game/c2s/e4/price_list_request_31914.bin")
         val request = GtlListingsPageRequestPacketCodec.read(buf)
 
         request.requestId shouldBe 3.toByte()
@@ -20,7 +21,7 @@ class GtlListingsPagePacketTest :
       }
 
       test("a captured price list page is consumed to the last byte") {
-        val buf = fixture("game/s2c/fe/price_history_32710.bin")
+        val buf = fixtureBuffer("game/s2c/fe/price_history_32710.bin")
         val page = GtlListingsPagePacketCodec.read(buf)
 
         page.requestId shouldBe 1.toByte()
@@ -35,7 +36,7 @@ class GtlListingsPagePacketTest :
       }
 
       test("a later price list page reports which page it answers") {
-        val buf = fixture("game/s2c/fe/price_history_page2_31914.bin")
+        val buf = fixtureBuffer("game/s2c/fe/price_history_page2_31914.bin")
         val page = GtlListingsPagePacketCodec.read(buf)
 
         page.requestId shouldBe 3.toByte()

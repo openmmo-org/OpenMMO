@@ -1,9 +1,9 @@
 package de.fiereu.openmmo.net.game
 
-import de.fiereu.bytecodec.test.decodeBytes
-import de.fiereu.bytecodec.test.encodeToBytes
 import de.fiereu.openmmo.common.enums.SkinSlot
-import de.fiereu.openmmo.common.utils.hexToBytes
+import de.fiereu.openmmo.common.test.decodeBytes
+import de.fiereu.openmmo.common.test.encodeToBytes
+import de.fiereu.openmmo.common.test.fixture
 import de.fiereu.openmmo.common.utils.toHex
 import de.fiereu.openmmo.net.game.packets.CreateCharacterPacketCodec
 import io.kotest.core.spec.style.FunSpec
@@ -12,9 +12,7 @@ import io.kotest.matchers.shouldBe
 class CreateCharacterPacketTest :
     FunSpec({
       test("decodes the captured female Hoenn character creation") {
-        val bytes =
-            "4c0061006e0061006e0061005400650073007400540077006f0000000101014c0304600f00030800680084"
-                .hexToBytes()
+        val bytes = fixture("game/c2s/03/female_hoenn.bin")
 
         val packet = CreateCharacterPacketCodec.decodeBytes(bytes)
 
@@ -33,8 +31,7 @@ class CreateCharacterPacketTest :
       }
 
       test("roundtrips the new male Hoenn character creation capture") {
-        val bytes =
-            "4d006100630068006500720044006500720000000001034c031e280a00025400700020".hexToBytes()
+        val bytes = fixture("game/c2s/03/male_hoenn_32710.bin")
 
         val packet = CreateCharacterPacketCodec.decodeBytes(bytes)
 
@@ -46,8 +43,7 @@ class CreateCharacterPacketTest :
       }
 
       test("roundtrips the independent female Kanto character creation capture") {
-        val bytes =
-            "4d0061006300680065007200520069006e0000000100004c030bb80e0003180030029c".hexToBytes()
+        val bytes = fixture("game/c2s/03/female_kanto_32710.bin")
 
         val packet = CreateCharacterPacketCodec.decodeBytes(bytes)
 

@@ -1,6 +1,7 @@
 package de.fiereu.openmmo.net.game
 
 import de.fiereu.bytecodec.ByteArrayReadBuffer
+import de.fiereu.openmmo.common.test.fixtureBuffer
 import de.fiereu.openmmo.net.game.packets.gtl.GtlMarketListingsPacketCodec
 import de.fiereu.openmmo.net.game.packets.gtl.GtlMarketListingsRequestPacketCodec
 import io.kotest.core.spec.style.FunSpec
@@ -15,7 +16,7 @@ class GtlMarketListingsPacketTest :
       }
 
       test("a captured board page is consumed to the last byte") {
-        val buf = fixture("game/s2c/70/board_page_31914.bin")
+        val buf = fixtureBuffer("game/s2c/70/board_page_31914.bin")
         val board = GtlMarketListingsPacketCodec.read(buf)
 
         board.fullReset shouldBe false

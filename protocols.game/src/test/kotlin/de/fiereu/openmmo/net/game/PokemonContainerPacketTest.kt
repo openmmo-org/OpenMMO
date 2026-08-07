@@ -1,19 +1,19 @@
 package de.fiereu.openmmo.net.game
 
-import de.fiereu.bytecodec.test.decodeBytes
-import de.fiereu.bytecodec.test.encodeToBytes
 import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.PokemonMove
 import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
+import de.fiereu.openmmo.common.test.decodeBytes
+import de.fiereu.openmmo.common.test.encodeToBytes
+import de.fiereu.openmmo.common.test.fixture
 import de.fiereu.openmmo.net.game.codecs.PokemonCodec
 import de.fiereu.openmmo.net.game.packets.PokemonContainerPacket
 import de.fiereu.openmmo.net.game.packets.PokemonContainerPacketCodec
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.time.LocalDateTime
-import java.util.Base64
 
 private fun testMon(id: Long, dex: Int, slot: Short) =
     Pokemon(
@@ -40,13 +40,10 @@ private fun testMon(id: Long, dex: Int, slot: Short) =
         caughtAt = LocalDateTime.of(2026, 1, 1, 0, 0, 0),
     )
 
-private const val CAPTURED_PARTY =
-    "AQEBAMABAAAAAAAAAACQAQAAAAAAAJABAAAAAAABAADvAbpwfdsAkAEAAAAAAFQAZQBzAHQAAAAAAAAABRQAAAClAAAAADIAIQArAAAAAAAjHgAAAAAAAAAAAAAAAAAAAQAAAAAAAAAEBQL/////AwDvvfceAAAAIAAAAAAAAACGhlNqAAD//wAA"
-
 class PokemonContainerPacketTest :
     FunSpec({
       test("round-trips a captured party container and exposes the monster fields") {
-        val bytes = Base64.getDecoder().decode(CAPTURED_PARTY)
+        val bytes = bytes()
         val decoded = PokemonContainerPacketCodec.decodeBytes(bytes)
         val mon = decoded.pokemon.single()
         mon.dexId shouldBe 495
@@ -125,4 +122,4 @@ class PokemonContainerPacketTest :
       }
     })
 
-private fun bytes(): ByteArray = Base64.getDecoder().decode(CAPTURED_PARTY)
+private fun bytes(): ByteArray = fixture("game/s2c/13/party_scrubbed.bin")

@@ -1,7 +1,8 @@
 package de.fiereu.openmmo.net.game
 
-import de.fiereu.bytecodec.test.decodeBytes
-import de.fiereu.bytecodec.test.encodeToBytes
+import de.fiereu.openmmo.common.test.decodeBytes
+import de.fiereu.openmmo.common.test.encodeToBytes
+import de.fiereu.openmmo.common.test.fixture
 import de.fiereu.openmmo.net.game.packets.battle.moves.MoveLearnPromptPacket
 import de.fiereu.openmmo.net.game.packets.battle.moves.MoveLearnPromptPacketCodec
 import de.fiereu.openmmo.net.game.packets.battle.moves.MoveLearnReplyPacket
@@ -16,21 +17,17 @@ private const val WATER_GUN: Short = 55
 private const val LEER: Short = 43
 private const val UNOVA_MOVE: Short = 526
 
-private fun entityIdBytes() =
-    byteArrayOf(
-        0x00, 0xC0.toByte(), 0xC8.toByte(), 0x2A, 0xEF.toByte(), 0xAD.toByte(), 0xCE.toByte(), 0x1A)
-
 class MoveLearnPacketsTest :
     FunSpec({
       test("decodes a captured prompt for one move") {
-        val bytes = entityIdBytes() + byteArrayOf(0x01, 0x9A.toByte(), 0x00)
+        val bytes = fixture("game/s2c/17/prompt_one_move_32710.bin")
         val decoded = MoveLearnPromptPacketCodec.decodeBytes(bytes)
         decoded shouldBe MoveLearnPromptPacket(ENTITY_ID, listOf(FURY_SWIPES))
         MoveLearnPromptPacketCodec.encodeToBytes(decoded) shouldBe bytes
       }
 
       test("decodes a captured prompt for two moves") {
-        val bytes = entityIdBytes() + byteArrayOf(0x02, 0x18, 0x02, 0x59, 0x01)
+        val bytes = fixture("game/s2c/17/prompt_two_moves_32710.bin")
         val decoded = MoveLearnPromptPacketCodec.decodeBytes(bytes)
         decoded shouldBe MoveLearnPromptPacket(ENTITY_ID, listOf(536, 345))
         MoveLearnPromptPacketCodec.encodeToBytes(decoded) shouldBe bytes
@@ -38,21 +35,7 @@ class MoveLearnPacketsTest :
 
       // Fury Swipes took the slot Leer held.
       test("decodes a captured reply that swapped a move in") {
-        val bytes =
-            entityIdBytes() +
-                byteArrayOf(
-                    0x04,
-                    0x0E,
-                    0x02,
-                    0x9A.toByte(),
-                    0x00,
-                    0x7A,
-                    0x00,
-                    0x37,
-                    0x00,
-                    0x01,
-                    0x9A.toByte(),
-                    0x00)
+        val bytes = fixture("game/c2s/0a/reply_swapped_32710.bin")
         val decoded = MoveLearnReplyPacketCodec.decodeBytes(bytes)
         decoded shouldBe
             MoveLearnReplyPacket(
@@ -65,10 +48,7 @@ class MoveLearnPacketsTest :
 
       // The moveset comes back as it was, so the player kept Leer.
       test("decodes a captured reply that declined") {
-        val bytes =
-            entityIdBytes() +
-                byteArrayOf(
-                    0x04, 0x0E, 0x02, 0x2B, 0x00, 0x7A, 0x00, 0x37, 0x00, 0x01, 0x9A.toByte(), 0x00)
+        val bytes = fixture("game/c2s/0a/reply_declined_32710.bin")
         val decoded = MoveLearnReplyPacketCodec.decodeBytes(bytes)
         decoded shouldBe
             MoveLearnReplyPacket(

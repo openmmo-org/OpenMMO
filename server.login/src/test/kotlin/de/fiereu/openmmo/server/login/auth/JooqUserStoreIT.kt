@@ -1,7 +1,7 @@
 package de.fiereu.openmmo.server.login.auth
 
 import de.fiereu.openmmo.common.enums.LoginState
-import de.fiereu.openmmo.server.login.testsupport.DockerAvailable
+import de.fiereu.openmmo.common.test.DockerAvailable
 import io.kotest.core.annotation.EnabledIf
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe

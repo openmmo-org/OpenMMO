@@ -8,9 +8,9 @@ import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
+import de.fiereu.openmmo.common.test.DockerAvailable
 import de.fiereu.openmmo.db.game.tables.references.CHARACTER_ITEMS
 import de.fiereu.openmmo.db.game.tables.references.POKEMON
-import de.fiereu.openmmo.server.game.testsupport.DockerAvailable
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.annotation.EnabledIf
 import io.kotest.core.spec.style.FunSpec

@@ -4,4 +4,7 @@ plugins {
   id("buildsrc.convention.sonarlint")
 }
 
-dependencies { testImplementation(libs.bundles.kotest) }
+dependencies {
+  testImplementation(project(":common.test"))
+  testImplementation(libs.bundles.kotest)
+}

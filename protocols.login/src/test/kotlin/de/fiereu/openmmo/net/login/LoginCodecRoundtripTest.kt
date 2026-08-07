@@ -1,7 +1,7 @@
 package de.fiereu.openmmo.net.login
 
-import de.fiereu.bytecodec.test.decodeBytes
-import de.fiereu.bytecodec.test.encodeToBytes
+import de.fiereu.openmmo.common.test.decodeBytes
+import de.fiereu.openmmo.common.test.encodeToBytes
 import de.fiereu.openmmo.net.login.packets.JoinGameServerPacket
 import de.fiereu.openmmo.net.login.packets.JoinGameServerPacketCodec
 import de.fiereu.openmmo.net.login.packets.MfaResponsePacket

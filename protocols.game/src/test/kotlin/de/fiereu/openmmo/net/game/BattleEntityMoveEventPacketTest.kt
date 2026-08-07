@@ -1,7 +1,7 @@
 package de.fiereu.openmmo.net.game
 
-import de.fiereu.bytecodec.test.decodeBytes
-import de.fiereu.bytecodec.test.encodeToBytes
+import de.fiereu.openmmo.common.test.decodeBytes
+import de.fiereu.openmmo.common.test.encodeToBytes
 import de.fiereu.openmmo.net.game.packets.battle.BattleActionEvent
 import de.fiereu.openmmo.net.game.packets.battle.BattleEffectTarget
 import de.fiereu.openmmo.net.game.packets.battle.BattleEntityMoveEventPacket
