@@ -115,14 +115,14 @@ constructor(
       toY = landing.second
     }
 
-    // Some warps trigger from their current tile.
-    val onTileWarp =
-        currentMap.warps.find { w ->
-          w.x == fromX && w.y == fromY && w.facingDirection == msg.direction
-        }
-    if (onTileWarp != null) {
-      warpService.executeWarp(ctx, charId, onTileWarp)
-      return
+    // Stairs and arrow warps fire from the tile the player stands on.
+    val standingBehavior = currentMap.tileAt(fromX, fromY)?.behavior
+    if (standingBehavior?.warpsWhenWalking == msg.direction) {
+      val onTileWarp = currentMap.warps.find { it.x == fromX && it.y == fromY }
+      if (onTileWarp != null) {
+        warpService.executeWarp(ctx, charId, onTileWarp)
+        return
+      }
     }
 
     // Walking off the edge of a map hands the player to the neighbouring map, if there is one.
@@ -161,13 +161,14 @@ constructor(
       return
     }
 
-    // Warps fire on the destination tile.
-    val warp =
-        currentMap.warps.find { w ->
-          w.x == toX &&
-              w.y == toY &&
-              (w.facingDirection == null || w.facingDirection == msg.direction)
+    // A door only warps when walked into from below, a ladder warps on the step itself.
+    val targetBehavior = currentMap.tileAt(toX, toY)?.behavior
+    val stepsIntoWarp =
+        when (targetBehavior) {
+          TileBehavior.DOOR -> msg.direction == Direction.UP
+          else -> targetBehavior?.warpsOnStep == true
         }
+    val warp = if (!stepsIntoWarp) null else currentMap.warps.find { w -> w.x == toX && w.y == toY }
     if (warp != null) {
       log.info { "WARP at ($toX, $toY) facing ${msg.direction}" }
       // A MAP_DYNAMIC warp (the truck exit) resolves to the destination a script set on the player.

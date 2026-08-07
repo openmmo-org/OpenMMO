@@ -2,6 +2,7 @@ package de.fiereu.openmmo.server.game.world
 
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.MapType
+import de.fiereu.openmmo.common.enums.TileBehavior
 import de.fiereu.openmmo.maps.MapDef
 
 data class WarpExitOverride(
@@ -12,7 +13,7 @@ data class WarpExitOverride(
 object WarpExitRules {
 
   fun inferExitFacing(
-      destTileBehavior: String?,
+      destTileBehavior: TileBehavior?,
       destMap: MapDef?,
       destX: Int,
       destY: Int,
@@ -20,13 +21,15 @@ object WarpExitRules {
   ): Direction {
     if (destMap == null) return Direction.DOWN
 
+    // The tile itself is exact, so it wins over the guesses below.
     when (destTileBehavior) {
-      "MB_NON_ANIMATED_DOOR",
-      "MB_ANIMATED_DOOR" -> return Direction.DOWN
-      "MB_NORTH_ARROW_WARP" -> return Direction.DOWN
-      "MB_SOUTH_ARROW_WARP" -> return Direction.UP
-      "MB_WEST_ARROW_WARP" -> return Direction.RIGHT
-      "MB_EAST_ARROW_WARP" -> return Direction.LEFT
+      TileBehavior.DOOR,
+      TileBehavior.NON_ANIMATED_DOOR -> return Direction.DOWN
+      TileBehavior.NORTH_ARROW_WARP -> return Direction.DOWN
+      TileBehavior.SOUTH_ARROW_WARP -> return Direction.UP
+      TileBehavior.WEST_ARROW_WARP -> return Direction.RIGHT
+      TileBehavior.EAST_ARROW_WARP -> return Direction.LEFT
+      else -> Unit
     }
 
     val sourceMapType = sourceMap?.mapType
@@ -103,8 +106,19 @@ object WarpExitRules {
   fun shouldAutoStep(
       sourceMap: MapDef?,
       destMap: MapDef?,
+      destTileBehavior: TileBehavior? = null,
   ): Boolean {
     if (sourceMap == null || destMap == null) return false
+
+    // An animated door drops the player below it, every other warp tile keeps them on it.
+    when (destTileBehavior) {
+      TileBehavior.DOOR -> return true
+      TileBehavior.NON_ANIMATED_DOOR,
+      TileBehavior.LADDER,
+      TileBehavior.STAIR_WARP_EAST,
+      TileBehavior.STAIR_WARP_WEST -> return false
+      else -> Unit
+    }
 
     val sourceBuilding =
         sourceMap.mapType == MapType.INSIDE || sourceMap.mapType == MapType.SECRET_BASE
