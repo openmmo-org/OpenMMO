@@ -3,6 +3,7 @@ package de.fiereu.openmmo.server.game.services
 import de.fiereu.network.PacketEvent
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.CharacterInfo
+import de.fiereu.openmmo.common.auth.SessionTokenVerifier
 import de.fiereu.openmmo.common.enums.CharacterGender
 import de.fiereu.openmmo.common.enums.ChatType
 import de.fiereu.openmmo.common.enums.Language
@@ -75,25 +76,40 @@ constructor(
     private val characterStore: CharacterStore,
     private val presenceService: PresenceService,
     private val mapScriptService: MapScriptService,
+    private val tokenVerifier: SessionTokenVerifier,
 ) {
 
   fun onJoinGame(event: PacketEvent<JoinPacket>) {
     val ctx = event.session
-    val join = event.packet
-    log.info { "Player joined the game." }
+    val authData = event.packet.authData
 
-    val authData = join.authData
-    var userId = 0
-    if (authData is NewAuthData) {
-      userId = authData.userId
-      log.info { "User $userId joined with session key (${authData.sessionKey.size} bytes)" }
+    if (authData !is NewAuthData) {
+      log.warn { "Rejected join with unsupported auth data ${authData::class.simpleName}" }
+      ctx.send(JoinResponsePacket.reject())
+      return
     }
 
-    if (userId > 0) {
-      ctx.attributes[PLAYER_STATE] = PlayerState(userId = userId)
-      sessionRegistry.register(ctx)
-      log.info { "Session created for user $userId" }
+    val token = tokenVerifier.verify(authData.sessionKey)
+    if (token == null) {
+      log.warn {
+        "Rejected join for claimed userId=${authData.userId}, " +
+            "session token invalid or expired (${authData.sessionKey.size} bytes)"
+      }
+      ctx.send(JoinResponsePacket.reject())
+      return
     }
+
+    // The claim in the packet is the client's, the token is the login server's.
+    val userId = token.userId.toInt()
+    if (userId != authData.userId) {
+      log.warn { "Join claimed userId=${authData.userId} but its token says $userId" }
+      ctx.send(JoinResponsePacket.reject())
+      return
+    }
+
+    ctx.attributes[PLAYER_STATE] = PlayerState(userId = userId)
+    sessionRegistry.register(ctx)
+    log.info { "Session created for user $userId" }
 
     ctx.send(JoinResponsePacket.acceptNow(playtime = 1337, rewardPoints = 420, balance = 187))
   }

@@ -40,7 +40,7 @@ object GameServerModule {
   @Provides
   @Singleton
   fun tokenVerifier(config: GameServerConfig): SessionTokenVerifier =
-      SessionTokenVerifier(config.sessionSecret)
+      SessionTokenVerifier(config.sessionSecret, config.sessionTokenMaxAge)
 
   @Provides
   @Singleton

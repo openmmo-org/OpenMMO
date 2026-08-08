@@ -3,6 +3,7 @@ package de.fiereu.openmmo.common.auth
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -37,9 +38,14 @@ class SessionTokenIssuer(secret: ByteArray, private val clock: Clock = Clock.sys
   }
 }
 
-class SessionTokenVerifier(secret: ByteArray) {
+class SessionTokenVerifier(
+    secret: ByteArray,
+    private val maxAge: Duration = DEFAULT_MAX_AGE,
+    private val clock: Clock = Clock.systemUTC(),
+) {
   init {
     require(secret.isNotEmpty()) { "session token secret must not be empty" }
+    require(!maxAge.isNegative && !maxAge.isZero) { "session token maxAge must be positive" }
   }
 
   private val secretKey = SecretKeySpec(secret, MAC_ALGORITHM)
@@ -52,7 +58,14 @@ class SessionTokenVerifier(secret: ByteArray) {
     val issuedAt = Instant.ofEpochSecond(epochSeconds)
     val expected = build(userId, issuedAt, secretKey)
     if (!MessageDigest.isEqual(bytes, expected)) return null
+    if (isExpired(issuedAt)) return null
     return SessionToken(userId, issuedAt, bytes)
+  }
+
+  private fun isExpired(issuedAt: Instant): Boolean {
+    val now = clock.instant()
+    if (issuedAt.isAfter(now.plus(CLOCK_SKEW_LEEWAY))) return true
+    return issuedAt.isBefore(now.minus(maxAge))
   }
 }
 
@@ -60,6 +73,11 @@ private const val MAC_ALGORITHM = "HmacSHA256"
 private const val PREFIX_SIZE = 16
 private const val MAC_SIZE = 16
 private const val TOKEN_SIZE = PREFIX_SIZE + MAC_SIZE
+
+private val DEFAULT_MAX_AGE: Duration = Duration.ofMinutes(5)
+
+// Without this a token dated ahead of our clock would never expire.
+private val CLOCK_SKEW_LEEWAY: Duration = Duration.ofSeconds(30)
 
 private fun build(userId: Long, issuedAt: Instant, key: SecretKeySpec): ByteArray {
   val out = ByteArray(TOKEN_SIZE)
