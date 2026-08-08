@@ -17,6 +17,7 @@ fun main() {
   component.databaseBootstrap().migrate()
   val characterStore = component.characterStore()
   characterStore.startPeriodicFlush()
+  runBlocking { component.devCharacterSeeder().seed() }
   Runtime.getRuntime()
       .addShutdownHook(
           Thread {
