@@ -18,6 +18,7 @@ data class GameServerNode(
     val iPv6Address: IPv6Address,
     val port: UShort = 7777u,
     val weight: UByte,
+    val id: UByte = 0u,
 )
 
 data class GameServerData(
