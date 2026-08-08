@@ -33,7 +33,7 @@ class SessionTokenIssuer(secret: ByteArray, private val clock: Clock = Clock.sys
 
   fun issue(userId: Long): SessionToken {
     val issuedAt = clock.instant()
-    val bytes = build(userId, issuedAt, secretKey)
+    val bytes = build(userId, issuedAt.epochSecond, secretKey)
     return SessionToken(userId, issuedAt, bytes)
   }
 }
@@ -55,9 +55,10 @@ class SessionTokenVerifier(
     val buf = ByteBuffer.wrap(bytes)
     val userId = buf.long
     val epochSeconds = buf.long
-    val issuedAt = Instant.ofEpochSecond(epochSeconds)
-    val expected = build(userId, issuedAt, secretKey)
+    // Authenticate before building an Instant, which throws on an out of range value.
+    val expected = build(userId, epochSeconds, secretKey)
     if (!MessageDigest.isEqual(bytes, expected)) return null
+    val issuedAt = Instant.ofEpochSecond(epochSeconds)
     if (isExpired(issuedAt)) return null
     return SessionToken(userId, issuedAt, bytes)
   }
@@ -76,14 +77,15 @@ private const val TOKEN_SIZE = PREFIX_SIZE + MAC_SIZE
 
 private val DEFAULT_MAX_AGE: Duration = Duration.ofMinutes(5)
 
-// Without this a token dated ahead of our clock would never expire.
+// Tolerates drift between the two servers' clocks. A token dated further ahead than this would
+// outlive maxAge by the difference.
 private val CLOCK_SKEW_LEEWAY: Duration = Duration.ofSeconds(30)
 
-private fun build(userId: Long, issuedAt: Instant, key: SecretKeySpec): ByteArray {
+private fun build(userId: Long, epochSecond: Long, key: SecretKeySpec): ByteArray {
   val out = ByteArray(TOKEN_SIZE)
   val prefix = ByteBuffer.wrap(out, 0, PREFIX_SIZE)
   prefix.putLong(userId)
-  prefix.putLong(issuedAt.epochSecond)
+  prefix.putLong(epochSecond)
   val mac = Mac.getInstance(MAC_ALGORITHM)
   mac.init(key)
   mac.update(out, 0, PREFIX_SIZE)

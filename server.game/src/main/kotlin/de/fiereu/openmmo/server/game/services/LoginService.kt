@@ -99,13 +99,14 @@ constructor(
       return
     }
 
-    // The claim in the packet is the client's, the token is the login server's.
-    val userId = token.userId.toInt()
-    if (userId != authData.userId) {
-      log.warn { "Join claimed userId=${authData.userId} but its token says $userId" }
+    // The claim in the packet is the client's, the token is the login server's. Compare before
+    // narrowing, so a value that does not fit an Int cannot match by truncation.
+    if (token.userId != authData.userId.toLong()) {
+      log.warn { "Join claimed userId=${authData.userId} but its token says ${token.userId}" }
       ctx.send(JoinResponsePacket.reject())
       return
     }
+    val userId = token.userId.toInt()
 
     ctx.attributes[PLAYER_STATE] = PlayerState(userId = userId)
     sessionRegistry.register(ctx)

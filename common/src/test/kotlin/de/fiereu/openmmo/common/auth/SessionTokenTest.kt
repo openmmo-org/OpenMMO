@@ -99,6 +99,26 @@ class SessionTokenTest :
             .shouldNotBeNull()
       }
 
+      test("an unauthentic token with an out of range timestamp is rejected, not thrown") {
+        val bytes = ByteArray(32)
+        java.nio.ByteBuffer.wrap(bytes).putLong(1L).putLong(Long.MAX_VALUE)
+
+        SessionTokenVerifier(secret).verify(bytes) shouldBe null
+      }
+
+      test("the skew leeway is thirty seconds") {
+        val now = Instant.ofEpochSecond(1_700_000_000)
+        val verifier =
+            SessionTokenVerifier(secret, Duration.ofMinutes(5), Clock.fixed(now, ZoneOffset.UTC))
+        fun issuedAhead(seconds: Long) =
+            SessionTokenIssuer(secret, Clock.fixed(now.plusSeconds(seconds), ZoneOffset.UTC))
+                .issue(7L)
+                .bytes
+
+        verifier.verify(issuedAhead(30)).shouldNotBeNull()
+        verifier.verify(issuedAhead(31)) shouldBe null
+      }
+
       test("non-positive max age rejected") {
         shouldThrow<IllegalArgumentException> { SessionTokenVerifier(secret, Duration.ZERO) }
         shouldThrow<IllegalArgumentException> {
