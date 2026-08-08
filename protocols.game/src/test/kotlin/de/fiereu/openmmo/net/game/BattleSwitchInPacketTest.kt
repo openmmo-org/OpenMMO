@@ -52,6 +52,18 @@ class BattleSwitchInPacketTest :
         bytes.toHex() shouldBe fixture("game/s2c/35/return_switch_in.bin").toHex()
       }
 
+      // The opposing block carries no moves, so this is 55 bytes where the player's own is 65.
+      test("round-trips a captured opponent switch-in") {
+        val bytes = fixture("game/s2c/35/opponent_switch_in.bin")
+        val decoded = BattleSwitchInPacketCodec.decodeBytes(bytes)
+        decoded.side shouldBe 1.toByte()
+        decoded.fullBlock shouldBe true
+        decoded.mon.species shouldBe 13.toShort()
+        decoded.mon.level shouldBe 7.toByte()
+        decoded.mon.movesPresent shouldBe false
+        BattleSwitchInPacketCodec.encodeToBytes(decoded).toHex() shouldBe bytes.toHex()
+      }
+
       // A benched monster coming out carries its full block then its active detail. The block
       // matches the captured Patrat bytes now built from structured fields.
       test("round-trips a full-block switch-in") {

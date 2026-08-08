@@ -82,8 +82,10 @@ internal object BattleFullBlockCodec : PacketCodec<BattleMonBlock>() {
     val maxHp = field(S16LE) { it.maxHp }
     constant(MOVES_HEADER)
     val movesPresent = field(Bool) { it.movesPresent }
-    val abilityId = field(S16LE) { it.abilityId }
-    val moveIds = field(S16LE.repeat(BattleMonBlock.MOVE_SLOTS)) { it.moveIds }
+    val abilityId = if (movesPresent) field(S16LE) { it.abilityId } else 0
+    val moveIds =
+        if (movesPresent) field(S16LE.repeat(BattleMonBlock.MOVE_SLOTS)) { it.moveIds }
+        else List(BattleMonBlock.MOVE_SLOTS) { 0.toShort() }
     return BattleMonBlock(
         slot, entityId, species, level, gender, abilityId, maxHp, currentHp, movesPresent, moveIds)
   }
