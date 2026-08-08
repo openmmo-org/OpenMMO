@@ -128,9 +128,13 @@ internal object PalletTown_ProfessorOaksLab_OnTransition : Script {
 
 internal object PalletTown_ProfessorOaksLab_ChooseStarterScene : Script {
   override suspend fun run(ctx: ScriptContext) {
-    ctx.moveSelfAndNpcs(List(8) { WALK_UP }, LOCALID_PROF_OAK to List(6) { WALK_UP })
-    // Oak ends up behind his desk, where the map already places him.
-    ctx.repositionNpc(LOCALID_PROF_OAK, 6, 3)
+    // Oak leads, then goes away and comes back behind his desk while the player is still far
+    // enough down the room not to see it. Moving him there in view would read as a teleport.
+    ctx.moveNpc(LOCALID_PROF_OAK, *List(6) { WALK_UP }.toTypedArray())
+    ctx.removeNpc(LOCALID_PROF_OAK)
+    ctx.showNpcAt(LOCALID_PROF_OAK, 6, 3)
+    ctx.moveNpc(LOCALID_PROF_OAK, FACE_DOWN)
+    ctx.moveSelf(*List(8) { WALK_UP }.toTypedArray())
     ctx.moveNpc(LOCALID_RIVAL, FACE_UP)
     ctx.clearFlag(KantoFlags.FLAG_DONT_TRANSITION_MUSIC)
 
