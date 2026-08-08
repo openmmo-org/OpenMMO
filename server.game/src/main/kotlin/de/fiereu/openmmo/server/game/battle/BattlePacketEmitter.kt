@@ -30,8 +30,11 @@ import de.fiereu.openmmo.net.game.packets.battle.MoveSlots
 import de.fiereu.openmmo.net.game.packets.battle.OpposingSide
 import de.fiereu.openmmo.server.game.world.interest.InterestManager
 import de.fiereu.openmmo.typechart.TypeChart
+import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 import javax.inject.Singleton
+
+private val log = KotlinLogging.logger {}
 
 private const val ACTION_PROMPT: Byte = -128 // 0x80
 private const val MOVE_EVENT_KIND: Byte = 1
@@ -51,10 +54,15 @@ private const val OPPONENT_SIDE: Byte = 1
 
 private val CAPTURED_APPEARANCE = "00024c031aac0f00038001a40004".hexToBytes()
 
-// The target move short the live server sends for each event. Meaning unknown, but it is fixed per
-// event type in every capture: a hit carries 0x0200, other events carry 0.
+// The target's outcome word, which picks the line the client prints for that target. A damaging
+// hit is 0x0200, a miss 1, a failure 4, and a status move that only moves a stat carries none of
+// them. The events under the target are read either way.
 private const val HP_TARGET_MOVE: Short = 0x0200
+private const val MISSED_TARGET_MOVE: Short = 1
+private const val FAILED_TARGET_MOVE: Short = 4
 private const val DEFAULT_TARGET_MOVE: Short = 0
+private const val SUPER_EFFECTIVE_BIT = 0x20
+private const val NOT_VERY_EFFECTIVE_BIT = 0x10
 
 /**
  * Turns battle state and [BattleEvent]s into packets. Everything battle wide goes through the
@@ -114,18 +122,16 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
               when (val next = events.getOrNull(i + 1)) {
                 is BattleEvent.DamageDealt -> {
                   i++
-                  val subEvents =
-                      mutableListOf(
-                          BattleActionEvent(
-                              null, null, BattleEventBody.HpUpdate(next.newHp.toShort())))
-                  // Type 4 is assumed to be the "super effective" line. Not very effective and no
-                  // effect ride other event ids we have not identified yet.
-                  if (next.effectiveness > TypeChart.NEUTRAL) {
-                    subEvents += BattleActionEvent(null, null, BattleEventBody.EffectivenessMessage)
-                  }
                   // The client faints the target on hp reaching 0, as the real server does, so no
                   // faint sub-event is sent here.
-                  listOf(BattleEffectTarget(next.targetId, HP_TARGET_MOVE, subEvents))
+                  val outcome = HP_TARGET_MOVE.toInt() or effectivenessBit(next.effectiveness)
+                  listOf(
+                      BattleEffectTarget(
+                          next.targetId,
+                          outcome.toShort(),
+                          listOf(
+                              BattleActionEvent(
+                                  null, null, BattleEventBody.HpUpdate(next.newHp.toShort())))))
                 }
                 is BattleEvent.StageChanged ->
                     if (!next.failed) {
@@ -141,7 +147,7 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
                     }
                 is BattleEvent.MoveWithoutTarget -> {
                   i++
-                  listOf(failTarget(battle, event.attackerId, next.moveId))
+                  listOf(failTarget(battle, event.attackerId, next))
                 }
                 else -> emptyList()
               }
@@ -263,16 +269,29 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
       BattleEffectTarget(entityId, targetMove, listOf(BattleActionEvent(null, null, body)))
 
   // A missed or failed move carries no target of its own, so it lands on the attacker's opponent.
+  // A miss is the target move word on its own with no events under it. The client writes the miss
+  // line from that, so sending an event as well makes it print an unrelated message.
   private fun failTarget(
       battle: BattleInstance,
       attackerId: Long,
-      moveId: Short
+      event: BattleEvent.MoveWithoutTarget,
   ): BattleEffectTarget {
     val defender =
         if (battle.isPlayerSide(attackerId)) battle.opponentMon().entityId
         else battle.activeMon().entityId
-    return target(defender, DEFAULT_TARGET_MOVE, BattleEventBody.MoveFailed(moveId))
+    return when (event) {
+      is BattleEvent.MoveMissed -> BattleEffectTarget(defender, MISSED_TARGET_MOVE, emptyList())
+      is BattleEvent.MoveFailed -> BattleEffectTarget(defender, FAILED_TARGET_MOVE, emptyList())
+    }
   }
+
+  /** The effectiveness line rides in the outcome word rather than in an event of its own. */
+  private fun effectivenessBit(effectiveness: Int): Int =
+      when {
+        effectiveness > TypeChart.NEUTRAL -> SUPER_EFFECTIVE_BIT
+        effectiveness in 1..<TypeChart.NEUTRAL -> NOT_VERY_EFFECTIVE_BIT
+        else -> 0
+      }
 
   fun broadcast(battle: BattleInstance, packet: Any) {
     interestManager.broadcast(battle.key, packet)
