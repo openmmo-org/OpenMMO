@@ -4,6 +4,7 @@ import de.fiereu.network.PacketEvent
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.PokemonMove
 import de.fiereu.openmmo.common.enums.BattleAction
+import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.moves.MoveRegistry
@@ -55,8 +56,15 @@ private const val MAX_WILD_LEVEL = 100
 
 private const val POKE_BALL_ITEM: Short = 5004
 
-/** A prompt waiting for its answer, kept after the battle ends. */
-private data class PendingMoveLearn(val entityId: Long, val offered: List<Short>)
+/**
+ * A prompt waiting for its answer, kept after the battle ends. A trainer battle can raise one
+ * monster past a level more than once, so these are held per monster rather than per player.
+ */
+private data class PendingMoveLearn(
+    val charId: Long,
+    val entityId: Long,
+    val offered: List<Short>,
+)
 
 /**
  * Orchestrates wild battles: builds the battle state from the party and a rolled wild monster,
@@ -106,9 +114,9 @@ constructor(
   fun onMoveLearnReply(event: PacketEvent<MoveLearnReplyPacket>) {
     val charId = event.session.attributes[PLAYER_STATE]?.characterId ?: return
     val reply = event.packet
-    val pending = pendingLearns[charId] ?: return
-    if (pending.entityId != reply.entityId) return
-    pendingLearns.remove(charId)
+    val pending = pendingLearns[reply.entityId] ?: return
+    if (pending.charId != charId) return
+    pendingLearns.remove(reply.entityId)
     val stored =
         characterStore.getCharacter(charId)?.pokemon?.firstOrNull { it.id == reply.entityId }
             ?: return
@@ -120,6 +128,17 @@ constructor(
     if (moves == stored.moves) return
     characterStore.updatePokemon(charId, stored.copy(moves = moves))
     characterStore.flushCharacterAsync(charId)
+    // A battle still running holds its own copy, and the next reward writes that copy back over
+    // the store. Move the live one across so the pick survives the rest of the battle.
+    battles
+        .byChar(charId)
+        ?.party
+        ?.firstOrNull { it.entityId == reply.entityId }
+        ?.let { live ->
+          live.moves.clear()
+          live.moves.addAll(moves.map { PokemonMove(it.id, it.pp) })
+          live.source = live.source.copy(moves = moves)
+        }
     event.session.send(emitter.moveSlotsDelta(reply.entityId, moves.map { it.id to it.pp }, 0))
   }
 
@@ -145,7 +164,7 @@ constructor(
   /** Ends a running battle when the player disconnects, keeping the last hp and pp state. */
   fun onDisconnect(session: SessionContext) {
     val charId = session.attributes[PLAYER_STATE]?.characterId ?: return
-    pendingLearns.remove(charId)
+    pendingLearns.values.removeIf { it.charId == charId }
     val battle = battles.byChar(charId) ?: return
     persistParty(battle)
     finishBattle(battle, BattleResult.DISCONNECTED)
@@ -205,7 +224,7 @@ constructor(
     val battle =
         createBattle(
             session,
-            trainer.party.map { OpponentSpec(it.dexId, it.level, it.moveIds) },
+            trainer.party.map { OpponentSpec(it.dexId, it.level, it.moveIds, it.iv) },
             catchable = false,
             escapable = false,
             trainer = trainer,
@@ -214,7 +233,13 @@ constructor(
   }
 
   /** One monster to roll for the opposing side. Empty [moveIds] keeps the level up moveset. */
-  private data class OpponentSpec(val dexId: Int, val level: Int, val moveIds: List<Int>)
+  /** One monster to roll for the opposing side. A null [iv] rolls one, as a wild encounter does. */
+  private data class OpponentSpec(
+      val dexId: Int,
+      val level: Int,
+      val moveIds: List<Int>,
+      val iv: Int? = null,
+  )
 
   private fun createWildBattle(
       session: SessionContext,
@@ -273,6 +298,21 @@ constructor(
                     } + List((4 - spec.moveIds.size).coerceAtLeast(0)) { PokemonMove(0, 0) })
       }
       val def = speciesRegistry.get(spec.dexId)!!
+      // A trainer's monsters are built to a fixed difficulty, so they must not keep the rolled
+      // IVs. Max hp moves with them, and the monster comes out full.
+      if (spec.iv != null) {
+        val ivs =
+            IVs().apply {
+              hp = spec.iv
+              atk = spec.iv
+              this.def = spec.iv
+              spAtk = spec.iv
+              spDef = spec.iv
+              spd = spec.iv
+            }
+        val fixed = rolled.copy(iVs = ivs)
+        rolled = fixed.copy(hp = StatCalculator.computeAll(def, fixed).hp.toShort())
+      }
       enemies +=
           BattleMonState(rolled.id, def, null, rolled, StatCalculator.computeAll(def, rolled))
     }
@@ -432,7 +472,7 @@ constructor(
    */
   private fun awardXp(battle: BattleInstance, defeated: BattleMonState) {
     val winner = battle.activeMon()
-    val reward = rewards.apply(winner, defeated.species, defeated.level)
+    val reward = rewards.apply(winner, defeated.species, defeated.level, battle.trainer != null)
     log.info {
       "char=${battle.charId} won: +${reward.xpGained} xp, level ${winner.level} -> ${reward.newLevel}"
     }
@@ -445,7 +485,7 @@ constructor(
     }
     if (outcome.offered.isNotEmpty()) {
       val offered = outcome.offered.map { it.moveId.toShort() }
-      pendingLearns[battle.charId] = PendingMoveLearn(winner.entityId, offered)
+      pendingLearns[winner.entityId] = PendingMoveLearn(battle.charId, winner.entityId, offered)
       battle.session.send(MoveLearnPromptPacket(winner.entityId, offered))
     }
     val grown =

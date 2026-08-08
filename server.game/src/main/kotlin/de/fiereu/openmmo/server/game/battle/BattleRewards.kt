@@ -35,8 +35,18 @@ class BattleRewards @Inject constructor() {
   fun trainerPrize(trainer: TrainerDef, lastLevel: Int): Int =
       PRIZE_PER_LEVEL * lastLevel * trainer.prizeRate
 
-  fun apply(winner: BattleMonState, defeated: SpeciesDef, defeatedLevel: Int): RewardResult {
-    val gained = wildXp(defeated, defeatedLevel)
+  /** A trainer's monster is worth half again as much, the way Gen 3 pays it. */
+  fun trainerXp(defeated: SpeciesDef, defeatedLevel: Int): Int =
+      wildXp(defeated, defeatedLevel) * 3 / 2
+
+  fun apply(
+      winner: BattleMonState,
+      defeated: SpeciesDef,
+      defeatedLevel: Int,
+      fromTrainer: Boolean = false,
+  ): RewardResult {
+    val gained =
+        if (fromTrainer) trainerXp(defeated, defeatedLevel) else wildXp(defeated, defeatedLevel)
     val rate = winner.species.growthRate
     val cap = ExpCurves.totalXpFor(rate, ExpCurves.MAX_LEVEL)
     val newXp = minOf(winner.source.xp + gained, cap)
@@ -44,7 +54,9 @@ class BattleRewards @Inject constructor() {
     val leveled = newLevel > winner.level
     val newEvs = addYields(winner.source.eVs, defeated)
     val grown = winner.source.copy(level = newLevel.toByte(), eVs = newEvs)
-    val newStats = StatCalculator.computeAll(winner.species, grown)
+    // Stats only move on a level up. New EVs are banked until then, as Gen 3 does, and the client
+    // is only told about stats when it is told about the level, so moving them apart desyncs it.
+    val newStats = if (leveled) StatCalculator.computeAll(winner.species, grown) else winner.stats
     // A level up raises the maximum, the missing hp stays missing.
     val newCurrentHp =
         (winner.currentHp + maxOf(0, newStats.hp - winner.stats.hp)).coerceAtMost(newStats.hp)

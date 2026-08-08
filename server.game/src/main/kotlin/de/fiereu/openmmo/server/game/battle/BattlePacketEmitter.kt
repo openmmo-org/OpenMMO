@@ -30,11 +30,8 @@ import de.fiereu.openmmo.net.game.packets.battle.MoveSlots
 import de.fiereu.openmmo.net.game.packets.battle.OpposingSide
 import de.fiereu.openmmo.server.game.world.interest.InterestManager
 import de.fiereu.openmmo.typechart.TypeChart
-import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 import javax.inject.Singleton
-
-private val log = KotlinLogging.logger {}
 
 private const val ACTION_PROMPT: Byte = -128 // 0x80
 private const val MOVE_EVENT_KIND: Byte = 1
@@ -124,14 +121,28 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
                   i++
                   // The client faints the target on hp reaching 0, as the real server does, so no
                   // faint sub-event is sent here.
+                  val subEvents =
+                      mutableListOf(
+                          BattleActionEvent(
+                              null, null, BattleEventBody.HpUpdate(next.newHp.toShort())))
+                  // A secondary stage change rides under the same target as the damage, the way
+                  // the captured Rock Tomb does. One aimed elsewhere gets a target of its own.
+                  var elsewhere = emptyList<BattleEffectTarget>()
+                  val secondary = events.getOrNull(i + 1)
+                  if (secondary is BattleEvent.StageChanged && !secondary.failed) {
+                    i++
+                    val body =
+                        BattleEventBody.StatChange(
+                            statIndex(secondary.stat), secondary.delta.toShort())
+                    if (secondary.targetId == next.targetId) {
+                      subEvents += BattleActionEvent(null, null, body)
+                    } else {
+                      elsewhere = listOf(target(secondary.targetId, DEFAULT_TARGET_MOVE, body))
+                    }
+                  }
                   val outcome = HP_TARGET_MOVE.toInt() or effectivenessBit(next.effectiveness)
-                  listOf(
-                      BattleEffectTarget(
-                          next.targetId,
-                          outcome.toShort(),
-                          listOf(
-                              BattleActionEvent(
-                                  null, null, BattleEventBody.HpUpdate(next.newHp.toShort())))))
+                  listOf(BattleEffectTarget(next.targetId, outcome.toShort(), subEvents)) +
+                      elsewhere
                 }
                 is BattleEvent.StageChanged ->
                     if (!next.failed) {

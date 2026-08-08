@@ -69,6 +69,27 @@ class BattleRewardsTest :
         rewards.trainerPrize(liam, liam.party.last().level) shouldBe 220
       }
 
+      test("a trainer's monster pays half again as much as a wild one") {
+        val rattata = species.get(RATTATA)!!
+
+        rewards.trainerXp(rattata, 11) shouldBe rewards.wildXp(rattata, 11) * 3 / 2
+      }
+
+      // Gen 3 banks EVs until a level up, and the client is only told about stats alongside a
+      // level, so moving them apart would desync it mid battle.
+      test("ev gains alone move neither the stats nor the hp") {
+        val mon = winner(level = 50, xp = ExpCurves.totalXpFor(GrowthRate.MEDIUM_SLOW, 50))
+        val before = mon.stats
+        val hpBefore = mon.currentHp
+
+        val reward = rewards.apply(mon, species.get(RATTATA)!!, 2)
+
+        reward.leveled shouldBe false
+        reward.newStats shouldBe before
+        reward.newCurrentHp shouldBe hpBefore
+        reward.newEvs.spd shouldBe 1
+      }
+
       test("a big win jumps several levels and recomputes stats") {
         val start = ExpCurves.totalXpFor(GrowthRate.MEDIUM_SLOW, 5)
         val mon = winner(level = 5, xp = start)

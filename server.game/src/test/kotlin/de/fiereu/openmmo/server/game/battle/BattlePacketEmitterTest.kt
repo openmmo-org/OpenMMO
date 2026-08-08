@@ -103,6 +103,33 @@ class BattlePacketEmitterTest :
         target.subEvents.single().body shouldBe BattleEventBody.HpUpdate(21)
       }
 
+      // Capture 0x33 bf4d168c carries both, an hp update and a speed drop, under one target.
+      test("a move's secondary stat drop rides under the damage it dealt") {
+        val session = FakeSession(1L)
+        val interest = InterestManager()
+        val emitter = BattlePacketEmitter(interest)
+        val attacker = mon(10L)
+        val defender = mon(20L)
+        val battle =
+            BattleInstance(1L, 1L, session, listOf(attacker), listOf(defender), BattleRng())
+        interest.join(session, battle.key)
+
+        emitter.sendEvents(
+            battle,
+            listOf(
+                BattleEvent.MoveUsed(attacker.entityId, TACKLE, 0, 34),
+                BattleEvent.DamageDealt(defender.entityId, 21, false, TypeChart.NEUTRAL * 2),
+                BattleEvent.StageChanged(defender.entityId, BattleStat.SPEED, -1, 0, -1, false),
+            ),
+        )
+
+        val target =
+            session.sent.filterIsInstance<BattleEntityMoveEventPacket>().single().targets.single()
+        target.targetMove shouldBe 0x0220.toShort()
+        target.subEvents.map { it.body } shouldBe
+            listOf(BattleEventBody.HpUpdate(21), BattleEventBody.StatChange(3, -1))
+      }
+
       // Capture 0x33 6c1b3e8a is a Growl: outcome word 0, one stat event under it.
       test("a stat change rides under an outcome word of its own") {
         val session = FakeSession(1L)

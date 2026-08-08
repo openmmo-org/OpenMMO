@@ -18,7 +18,7 @@ class TrainerParser(private val rootDir: File) {
 
   fun parseAll(): List<ParsedTrainer> {
     val parties = readParties()
-    val prizeRates = readPrizeRates()
+    val (prizeRates, defaultPrizeRate) = readPrizeRates()
     return readTrainers()
         .mapNotNull { entry ->
           val id = trainerIds[entry.constant]
@@ -38,7 +38,7 @@ class TrainerParser(private val rootDir: File) {
               name = entry.name,
               trainerClass = classIds[entry.trainerClass] ?: 0,
               doubleBattle = entry.doubleBattle,
-              prizeRate = prizeRates[entry.trainerClass] ?: 0,
+              prizeRate = prizeRates[entry.trainerClass] ?: defaultPrizeRate,
               party = party,
           )
         }
@@ -105,10 +105,16 @@ class TrainerParser(private val rootDir: File) {
     }
   }
 
-  /** gTrainerMoneyTable, which pays a trainer class this much per level of its last monster. */
-  private fun readPrizeRates(): Map<String, Int> {
+  /**
+   * gTrainerMoneyTable, which pays a trainer class this much per level of its last monster. The
+   * table ends with a 0xFF row that every class it does not list falls through to.
+   */
+  private fun readPrizeRates(): Pair<Map<String, Int>, Int> {
     val table = MONEY_TABLE.find(read("src/battle_main.c"))?.groupValues?.get(1).orEmpty()
-    return MONEY_ENTRY.findAll(table).associate { it.groupValues[1] to it.groupValues[2].toInt() }
+    val byClass =
+        MONEY_ENTRY.findAll(table).associate { it.groupValues[1] to it.groupValues[2].toInt() }
+    val fallback = MONEY_FALLBACK.find(table)?.groupValues?.get(1)?.toInt() ?: 0
+    return byClass to fallback
   }
 
   private fun fields(body: String): Map<String, String> =
@@ -144,5 +150,6 @@ class TrainerParser(private val rootDir: File) {
     val MONEY_TABLE =
         Regex("""gTrainerMoneyTable\[]\s*=\s*\{(.*?)};""", RegexOption.DOT_MATCHES_ALL)
     val MONEY_ENTRY = Regex("""\{\s*(TRAINER_CLASS_\w+)\s*,\s*(\d+)\s*}""")
+    val MONEY_FALLBACK = Regex("""\{\s*0xFF\s*,\s*(\d+)\s*}""")
   }
 }
