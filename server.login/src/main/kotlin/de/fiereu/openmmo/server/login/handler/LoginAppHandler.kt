@@ -44,7 +44,7 @@ constructor(
     onSuspend<JoinGameServerPacket> { event -> onJoinGameServer(event) }
   }
 
-  private suspend fun onLoginRequest(event: PacketEvent<LoginRequestPacket>) {
+  internal suspend fun onLoginRequest(event: PacketEvent<LoginRequestPacket>) {
     when (val method = event.packet.method) {
       is PasswordLogin -> onPasswordLogin(event, method)
       is TokenLogin -> onTokenLogin(event, method)
@@ -73,7 +73,10 @@ constructor(
     val username = event.packet.username
     val token = rememberMeVerifier.verify(method.token)
     val user = token?.let { users.findForToken(it.userId) }
-    if (token == null || user == null || user.tokenEpoch != token.epoch) {
+    if (token == null ||
+        user == null ||
+        user.tokenEpoch != token.epoch ||
+        !user.username.equals(username, ignoreCase = true)) {
       log.warn { "Rejected token login for $username" }
       event.session.send(LoginResponsePacket(LoginState.INVALID_SAVED_CREDENTIALS))
       return

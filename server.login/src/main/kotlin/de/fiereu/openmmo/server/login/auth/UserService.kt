@@ -12,7 +12,12 @@ interface UserService {
   data class AuthResult(val state: LoginState, val userId: Int? = null, val tokenEpoch: Int = 0)
 
   /** Identity a remember me token resolves to, with the epoch that token has to still match. */
-  data class TokenUser(val id: Int, val displayName: String, val tokenEpoch: Int)
+  data class TokenUser(
+      val id: Int,
+      val username: String,
+      val displayName: String,
+      val tokenEpoch: Int,
+  )
 
   suspend fun authenticate(username: String, password: String): AuthResult
 
@@ -63,5 +68,7 @@ class InMemoryUserStore @Inject constructor() : UserService {
   override suspend fun findForToken(userId: Int): UserService.TokenUser? =
       users.values
           .firstOrNull { it.id == userId }
-          ?.let { UserService.TokenUser(it.id, it.username, it.tokenEpoch) }
+          ?.let {
+            UserService.TokenUser(it.id, it.username.lowercase(), it.username, it.tokenEpoch)
+          }
 }

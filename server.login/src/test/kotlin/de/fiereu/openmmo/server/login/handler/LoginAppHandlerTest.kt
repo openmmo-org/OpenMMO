@@ -6,8 +6,9 @@ import de.fiereu.network.SessionAttributes
 import de.fiereu.network.SessionContext
 import de.fiereu.network.SessionPhase
 import de.fiereu.network.Side
+import de.fiereu.openmmo.common.auth.RememberMeTokenIssuer
+import de.fiereu.openmmo.common.auth.RememberMeTokenVerifier
 import de.fiereu.openmmo.common.auth.SessionTokenIssuer
-import de.fiereu.openmmo.common.auth.SessionTokenVerifier
 import de.fiereu.openmmo.common.enums.Language
 import de.fiereu.openmmo.common.enums.LoginState
 import de.fiereu.openmmo.net.login.packets.JoinGameServerPacket
@@ -83,7 +84,10 @@ private class RecordingSession : SessionContext {
   override fun onPhase(phase: SessionPhase, listener: () -> Unit) = listener()
 }
 
-private fun loginRequest(username: String, method: de.fiereu.openmmo.net.login.packets.LoginMethod) =
+private fun loginRequest(
+    username: String,
+    method: de.fiereu.openmmo.net.login.packets.LoginMethod
+) =
     LoginRequestPacket(
         username = username,
         manualLogin = true,
@@ -100,17 +104,18 @@ class LoginAppHandlerTest :
     FunSpec({
       val secret = ByteArray(32) { it.toByte() }
 
+      val maxAge: Duration = Duration.ofDays(30)
+
       fun newHandler(
           users: InMemoryUserStore,
           clock: Clock = Clock.systemUTC(),
-          tokenIssuer: SessionTokenIssuer = SessionTokenIssuer(secret, clock),
       ): LoginAppHandler =
           LoginAppHandler(
               users = users,
               catalog = GameServerCatalog(),
-              tokenIssuer = tokenIssuer,
-              tokenVerifier = SessionTokenVerifier(secret),
-              clock = clock,
+              tokenIssuer = SessionTokenIssuer(secret, clock),
+              rememberMeIssuer = RememberMeTokenIssuer(secret, clock),
+              rememberMeVerifier = RememberMeTokenVerifier(secret, maxAge, clock),
               scope = CoroutineScope(Job()),
           )
 
@@ -158,9 +163,9 @@ class LoginAppHandlerTest :
         credentials.key.isNotBlank() shouldBe true
         val tokenBytes = Base64.getDecoder().decode(credentials.key)
         tokenBytes.size shouldBe 32
-        val decoded = SessionTokenVerifier(secret).verify(tokenBytes)
+        val decoded = RememberMeTokenVerifier(secret, maxAge).verify(tokenBytes)
         decoded.shouldNotBeNull()
-        decoded.userId shouldBe userId.toLong()
+        decoded.userId shouldBe userId
         (session.sent[1] as LoginResponsePacket).state shouldBe LoginState.AUTHED
         session.attributes[AUTHED_USER_ID] shouldBe userId
       }
@@ -169,7 +174,7 @@ class LoginAppHandlerTest :
         val users = InMemoryUserStore()
         val userId = users.addUser("tokenuser", "secret")
         val handler = newHandler(users)
-        val token = SessionTokenIssuer(secret).issue(userId.toLong())
+        val token = RememberMeTokenIssuer(secret).issue(userId, 0)
         val session = RecordingSession()
         runBlocking {
           handler.onLoginRequest(
@@ -179,8 +184,10 @@ class LoginAppHandlerTest :
             listOf(SentCredentialsPacket::class, LoginResponsePacket::class)
         val refreshed = session.sent[0] as SentCredentialsPacket
         val refreshedBytes = Base64.getDecoder().decode(refreshed.key)
-        SessionTokenVerifier(secret).verify(refreshedBytes).shouldNotBeNull().userId shouldBe
-            userId.toLong()
+        RememberMeTokenVerifier(secret, maxAge)
+            .verify(refreshedBytes)
+            .shouldNotBeNull()
+            .userId shouldBe userId
         (session.sent[1] as LoginResponsePacket).state shouldBe LoginState.AUTHED
         session.attributes[AUTHED_USER_ID] shouldBe userId
       }
@@ -190,7 +197,7 @@ class LoginAppHandlerTest :
         val userId = users.addUser("tokenuser", "secret")
         val issuedAt = Instant.ofEpochSecond(1_700_000_000)
         val token =
-            SessionTokenIssuer(secret, Clock.fixed(issuedAt, ZoneOffset.UTC)).issue(userId.toLong())
+            RememberMeTokenIssuer(secret, Clock.fixed(issuedAt, ZoneOffset.UTC)).issue(userId, 0)
         val laterClock = Clock.fixed(issuedAt.plus(Duration.ofDays(31)), ZoneOffset.UTC)
         val handler = newHandler(users, clock = laterClock)
         val session = RecordingSession()
@@ -219,7 +226,7 @@ class LoginAppHandlerTest :
 
       test("token login for a username that does not exist is rejected") {
         val users = InMemoryUserStore()
-        val token = SessionTokenIssuer(secret).issue(999L)
+        val token = RememberMeTokenIssuer(secret).issue(999, 0)
         val handler = newHandler(users)
         val session = RecordingSession()
         runBlocking {
@@ -236,7 +243,7 @@ class LoginAppHandlerTest :
         val otherId = users.addUser("other", "secret")
         users.addUser("victim", "secret")
         val handler = newHandler(users)
-        val token = SessionTokenIssuer(secret).issue(otherId.toLong())
+        val token = RememberMeTokenIssuer(secret).issue(otherId, 0)
         val session = RecordingSession()
         runBlocking {
           handler.onLoginRequest(

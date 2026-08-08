@@ -30,7 +30,7 @@ constructor(
   override suspend fun findForToken(userId: Int): UserService.TokenUser? =
       withContext(dispatcher) {
         dsl.selectFrom(USERS).where(USERS.ID.eq(userId)).fetchOne()?.let {
-          UserService.TokenUser(it.id!!, it.displayName, it.tokenEpoch ?: 0)
+          UserService.TokenUser(it.id!!, it.username, it.displayName, it.tokenEpoch ?: 0)
         }
       }
 
