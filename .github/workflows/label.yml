@@ -1,0 +1,27 @@
+name: Label
+
+on:
+  pull_request_target:
+    types: [ opened, edited, reopened, synchronize ]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: label-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  label:
+    name: Type and area
+    runs-on: ubuntu-latest
+    steps:
+      # Never check out the pull request head in this job. pull_request_target
+      # runs with a write token even for forks, so running their code here would
+      # hand the token to the fork.
+      - name: Apply the labels
+        uses: actions/labeler@v5
+        with:
+          configuration-path: .github/labeler.yml
+          sync-labels: true

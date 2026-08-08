@@ -24,7 +24,7 @@
       "description": "Major updates always wait for manual review",
       "matchUpdateTypes": ["major"],
       "automerge": false,
-      "addLabels": ["major"]
+      "addLabels": ["dependencies: major"]
     },
     {
       "description": "Group Compose Multiplatform artifacts together",

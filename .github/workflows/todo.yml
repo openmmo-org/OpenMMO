@@ -20,4 +20,4 @@ jobs:
         uses: alstr/todo-to-issue-action@v5
         with:
           CLOSE_ISSUES: true
-          IDENTIFIERS: '[{"name": "TODO", "labels": []}, {"name": "FIXME", "labels": []}, {"name": "BUG", "labels": []}]'
+          IDENTIFIERS: '[{"name": "TODO", "labels": ["source: todo"]}, {"name": "FIXME", "labels": ["source: todo"]}, {"name": "BUG", "labels": ["source: todo", "type: bug"]}]'
