@@ -4,6 +4,7 @@ import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.dialog.DialogLine
 import de.fiereu.openmmo.common.enums.Direction
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.net.game.packets.dialog.TextPokemonSpeciesArg
 import de.fiereu.openmmo.server.game.battle.BattleResult
 import de.fiereu.openmmo.server.game.services.BattleService
@@ -137,6 +138,16 @@ internal constructor(
   suspend fun battle(dexId: Int, level: Int, vararg moveIds: Int): BattleResult =
       checkNotNull(battles) { "Battle service is unavailable" }
           .startScriptedBattle(session, dexId, level, moveIds.toList())
+
+  /** Fight the decomp trainer with this id, using the region the player is standing in. */
+  suspend fun trainerBattle(trainerId: Int): BattleResult {
+    val region =
+        checkNotNull(Region.byWireValue(state.regionId.toByte())) {
+          "Scene ran in unknown region ${state.regionId}"
+        }
+    return checkNotNull(battles) { "Battle service is unavailable" }
+        .startTrainerBattle(session, region, trainerId)
+  }
 
   /**
    * Walk the map npc with decomp local id [localId] (its entityIdx) through [steps] and wait for

@@ -17,6 +17,7 @@ import de.fiereu.openmmo.net.game.packets.battle.BattleEntityDeltaPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleEntityMoveEventPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleEventBody
 import de.fiereu.openmmo.net.game.packets.battle.BattleFieldStatePacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleOpponentBlock
 import de.fiereu.openmmo.net.game.packets.battle.BattleQueuedEventPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleSidePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleSlotEventEnumPacket
@@ -44,6 +45,9 @@ private const val PRESENCE_OVERWORLD: Byte = 0
 
 // The active battle side reported to the client so the bag knows which monster an item targets.
 private const val PLAYER_SIDE: Byte = 1
+
+// The side byte a switch-in carries, which is not the same numbering as BattleSidePacket.
+private const val OPPONENT_SIDE: Byte = 1
 
 private val CAPTURED_APPEARANCE = "00024c031aac0f00038001a40004".hexToBytes()
 
@@ -75,11 +79,17 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
             //  These are the captured values, so every player appears as the captured character.
             playerAppearance = CAPTURED_APPEARANCE,
             background = 0,
-            opposing = OpposingSide.WILD,
-            trainerId = 0,
+            opposing = if (battle.trainer == null) OpposingSide.WILD else OpposingSide.TRAINER,
+            // The client looks the trainer name and sprite up by the decomp id.
+            // TODO Check whether Hoenn needs a region tag, both decomps number trainers from 1
+            trainerId = (battle.trainer?.id ?: 0).toShort(),
             playerParty = battle.party.mapIndexed { slot, mon -> mon.toBlock(slot, true) },
             activeSlot = battle.activeSlot,
-            opponentParty = battle.opponent.mapIndexed { slot, mon -> mon.toOpponentBlock(slot) },
+            opponentParty =
+                battle.opponent.mapIndexed { slot, mon ->
+                  if (slot in battle.opponentSeen) mon.toOpponentBlock(slot)
+                  else BattleOpponentBlock(slot = slot, revealed = false)
+                },
             opponentActiveSlot = battle.opponentSlot,
         ),
     )
@@ -158,6 +168,20 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
             oldSlot = if (fullBlock) 0 else 1,
             mon = battle.activeMon().toBlock(slot = battle.activeSlot, movesPresent = true),
             fullBlock = fullBlock,
+        ),
+    )
+  }
+
+  /** The opposing side sends out its next monster. Its moves stay hidden from the player. */
+  fun sendOpponentSwitchIn(battle: BattleInstance, fullBlock: Boolean) {
+    broadcast(
+        battle,
+        BattleSwitchInPacket(
+            newSlot = if (fullBlock) 1 else 0,
+            oldSlot = if (fullBlock) 0 else 1,
+            mon = battle.opponentMon().toBlock(battle.opponentSlot, movesPresent = false),
+            fullBlock = fullBlock,
+            side = OPPONENT_SIDE,
         ),
     )
   }

@@ -29,7 +29,7 @@ data class BattleFieldStatePacket(
     /** Picks the battle backdrop. Outdoors is 0, forest 9, caves 12. */
     val background: Byte,
     val opposing: OpposingSide,
-    /** A trainer's class or battle sprite. Zero on a wild battle. */
+    /** The decomp trainer id, which the client draws the name and sprite from. Zero on a wild. */
     val trainerId: Short,
     val playerParty: List<BattleMonBlock>,
     val activeSlot: Int,

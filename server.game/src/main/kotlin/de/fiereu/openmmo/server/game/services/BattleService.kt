@@ -5,6 +5,7 @@ import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.PokemonMove
 import de.fiereu.openmmo.common.enums.BattleAction
 import de.fiereu.openmmo.common.enums.PokemonContainer
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.moves.MoveRegistry
 import de.fiereu.openmmo.net.game.packets.ChatMessageSendPacket
 import de.fiereu.openmmo.net.game.packets.MapLoadedAckPacket
@@ -22,6 +23,7 @@ import de.fiereu.openmmo.server.game.battle.BattleRegistry
 import de.fiereu.openmmo.server.game.battle.BattleResult
 import de.fiereu.openmmo.server.game.battle.BattleRewards
 import de.fiereu.openmmo.server.game.battle.BattleRng
+import de.fiereu.openmmo.server.game.battle.BattleRules
 import de.fiereu.openmmo.server.game.battle.MoveLearner
 import de.fiereu.openmmo.server.game.battle.StatCalculator
 import de.fiereu.openmmo.server.game.battle.TurnEngine
@@ -31,6 +33,8 @@ import de.fiereu.openmmo.server.game.battle.notice
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import de.fiereu.openmmo.server.game.world.interest.InterestManager
+import de.fiereu.openmmo.trainer.TrainerDef
+import de.fiereu.openmmo.trainer.TrainerRegistry
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
@@ -73,6 +77,7 @@ constructor(
     private val interestManager: InterestManager,
     private val speciesRegistry: SpeciesRegistry,
     private val moveRegistry: MoveRegistry,
+    private val trainers: TrainerRegistry,
 ) {
 
   private val pendingLearns = ConcurrentHashMap<Long, PendingMoveLearn>()
@@ -181,6 +186,36 @@ constructor(
     return battle.completion.await()
   }
 
+  /** Runs a battle against the decomp trainer with this id and waits for its scene. */
+  suspend fun startTrainerBattle(
+      session: SessionContext,
+      region: Region,
+      trainerId: Int,
+  ): BattleResult {
+    val trainer = trainers.get(region, trainerId)
+    if (trainer == null) {
+      log.warn { "No $region trainer with id $trainerId" }
+      return BattleResult.FAILED
+    }
+    return startTrainerBattle(session, trainer)
+  }
+
+  /** Runs a battle against a trainer's whole team and waits for its scene. */
+  suspend fun startTrainerBattle(session: SessionContext, trainer: TrainerDef): BattleResult {
+    val battle =
+        createBattle(
+            session,
+            trainer.party.map { OpponentSpec(it.dexId, it.level, it.moveIds) },
+            catchable = false,
+            escapable = false,
+            trainer = trainer,
+        ) ?: return BattleResult.FAILED
+    return battle.completion.await()
+  }
+
+  /** One monster to roll for the opposing side. Empty [moveIds] keeps the level up moveset. */
+  private data class OpponentSpec(val dexId: Int, val level: Int, val moveIds: List<Int>)
+
   private fun createWildBattle(
       session: SessionContext,
       dexId: Int,
@@ -188,6 +223,15 @@ constructor(
       catchable: Boolean,
       escapable: Boolean,
       moveIds: List<Int> = emptyList(),
+  ): BattleInstance? =
+      createBattle(session, listOf(OpponentSpec(dexId, level, moveIds)), catchable, escapable)
+
+  private fun createBattle(
+      session: SessionContext,
+      opponents: List<OpponentSpec>,
+      catchable: Boolean,
+      escapable: Boolean,
+      trainer: TrainerDef? = null,
   ): BattleInstance? {
     val charId = session.attributes[PLAYER_STATE]?.characterId ?: return null
     if (battles.byChar(charId) != null) {
@@ -213,32 +257,32 @@ constructor(
       return null
     }
     val rng = BattleRng()
-    var wildPokemon = wildMons.create(dexId, level, rng)
-    if (wildPokemon == null) {
-      session.send(notice("Unknown species $dexId."))
-      return null
+    val enemies = mutableListOf<BattleMonState>()
+    for (spec in opponents) {
+      var rolled = wildMons.create(spec.dexId, spec.level, rng)
+      if (rolled == null) {
+        session.send(notice("Unknown species ${spec.dexId}."))
+        return null
+      }
+      if (spec.moveIds.isNotEmpty()) {
+        rolled =
+            rolled.copy(
+                moves =
+                    spec.moveIds.take(4).map { id ->
+                      PokemonMove(id.toShort(), (moveRegistry.get(id)?.pp ?: 0).toByte())
+                    } + List((4 - spec.moveIds.size).coerceAtLeast(0)) { PokemonMove(0, 0) })
+      }
+      val def = speciesRegistry.get(spec.dexId)!!
+      enemies +=
+          BattleMonState(rolled.id, def, null, rolled, StatCalculator.computeAll(def, rolled))
     }
-    if (moveIds.isNotEmpty()) {
-      wildPokemon =
-          wildPokemon.copy(
-              moves =
-                  moveIds.take(4).map { id ->
-                    PokemonMove(id.toShort(), (moveRegistry.get(id)?.pp ?: 0).toByte())
-                  } + List((4 - moveIds.size).coerceAtLeast(0)) { PokemonMove(0, 0) })
-    }
-    val wildDef = speciesRegistry.get(dexId)!!
-    val wild =
-        BattleMonState(
-            wildPokemon.id,
-            wildDef,
-            null,
-            wildPokemon,
-            StatCalculator.computeAll(wildDef, wildPokemon),
-        )
     log.info {
-      "Starting wild battle for char=$charId (${stored.info.name}): ${wildDef.name} level $level"
+      "Starting battle for char=$charId (${stored.info.name}) against " +
+          enemies.joinToString { "${it.species.name} level ${it.level}" }
     }
-    val battle = battles.create(charId, session, party, listOf(wild), rng, catchable, escapable)
+    val battle =
+        battles.create(
+            charId, session, party, enemies, rng, BattleRules(catchable, escapable, trainer))
     val firstAlive = party.indexOfFirst { !it.fainted }
     battle.activeSlot = firstAlive
     battle.seenActive.clear()
@@ -256,8 +300,13 @@ constructor(
 
   private fun afterTurn(battle: BattleInstance) {
     when {
-      battle.opponentMon().fainted -> endVictory(battle)
+      battle.opponent.all { it.fainted } -> endVictory(battle)
       battle.party.all { it.fainted } -> endDefeat(battle)
+      battle.opponentMon().fainted -> {
+        sendOutNextOpponent(battle)
+        battle.turn += 1
+        emitter.sendPrompt(battle)
+      }
       // The active mon fainted with a live backup. Open the switch screen instead of the action
       // prompt. The replacement arrives as a normal SWITCH action.
       battle.activeMon().fainted -> emitter.sendSwitchPrompt(battle)
@@ -295,6 +344,16 @@ constructor(
       emitter.sendEvents(battle, engine.resolveSwitchTurn(battle))
       afterTurn(battle)
     }
+  }
+
+  private fun sendOutNextOpponent(battle: BattleInstance) {
+    val next = battle.opponent.indexOfFirst { !it.fainted }
+    if (next < 0) return
+    val fullBlock = next !in battle.opponentSeen
+    battle.opponentSlot = next
+    battle.opponentSeen.add(next)
+    log.info { "Opponent sends out slot $next for char=${battle.charId}" }
+    emitter.sendOpponentSwitchIn(battle, fullBlock)
   }
 
   private fun performSwitch(battle: BattleInstance, target: Int) {

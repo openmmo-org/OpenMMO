@@ -2,6 +2,7 @@ package de.fiereu.openmmo.server.game.battle
 
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.server.game.world.interest.BattleInterestKey
+import de.fiereu.openmmo.trainer.TrainerDef
 import kotlinx.coroutines.CompletableDeferred
 
 enum class BattleResult {
@@ -13,6 +14,13 @@ enum class BattleResult {
   FAILED,
 }
 
+/** What kind of battle this is, beyond the two teams. A [trainer] owns the opposing side. */
+data class BattleRules(
+    val catchable: Boolean = true,
+    val escapable: Boolean = true,
+    val trainer: TrainerDef? = null,
+)
+
 /** One running battle. A wild encounter is the case where [opponent] holds a single monster. */
 class BattleInstance(
     val battleId: Long,
@@ -23,6 +31,8 @@ class BattleInstance(
     val rng: BattleRng,
     val catchable: Boolean = true,
     val escapable: Boolean = true,
+    /** The trainer who owns [opponent], or null for a wild encounter. */
+    val trainer: TrainerDef? = null,
 ) {
   val key: BattleInterestKey = BattleInterestKey(battleId)
   var turn: Int = 1
