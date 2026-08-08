@@ -20,6 +20,7 @@ import de.fiereu.openmmo.net.game.packets.battle.BattleEntityDeltaPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleFieldStatePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleQueuedEventPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleSidePacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleSwitchInPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleTileMapPacket
 import de.fiereu.openmmo.pokemon.LearnsetRegistry
 import de.fiereu.openmmo.pokemon.SpeciesRegistry
@@ -34,20 +35,27 @@ import de.fiereu.openmmo.server.game.storage.EntityIdService
 import de.fiereu.openmmo.server.game.testsupport.FakeCharacterRepository
 import de.fiereu.openmmo.server.game.testsupport.FakeSession
 import de.fiereu.openmmo.server.game.world.interest.InterestManager
+import de.fiereu.openmmo.trainer.TrainerDef
+import de.fiereu.openmmo.trainer.TrainerMon
+import de.fiereu.openmmo.trainer.TrainerRegistry
 import de.fiereu.openmmo.typechart.TypeChart
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import java.time.LocalDateTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 
 private const val TACKLE: Short = 33
+private const val RATTATA = 19
 
 private fun bulbasaur(ownerId: Long, level: Byte, hp: Short): Pokemon =
     Pokemon(
@@ -95,6 +103,7 @@ private class Fixture(scope: CoroutineScope) {
           interestManager = interestManager,
           speciesRegistry = SpeciesRegistry(),
           moveRegistry = MoveRegistry(),
+          trainers = TrainerRegistry(),
       )
 
   suspend fun playerWithParty(level: Byte = 50, hp: Short = 999): Pair<FakeSession, Long> {
@@ -138,8 +147,8 @@ class BattleServiceTest :
           // Bulbasaur base hp 45 at level 50 with empty IVs and EVs.
           val field = session.sent.filterIsInstance<BattleFieldStatePacket>().single()
           field.playerParty.single().maxHp shouldBe 105.toShort()
-          field.wildParty.single().level shouldBe 2.toByte()
-          field.wildParty.single().currentHp shouldBe field.wildParty.single().maxHp
+          field.opponentParty.single().level shouldBe 2.toByte()
+          field.opponentParty.single().currentHp shouldBe field.opponentParty.single().maxHp
         }
       }
 
@@ -230,6 +239,64 @@ class BattleServiceTest :
           val saved = fx.repo.saved[charId].shouldNotBeNull()
           saved.pokemon.single().moves[0].pp shouldBe (35 - rounds).toByte()
           saved.pokemon.single().xp shouldBe 57 * 2 / 7
+        }
+      }
+
+      test("a trainer sends out its next monster instead of losing when one faints") {
+        runTest {
+          val fx = Fixture(backgroundScope)
+          val (session, charId) = fx.playerWithParty()
+          val terry =
+              TrainerDef(
+                  id = 1,
+                  name = "TERRY",
+                  trainerClass = 0,
+                  doubleBattle = false,
+                  prizeRate = 5,
+                  party =
+                      listOf(
+                          TrainerMon(RATTATA, 2, 0, 0, emptyList()),
+                          TrainerMon(RATTATA, 2, 0, 0, emptyList()),
+                      ),
+              )
+          // The battle never ends in this test, so its await must not hold the test scope open.
+          backgroundScope.launch { fx.service.startTrainerBattle(session, terry) }
+          runCurrent()
+
+          val battle = fx.registry.byChar(charId).shouldNotBeNull()
+          battle.opponent.size shouldBe 2
+
+          val field = session.sent.filterIsInstance<BattleFieldStatePacket>().single()
+          field.opponentParty[0].revealed.shouldBeTrue()
+          field.opponentParty[1].revealed shouldBe false
+
+          var rounds = 0
+          while (battle.opponentSlot == 0 && rounds < 10) {
+            session.act(fx.service, BattleAction.MOVE, TACKLE)
+            rounds += 1
+          }
+
+          battle.opponentSlot shouldBe 1
+          battle.opponent[0].fainted.shouldBeTrue()
+          battle.pendingResult.shouldBeNull()
+          session.sent.filterIsInstance<BattleSwitchInPacket>().last().side shouldBe 1.toByte()
+
+          // The lead is paid for as it faints, not held back until the whole team is beaten.
+          val xpBefore = battle.activeMon().source.xp
+          xpBefore shouldBeGreaterThan 0
+          session.sent
+              .filterIsInstance<BattleEntityDeltaPacket>()
+              .any { it.experience != null }
+              .shouldBeTrue()
+
+          rounds = 0
+          while (battle.pendingResult == null && rounds < 10) {
+            session.act(fx.service, BattleAction.MOVE, TACKLE)
+            rounds += 1
+          }
+
+          // The second monster pays on top of the first, rather than replacing it.
+          battle.activeMon().source.xp shouldBeGreaterThan xpBefore
         }
       }
 

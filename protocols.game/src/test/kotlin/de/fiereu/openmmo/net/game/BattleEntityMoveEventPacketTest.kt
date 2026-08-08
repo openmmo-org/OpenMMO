@@ -2,6 +2,8 @@ package de.fiereu.openmmo.net.game
 
 import de.fiereu.openmmo.common.test.decodeBytes
 import de.fiereu.openmmo.common.test.encodeToBytes
+import de.fiereu.openmmo.common.test.fixture
+import de.fiereu.openmmo.common.utils.toHex
 import de.fiereu.openmmo.net.game.packets.battle.BattleActionEvent
 import de.fiereu.openmmo.net.game.packets.battle.BattleEffectTarget
 import de.fiereu.openmmo.net.game.packets.battle.BattleEntityMoveEventPacket
@@ -12,6 +14,19 @@ import io.kotest.matchers.shouldBe
 
 class BattleEntityMoveEventPacketTest :
     FunSpec({
+      // A captured Growl, which is a status move whose only effect is one stat drop.
+      test("round-trips a captured stat change byte for byte") {
+        val bytes = fixture("game/s2c/33/stat_change_growl.bin")
+        val decoded = BattleEntityMoveEventPacketCodec.decodeBytes(bytes)
+
+        decoded.sourceMove shouldBe 45.toShort()
+        val target = decoded.targets.single()
+        target.targetMove shouldBe 0.toShort()
+        target.subEvents.single().body shouldBe
+            BattleEventBody.StatChange(stat = 1, stageDelta = -1)
+        BattleEntityMoveEventPacketCodec.encodeToBytes(decoded).toHex() shouldBe bytes.toHex()
+      }
+
       test("round-trips every body type and entity-flag combination") {
         val packet =
             BattleEntityMoveEventPacket(

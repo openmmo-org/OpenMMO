@@ -4,7 +4,9 @@ import de.fiereu.network.PacketEvent
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.PokemonMove
 import de.fiereu.openmmo.common.enums.BattleAction
+import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.moves.MoveRegistry
 import de.fiereu.openmmo.net.game.packets.ChatMessageSendPacket
 import de.fiereu.openmmo.net.game.packets.MapLoadedAckPacket
@@ -22,6 +24,7 @@ import de.fiereu.openmmo.server.game.battle.BattleRegistry
 import de.fiereu.openmmo.server.game.battle.BattleResult
 import de.fiereu.openmmo.server.game.battle.BattleRewards
 import de.fiereu.openmmo.server.game.battle.BattleRng
+import de.fiereu.openmmo.server.game.battle.BattleRules
 import de.fiereu.openmmo.server.game.battle.MoveLearner
 import de.fiereu.openmmo.server.game.battle.StatCalculator
 import de.fiereu.openmmo.server.game.battle.TurnEngine
@@ -31,6 +34,8 @@ import de.fiereu.openmmo.server.game.battle.notice
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import de.fiereu.openmmo.server.game.world.interest.InterestManager
+import de.fiereu.openmmo.trainer.TrainerDef
+import de.fiereu.openmmo.trainer.TrainerRegistry
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
@@ -51,13 +56,20 @@ private const val MAX_WILD_LEVEL = 100
 
 private const val POKE_BALL_ITEM: Short = 5004
 
-/** A prompt waiting for its answer, kept after the battle ends. */
-private data class PendingMoveLearn(val entityId: Long, val offered: List<Short>)
+/**
+ * A prompt waiting for its answer, kept after the battle ends. A trainer battle can raise one
+ * monster past a level more than once, so these are held per monster rather than per player.
+ */
+private data class PendingMoveLearn(
+    val charId: Long,
+    val entityId: Long,
+    val offered: List<Short>,
+)
 
 /**
- * Orchestrates wild battles: builds the battle state from the party and a rolled wild monster,
- * routes client actions through the [TurnEngine], and persists the outcome. Packets go out through
- * the [BattlePacketEmitter] over the battle's interest key.
+ * Orchestrates battles: builds the battle state from the party and the opposing side, routes client
+ * actions through the [TurnEngine], and persists the outcome. Packets go out through the
+ * [BattlePacketEmitter] over the battle's interest key.
  */
 @Singleton
 class BattleService
@@ -73,6 +85,7 @@ constructor(
     private val interestManager: InterestManager,
     private val speciesRegistry: SpeciesRegistry,
     private val moveRegistry: MoveRegistry,
+    private val trainers: TrainerRegistry,
 ) {
 
   private val pendingLearns = ConcurrentHashMap<Long, PendingMoveLearn>()
@@ -101,9 +114,9 @@ constructor(
   fun onMoveLearnReply(event: PacketEvent<MoveLearnReplyPacket>) {
     val charId = event.session.attributes[PLAYER_STATE]?.characterId ?: return
     val reply = event.packet
-    val pending = pendingLearns[charId] ?: return
-    if (pending.entityId != reply.entityId) return
-    pendingLearns.remove(charId)
+    val pending = pendingLearns[reply.entityId] ?: return
+    if (pending.charId != charId) return
+    pendingLearns.remove(reply.entityId)
     val stored =
         characterStore.getCharacter(charId)?.pokemon?.firstOrNull { it.id == reply.entityId }
             ?: return
@@ -115,6 +128,17 @@ constructor(
     if (moves == stored.moves) return
     characterStore.updatePokemon(charId, stored.copy(moves = moves))
     characterStore.flushCharacterAsync(charId)
+    // A battle still running holds its own copy, and the next reward writes that copy back over
+    // the store. Move the live one across so the pick survives the rest of the battle.
+    battles
+        .byChar(charId)
+        ?.party
+        ?.firstOrNull { it.entityId == reply.entityId }
+        ?.let { live ->
+          live.moves.clear()
+          live.moves.addAll(moves.map { PokemonMove(it.id, it.pp) })
+          live.source = live.source.copy(moves = moves)
+        }
     event.session.send(emitter.moveSlotsDelta(reply.entityId, moves.map { it.id to it.pp }, 0))
   }
 
@@ -140,7 +164,7 @@ constructor(
   /** Ends a running battle when the player disconnects, keeping the last hp and pp state. */
   fun onDisconnect(session: SessionContext) {
     val charId = session.attributes[PLAYER_STATE]?.characterId ?: return
-    pendingLearns.remove(charId)
+    pendingLearns.values.removeIf { it.charId == charId }
     val battle = battles.byChar(charId) ?: return
     persistParty(battle)
     finishBattle(battle, BattleResult.DISCONNECTED)
@@ -181,6 +205,41 @@ constructor(
     return battle.completion.await()
   }
 
+  /** Runs a battle against the decomp trainer with this id and waits for its scene. */
+  suspend fun startTrainerBattle(
+      session: SessionContext,
+      region: Region,
+      trainerId: Int,
+  ): BattleResult {
+    val trainer = trainers.get(region, trainerId)
+    if (trainer == null) {
+      log.warn { "No $region trainer with id $trainerId" }
+      return BattleResult.FAILED
+    }
+    return startTrainerBattle(session, trainer)
+  }
+
+  /** Runs a battle against a trainer's whole team and waits for its scene. */
+  suspend fun startTrainerBattle(session: SessionContext, trainer: TrainerDef): BattleResult {
+    val battle =
+        createBattle(
+            session,
+            trainer.party.map { OpponentSpec(it.dexId, it.level, it.moveIds, it.iv) },
+            catchable = false,
+            escapable = false,
+            trainer = trainer,
+        ) ?: return BattleResult.FAILED
+    return battle.completion.await()
+  }
+
+  /** Empty [moveIds] keeps the level up moveset, a null [iv] rolls one like a wild encounter. */
+  private data class OpponentSpec(
+      val dexId: Int,
+      val level: Int,
+      val moveIds: List<Int>,
+      val iv: Int? = null,
+  )
+
   private fun createWildBattle(
       session: SessionContext,
       dexId: Int,
@@ -188,6 +247,15 @@ constructor(
       catchable: Boolean,
       escapable: Boolean,
       moveIds: List<Int> = emptyList(),
+  ): BattleInstance? =
+      createBattle(session, listOf(OpponentSpec(dexId, level, moveIds)), catchable, escapable)
+
+  private fun createBattle(
+      session: SessionContext,
+      opponents: List<OpponentSpec>,
+      catchable: Boolean,
+      escapable: Boolean,
+      trainer: TrainerDef? = null,
   ): BattleInstance? {
     val charId = session.attributes[PLAYER_STATE]?.characterId ?: return null
     if (battles.byChar(charId) != null) {
@@ -213,32 +281,47 @@ constructor(
       return null
     }
     val rng = BattleRng()
-    var wildPokemon = wildMons.create(dexId, level, rng)
-    if (wildPokemon == null) {
-      session.send(notice("Unknown species $dexId."))
-      return null
+    val enemies = mutableListOf<BattleMonState>()
+    for (spec in opponents) {
+      var rolled = wildMons.create(spec.dexId, spec.level, rng)
+      if (rolled == null) {
+        session.send(notice("Unknown species ${spec.dexId}."))
+        return null
+      }
+      if (spec.moveIds.isNotEmpty()) {
+        rolled =
+            rolled.copy(
+                moves =
+                    spec.moveIds.take(4).map { id ->
+                      PokemonMove(id.toShort(), (moveRegistry.get(id)?.pp ?: 0).toByte())
+                    } + List((4 - spec.moveIds.size).coerceAtLeast(0)) { PokemonMove(0, 0) })
+      }
+      val def = speciesRegistry.get(spec.dexId)!!
+      // A trainer's monsters are built to a fixed difficulty, so they must not keep the rolled
+      // IVs. Max hp moves with them, and the monster comes out full.
+      if (spec.iv != null) {
+        val ivs =
+            IVs().apply {
+              hp = spec.iv
+              atk = spec.iv
+              this.def = spec.iv
+              spAtk = spec.iv
+              spDef = spec.iv
+              spd = spec.iv
+            }
+        val fixed = rolled.copy(iVs = ivs)
+        rolled = fixed.copy(hp = StatCalculator.computeAll(def, fixed).hp.toShort())
+      }
+      enemies +=
+          BattleMonState(rolled.id, def, null, rolled, StatCalculator.computeAll(def, rolled))
     }
-    if (moveIds.isNotEmpty()) {
-      wildPokemon =
-          wildPokemon.copy(
-              moves =
-                  moveIds.take(4).map { id ->
-                    PokemonMove(id.toShort(), (moveRegistry.get(id)?.pp ?: 0).toByte())
-                  } + List((4 - moveIds.size).coerceAtLeast(0)) { PokemonMove(0, 0) })
-    }
-    val wildDef = speciesRegistry.get(dexId)!!
-    val wild =
-        BattleMonState(
-            wildPokemon.id,
-            wildDef,
-            null,
-            wildPokemon,
-            StatCalculator.computeAll(wildDef, wildPokemon),
-        )
     log.info {
-      "Starting wild battle for char=$charId (${stored.info.name}): ${wildDef.name} level $level"
+      "Starting battle for char=$charId (${stored.info.name}) against " +
+          enemies.joinToString { "${it.species.name} level ${it.level}" }
     }
-    val battle = battles.create(charId, session, party, wild, rng, catchable, escapable)
+    val battle =
+        battles.create(
+            charId, session, party, enemies, rng, BattleRules(catchable, escapable, trainer))
     val firstAlive = party.indexOfFirst { !it.fainted }
     battle.activeSlot = firstAlive
     battle.seenActive.clear()
@@ -256,14 +339,21 @@ constructor(
 
   private fun afterTurn(battle: BattleInstance) {
     when {
-      battle.wild.fainted -> endVictory(battle)
+      battle.opponent.all { it.fainted } -> endVictory(battle)
       battle.party.all { it.fainted } -> endDefeat(battle)
-      // The active mon fainted with a live backup. Open the switch screen instead of the action
-      // prompt. The replacement arrives as a normal SWITCH action.
-      battle.activeMon().fainted -> emitter.sendSwitchPrompt(battle)
       else -> {
-        battle.turn += 1
-        emitter.sendPrompt(battle)
+        if (battle.opponentMon().fainted) {
+          awardXp(battle, battle.opponentMon())
+          sendOutNextOpponent(battle)
+        }
+        // The active mon fainted with a live backup. Open the switch screen instead of the action
+        // prompt. The replacement arrives as a normal SWITCH action.
+        if (battle.activeMon().fainted) {
+          emitter.sendSwitchPrompt(battle)
+        } else {
+          battle.turn += 1
+          emitter.sendPrompt(battle)
+        }
       }
     }
   }
@@ -297,13 +387,24 @@ constructor(
     }
   }
 
+  private fun sendOutNextOpponent(battle: BattleInstance) {
+    val next = battle.opponent.indexOfFirst { !it.fainted }
+    if (next < 0) return
+    val fullBlock = next !in battle.opponentSeen
+    val oldSlot = battle.opponentSlot
+    battle.opponentSlot = next
+    battle.opponentSeen.add(next)
+    log.info { "Opponent sends out slot $next for char=${battle.charId}" }
+    emitter.sendOpponentSwitchIn(battle, oldSlot, fullBlock)
+  }
+
   private fun performSwitch(battle: BattleInstance, target: Int) {
     val oldSlot = battle.activeSlot
     val fullBlock = target !in battle.seenActive
     battle.activeSlot = target
     battle.seenActive.add(target)
     log.info { "Switch char=${battle.charId} slot $oldSlot -> $target (fullBlock=$fullBlock)" }
-    emitter.sendSwitchIn(battle, fullBlock)
+    emitter.sendSwitchIn(battle, oldSlot, fullBlock)
   }
 
   private fun flee(battle: BattleInstance) {
@@ -326,20 +427,23 @@ constructor(
     val stored = characterStore.getCharacter(battle.charId) ?: return
     val nextSlot = ((stored.pokemon.maxOfOrNull { it.containerSlot } ?: -1) + 1).toShort()
     val caught =
-        battle.wild.source.copy(
-            ownerId = battle.charId,
-            container = PokemonContainer.PARTY,
-            containerSlot = nextSlot,
-            ot = stored.info.name,
-            hp = battle.wild.currentHp.toShort(),
-            moves = battle.wild.moves.map { PokemonMove(it.id, it.pp) },
-            caughtAt = LocalDateTime.now(),
-        )
-    log.info { "Caught wild ${battle.wild.species.name} for char=${battle.charId}" }
+        battle
+            .opponentMon()
+            .source
+            .copy(
+                ownerId = battle.charId,
+                container = PokemonContainer.PARTY,
+                containerSlot = nextSlot,
+                ot = stored.info.name,
+                hp = battle.opponentMon().currentHp.toShort(),
+                moves = battle.opponentMon().moves.map { PokemonMove(it.id, it.pp) },
+                caughtAt = LocalDateTime.now(),
+            )
+    log.info { "Caught wild ${battle.opponentMon().species.name} for char=${battle.charId}" }
     // The caught monster is sent as a full 148-byte record on opcode 0x14 before the ball-throw
     // event, so the client can resolve the monster when the throw lands.
     battle.session.send(SocialListEntryAddPacket(caught))
-    battle.session.send(acquiredMonsterDelta(caught, battle.wild.species))
+    battle.session.send(acquiredMonsterDelta(caught, battle.opponentMon().species))
     // "Player threw a Poke Ball" event.
     battle.session.send(
         BattleListEventPacket(
@@ -354,8 +458,22 @@ constructor(
   }
 
   private fun endVictory(battle: BattleInstance) {
+    awardXp(battle, battle.opponentMon())
+    val prize = battle.trainer?.let { rewards.trainerPrize(it, battle.opponent.last().level) } ?: 0
+    if (prize > 0) {
+      characterStore.addMoney(battle.charId, prize)
+      log.info { "char=${battle.charId} won $prize from ${battle.trainer?.name}" }
+    }
+    endBattle(battle, BattleResult.VICTORY, battle.activeMon().entityId, prize)
+  }
+
+  /**
+   * Pays the active monster for knocking [defeated] out. A trainer's team is paid for one at a
+   * time, as each faints, which is when the captures show the delta going out.
+   */
+  private fun awardXp(battle: BattleInstance, defeated: BattleMonState) {
     val winner = battle.activeMon()
-    val reward = rewards.apply(winner, battle.wild.species, battle.wild.level)
+    val reward = rewards.apply(winner, defeated.species, defeated.level, battle.trainer != null)
     log.info {
       "char=${battle.charId} won: +${reward.xpGained} xp, level ${winner.level} -> ${reward.newLevel}"
     }
@@ -368,20 +486,20 @@ constructor(
     }
     if (outcome.offered.isNotEmpty()) {
       val offered = outcome.offered.map { it.moveId.toShort() }
-      pendingLearns[battle.charId] = PendingMoveLearn(winner.entityId, offered)
+      pendingLearns[winner.entityId] = PendingMoveLearn(battle.charId, winner.entityId, offered)
       battle.session.send(MoveLearnPromptPacket(winner.entityId, offered))
     }
-    characterStore.updatePokemon(
-        battle.charId,
+    val grown =
         winner.source.copy(
             level = reward.newLevel.toByte(),
             xp = reward.newXp,
             hp = reward.newCurrentHp.toShort(),
             eVs = reward.newEvs,
             moves = winner.moves.map { PokemonMove(it.id, it.pp) },
-        ),
-    )
-    endBattle(battle, BattleResult.VICTORY, skip = winner.entityId)
+        )
+    winner.source = grown
+    winner.stats = reward.newStats
+    characterStore.updatePokemon(battle.charId, grown)
   }
 
   private fun endDefeat(battle: BattleInstance) {
@@ -393,10 +511,11 @@ constructor(
       battle: BattleInstance,
       result: BattleResult,
       skip: Long? = null,
+      prizeMoney: Int = 0,
   ) {
     persistParty(battle, skip)
     val party = characterStore.getCharacter(battle.charId)?.pokemon ?: emptyList()
-    emitter.sendBattleEnd(battle, party)
+    emitter.sendBattleEnd(battle, party, prizeMoney)
     battle.pendingResult = result
   }
 

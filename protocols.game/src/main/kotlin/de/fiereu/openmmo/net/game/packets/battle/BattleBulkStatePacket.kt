@@ -180,12 +180,12 @@ data class BattleBulkStatePacket(
     /**
      * Terminal marker sent when a wild encounter resolves, telling the client to leave the scene.
      */
-    fun battleEnd(): BattleBulkStatePacket =
+    fun battleEnd(prizeMoney: Int = 0): BattleBulkStatePacket =
         BattleBulkStatePacket(
             phase = 0,
             firstGroup = listOf(NullSerializedEntry),
             secondGroup = listOf(NullSerializedEntry),
-            prizeMoney = 0,
+            prizeMoney = prizeMoney,
             valueB = 0,
             flag = 2,
             thirdGroup = emptyList(),

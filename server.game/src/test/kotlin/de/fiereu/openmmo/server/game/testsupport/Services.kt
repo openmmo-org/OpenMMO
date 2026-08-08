@@ -29,6 +29,7 @@ import de.fiereu.openmmo.server.game.storage.CharacterStore
 import de.fiereu.openmmo.server.game.storage.EntityIdService
 import de.fiereu.openmmo.server.game.world.interest.InterestManager
 import de.fiereu.openmmo.server.game.world.interest.PassThroughInterestPolicy
+import de.fiereu.openmmo.trainer.TrainerRegistry
 import de.fiereu.openmmo.typechart.TypeChart
 
 /**
@@ -59,6 +60,7 @@ fun movementService(
           interestManager = interest,
           speciesRegistry = species,
           moveRegistry = moves,
+          trainers = TrainerRegistry(),
       )
   val registry = ScriptRegistry(emptyMap())
   val runner =

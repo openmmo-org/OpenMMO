@@ -37,11 +37,7 @@ private fun seg(hex: String): ByteArray =
 
 // Captured constant that precedes the moves-present flag, meaning still unknown.
 private val MOVES_HEADER = seg("000000ff03")
-// The wild block replaces the ability and move segment with this captured marker.
-private val WILD_MOVES_SEGMENT = seg("000000ff030001")
 private val ACTIVE_TAIL = seg("03ff0000000066666666")
-
-private val NO_MOVES = List(BattleMonBlock.MOVE_SLOTS) { 0.toShort() }
 
 /** The active monster's detail block, naming only species, level, and gender. */
 internal data class BattleActiveDetail(
@@ -86,18 +82,38 @@ internal object BattleFullBlockCodec : PacketCodec<BattleMonBlock>() {
     val maxHp = field(S16LE) { it.maxHp }
     constant(MOVES_HEADER)
     val movesPresent = field(Bool) { it.movesPresent }
-    val abilityId = field(S16LE) { it.abilityId }
-    val moveIds = field(S16LE.repeat(BattleMonBlock.MOVE_SLOTS)) { it.moveIds }
+    val abilityId = if (movesPresent) field(S16LE) { it.abilityId } else 0
+    val moveIds =
+        if (movesPresent) field(S16LE.repeat(BattleMonBlock.MOVE_SLOTS)) { it.moveIds }
+        else List(BattleMonBlock.MOVE_SLOTS) { 0.toShort() }
     return BattleMonBlock(
         slot, entityId, species, level, gender, abilityId, maxHp, currentHp, movesPresent, moveIds)
   }
 }
 
-/** The wild side's block. The decode fills ability and moves with zero. */
-internal object BattleWildBlockCodec : PacketCodec<BattleMonBlock>() {
-  override fun CodecScope<BattleMonBlock>.body(): BattleMonBlock {
+/**
+ * One monster on the opposing side. A monster the player has not been shown yet rides as a stub
+ * with no body at all, which is how a trainer's benched team is hidden until it is sent out.
+ */
+data class BattleOpponentBlock(
+    val slot: Int,
+    val revealed: Boolean,
+    val entityId: Long = 0,
+    val species: Short = 0,
+    val level: Byte = 0,
+    val gender: Byte = 0,
+    val maxHp: Short = 0,
+    val currentHp: Short = 0,
+)
+
+private const val REVEALED: Byte = 1
+private const val HIDDEN: Byte = 2
+
+internal object BattleOpponentBlockCodec : PacketCodec<BattleOpponentBlock>() {
+  override fun CodecScope<BattleOpponentBlock>.body(): BattleOpponentBlock {
     val slot = field(S8) { it.slot.toByte() }.toInt()
-    constant(1)
+    val kind = field(S8) { if (it.revealed) REVEALED else HIDDEN }
+    if (kind != REVEALED) return BattleOpponentBlock(slot, revealed = false)
     val entityId = field(S64LE) { it.entityId }
     val species = field(S16LE) { it.species }
     val level = field(S8) { it.level }
@@ -106,10 +122,9 @@ internal object BattleWildBlockCodec : PacketCodec<BattleMonBlock>() {
     padding(3)
     val currentHp = field(S16LE) { it.currentHp }
     val maxHp = field(S16LE) { it.maxHp }
-    constant(WILD_MOVES_SEGMENT)
-    field(BattleActiveDetailCodec) { BattleActiveDetail.of(it.slot, it) }
-    padding(4)
-    return BattleMonBlock(
-        slot, entityId, species, level, gender, 0, maxHp, currentHp, false, NO_MOVES)
+    constant(MOVES_HEADER)
+    // The opposing side never carries a moveset, so the client cannot read the enemy's moves.
+    constant(0)
+    return BattleOpponentBlock(slot, true, entityId, species, level, gender, maxHp, currentHp)
   }
 }

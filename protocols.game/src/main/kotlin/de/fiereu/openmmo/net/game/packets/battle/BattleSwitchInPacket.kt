@@ -13,6 +13,8 @@ data class BattleSwitchInPacket(
     val oldSlot: Int,
     val mon: BattleMonBlock,
     val fullBlock: Boolean,
+    /** 0 sends out one of the player's own, 1 one of the opponent's. */
+    val side: Byte = 0,
 )
 
 private val NO_MOVES = List(BattleMonBlock.MOVE_SLOTS) { 0.toShort() }
@@ -56,10 +58,11 @@ private val SwitchInMonCodec: Codec<SwitchInMon> =
 
 object BattleSwitchInPacketCodec : PacketCodec<BattleSwitchInPacket>() {
   override fun CodecScope<BattleSwitchInPacket>.body(): BattleSwitchInPacket {
-    padding(2)
+    val side = field(S8) { it.side }
+    reserved(0)
     val newSlot = field(U8) { it.newSlot }
     val oldSlot = field(U8) { it.oldSlot }
     val section = field(SwitchInMonCodec) { SwitchInMon(it.mon, it.fullBlock) }
-    return BattleSwitchInPacket(newSlot, oldSlot, section.mon, section.fullBlock)
+    return BattleSwitchInPacket(newSlot, oldSlot, section.mon, section.fullBlock, side)
   }
 }

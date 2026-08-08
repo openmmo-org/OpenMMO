@@ -18,9 +18,7 @@ sealed interface BattleEventBody {
   /** Event 5, BattlePokemonFainted. [playFaintAnimation] plays the faint-in-place animation. */
   data class Faint(val playFaintAnimation: Boolean) : BattleEventBody
 
-  /**
-   * Event 4, BattleEffectivenessMessage. No body: the client derives the message from the types.
-   */
+  /** Event 4, meaning unknown. It carries no body. Effectiveness rides in the outcome word. */
   data object EffectivenessMessage : BattleEventBody
 
   /** Event 0x40, BattleMoveFailed. [moveId] names the move in the "it failed" message. */
@@ -35,13 +33,20 @@ private val HpUpdateBodyCodec: Codec<BattleEventBody> =
       }
     }
 
+private const val STAT_INDEX_MASK = 0x7F
+
 private val StatChangeBodyCodec: Codec<BattleEventBody> =
     object : PacketCodec<BattleEventBody>() {
       override fun CodecScope<BattleEventBody>.body(): BattleEventBody {
         val changeType = field(S8) { (it as BattleEventBody.StatChange).changeType }
+        // Only the low seven bits name the stat. The top bit is a separate emphasis flag, and the
+        // direction rides in the signed stage count rather than here.
         val stat = field(S8) { (it as BattleEventBody.StatChange).stat }
-        val stageDelta = field(S16LE) { (it as BattleEventBody.StatChange).stageDelta }
-        return BattleEventBody.StatChange(stat, stageDelta, changeType)
+        val stages = field(S8) { (it as BattleEventBody.StatChange).stageDelta.toByte() }
+        // 0xFF in every capture.
+        reserved(0xFF)
+        return BattleEventBody.StatChange(
+            (stat.toInt() and STAT_INDEX_MASK).toByte(), stages.toShort(), changeType)
       }
     }
 
