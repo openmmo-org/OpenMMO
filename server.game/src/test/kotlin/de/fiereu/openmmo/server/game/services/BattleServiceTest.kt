@@ -138,8 +138,8 @@ class BattleServiceTest :
           // Bulbasaur base hp 45 at level 50 with empty IVs and EVs.
           val field = session.sent.filterIsInstance<BattleFieldStatePacket>().single()
           field.playerParty.single().maxHp shouldBe 105.toShort()
-          field.wildParty.single().level shouldBe 2.toByte()
-          field.wildParty.single().currentHp shouldBe field.wildParty.single().maxHp
+          field.opponentParty.single().level shouldBe 2.toByte()
+          field.opponentParty.single().currentHp shouldBe field.opponentParty.single().maxHp
         }
       }
 

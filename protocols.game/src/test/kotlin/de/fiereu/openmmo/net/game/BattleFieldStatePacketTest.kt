@@ -6,23 +6,28 @@ import de.fiereu.openmmo.common.test.fixture
 import de.fiereu.openmmo.net.game.packets.battle.BattleFieldStatePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleFieldStatePacketCodec
 import de.fiereu.openmmo.net.game.packets.battle.BattleMonBlock
+import de.fiereu.openmmo.net.game.packets.battle.BattleOpponentBlock
+import de.fiereu.openmmo.net.game.packets.battle.OpposingSide
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+
+private const val WILD = "game/s2c/30/wild_two_party_scrubbed.bin"
+private const val TRAINER = "game/s2c/30/trainer_one_opponent_scrubbed.bin"
 
 class BattleFieldStatePacketTest :
     FunSpec({
       test("round-trips a two-party wild field state byte for byte") {
-        val bytes = fixture("game/s2c/30/wild_two_party_scrubbed.bin")
+        val bytes = fixture(WILD)
         val decoded = BattleFieldStatePacketCodec.decodeBytes(bytes)
         decoded.playerName shouldBe "Test"
         decoded.playerParty.size shouldBe 2
         decoded.activeSlot shouldBe 0
+        decoded.opposing shouldBe OpposingSide.WILD
         BattleFieldStatePacketCodec.encodeToBytes(decoded) shouldBe bytes
       }
 
       test("decodes the structured mon fields from the capture") {
-        val bytes = fixture("game/s2c/30/wild_two_party_scrubbed.bin")
-        val decoded = BattleFieldStatePacketCodec.decodeBytes(bytes)
+        val decoded = BattleFieldStatePacketCodec.decodeBytes(fixture(WILD))
 
         val snivy = decoded.playerParty[0]
         snivy.slot shouldBe 0
@@ -43,12 +48,42 @@ class BattleFieldStatePacketTest :
         patrat.abilityId shouldBe 50.toShort()
         patrat.moveIds shouldBe listOf<Short>(33, 0, 0, 0)
 
-        val wild = decoded.wildParty.single()
+        val wild = decoded.opponentParty.single()
+        wild.revealed shouldBe true
         wild.species shouldBe 504.toShort()
         wild.level shouldBe 2.toByte()
         wild.maxHp shouldBe 14.toShort()
         wild.currentHp shouldBe 14.toShort()
-        wild.movesPresent shouldBe false
+      }
+
+      test("round-trips a trainer field state byte for byte") {
+        val bytes = fixture(TRAINER)
+        val decoded = BattleFieldStatePacketCodec.decodeBytes(bytes)
+
+        decoded.opposing shouldBe OpposingSide.TRAINER
+        decoded.trainerId shouldBe 0x68.toShort()
+        decoded.playerParty.size shouldBe 3
+        val weedle = decoded.opponentParty.single()
+        weedle.revealed shouldBe true
+        weedle.species shouldBe 13.toShort()
+        weedle.level shouldBe 9.toByte()
+        weedle.currentHp shouldBe 26.toShort()
+
+        BattleFieldStatePacketCodec.encodeToBytes(decoded) shouldBe bytes
+      }
+
+      test("an unrevealed opponent rides as a stub and round-trips") {
+        val decoded = BattleFieldStatePacketCodec.decodeBytes(fixture(TRAINER))
+        val benched = BattleOpponentBlock(slot = 1, revealed = false)
+        val twoMon = decoded.copy(opponentParty = decoded.opponentParty + benched)
+
+        val reDecoded =
+            BattleFieldStatePacketCodec.decodeBytes(
+                BattleFieldStatePacketCodec.encodeToBytes(twoMon))
+
+        reDecoded.opponentParty.size shouldBe 2
+        reDecoded.opponentParty[1].revealed shouldBe false
+        reDecoded shouldBe twoMon
       }
 
       test("round-trips a synthetic field state for a species without a capture") {
@@ -65,26 +100,28 @@ class BattleFieldStatePacketTest :
                 movesPresent = true,
                 moveIds = listOf(33, 39, 45, 98),
             )
-        val wild =
-            BattleMonBlock(
+        val geodude =
+            BattleOpponentBlock(
                 slot = 0,
+                revealed = true,
                 entityId = 0x456C000L,
                 species = 74,
                 level = 9,
-                gender = 0,
-                abilityId = 0,
                 maxHp = 26,
                 currentHp = 26,
-                movesPresent = false,
-                moveIds = listOf(0, 0, 0, 0),
             )
         val packet =
             BattleFieldStatePacket(
                 playerName = "Ash",
                 playerId = 0x19000L,
+                playerAppearance = ByteArray(BattleFieldStatePacket.APPEARANCE_SIZE),
+                background = 0,
+                opposing = OpposingSide.WILD,
+                trainerId = 0,
                 playerParty = listOf(rattata),
                 activeSlot = 0,
-                wildParty = listOf(wild),
+                opponentParty = listOf(geodude),
+                opponentActiveSlot = 0,
             )
         val decoded =
             BattleFieldStatePacketCodec.decodeBytes(

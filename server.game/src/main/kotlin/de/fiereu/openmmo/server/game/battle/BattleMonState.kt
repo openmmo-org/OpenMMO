@@ -3,6 +3,7 @@ package de.fiereu.openmmo.server.game.battle
 import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.PokemonMove
 import de.fiereu.openmmo.net.game.packets.battle.BattleMonBlock
+import de.fiereu.openmmo.net.game.packets.battle.BattleOpponentBlock
 import de.fiereu.openmmo.pokemon.SpeciesDef
 import java.util.EnumMap
 
@@ -52,6 +53,18 @@ class BattleMonState(
       }
 
   fun effective(stat: BattleStat): Int = StatStages.scaleStat(unstaged(stat), stage(stat))
+
+  fun toOpponentBlock(slot: Int): BattleOpponentBlock =
+      BattleOpponentBlock(
+          slot = slot,
+          revealed = true,
+          entityId = entityId,
+          species = species.id.toShort(),
+          level = source.level,
+          gender = gender,
+          maxHp = stats.hp.toShort(),
+          currentHp = currentHp.toShort(),
+      )
 
   fun toBlock(slot: Int, movesPresent: Boolean): BattleMonBlock =
       BattleMonBlock(

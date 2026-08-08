@@ -5,6 +5,7 @@ import de.fiereu.openmmo.common.enums.ChatType
 import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.Language
 import de.fiereu.openmmo.common.enums.PokemonContainer
+import de.fiereu.openmmo.common.utils.hexToBytes
 import de.fiereu.openmmo.net.game.packets.ChatMessagePacket
 import de.fiereu.openmmo.net.game.packets.EntityMovePpPacket
 import de.fiereu.openmmo.net.game.packets.EntityPresencePacket
@@ -25,6 +26,7 @@ import de.fiereu.openmmo.net.game.packets.battle.BattleSwitchInPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleTileMapPacket
 import de.fiereu.openmmo.net.game.packets.battle.Experience
 import de.fiereu.openmmo.net.game.packets.battle.MoveSlots
+import de.fiereu.openmmo.net.game.packets.battle.OpposingSide
 import de.fiereu.openmmo.server.game.world.interest.InterestManager
 import de.fiereu.openmmo.typechart.TypeChart
 import javax.inject.Inject
@@ -42,6 +44,8 @@ private const val PRESENCE_OVERWORLD: Byte = 0
 
 // The active battle side reported to the client so the bag knows which monster an item targets.
 private const val PLAYER_SIDE: Byte = 1
+
+private val CAPTURED_APPEARANCE = "00024c031aac0f00038001a40004".hexToBytes()
 
 // The target move short the live server sends for each event. Meaning unknown, but it is fixed per
 // event type in every capture: a hit carries 0x0200, other events carry 0.
@@ -67,9 +71,16 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
         BattleFieldStatePacket(
             playerName = playerName,
             playerId = battle.charId,
+            // TODO Send the player's own appearance and the map's battle backdrop
+            //  These are the captured values, so every player appears as the captured character.
+            playerAppearance = CAPTURED_APPEARANCE,
+            background = 0,
+            opposing = OpposingSide.WILD,
+            trainerId = 0,
             playerParty = battle.party.mapIndexed { slot, mon -> mon.toBlock(slot, true) },
             activeSlot = battle.activeSlot,
-            wildParty = listOf(battle.wild.toBlock(slot = 0, movesPresent = false)),
+            opponentParty = listOf(battle.wild.toOpponentBlock(slot = 0)),
+            opponentActiveSlot = 0,
         ),
     )
     sendPrompt(battle)
