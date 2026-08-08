@@ -1,0 +1,51 @@
+"area: protocol":
+  - changed-files:
+      - any-glob-to-any-file:
+          - bytecodec/**
+          - network/**
+          - protocols.login/**
+          - protocols.game/**
+
+# The game systems live inside the server.game module, so the two areas split by
+# package instead of by module.
+"area: server":
+  - changed-files:
+      - any-glob-to-any-file:
+          - server.login/**
+          - server.game/src/**/game/*.kt
+          - server.game/src/**/game/config/**
+          - server.game/src/**/game/db/**
+          - server.game/src/**/game/di/**
+          - server.game/src/**/game/handler/**
+          - server.game/src/**/game/services/**
+          - server.game/src/**/game/session/**
+          - server.game/src/**/game/storage/**
+          - server.game/src/main/resources/db/**
+
+"area: game":
+  - changed-files:
+      - any-glob-to-any-file:
+          - server.game/src/**/game/battle/**
+          - server.game/src/**/game/script/**
+          - server.game/src/**/game/world/**
+
+"area: codegen":
+  - changed-files:
+      - any-glob-to-any-file:
+          - codegen/**
+          - decomp/**
+
+"area: patcher":
+  - changed-files:
+      - any-glob-to-any-file:
+          - patcher/**
+          - keys/**
+
+"area: build":
+  - changed-files:
+      - any-glob-to-any-file:
+          - buildSrc/**
+          - gradle/**
+          - "*.gradle.kts"
+          - gradle.properties
+          - .github/**

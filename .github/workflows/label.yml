@@ -1,0 +1,82 @@
+name: Label
+
+on:
+  pull_request_target:
+    types: [ opened, edited, reopened, synchronize ]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: label-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  area:
+    name: Area from the changed paths
+    runs-on: ubuntu-latest
+    steps:
+      # Never check out the pull request head in this job. pull_request_target
+      # runs with a write token even for forks, so running their code here would
+      # hand the token to the fork.
+      - name: Apply the area labels
+        uses: actions/labeler@v5
+        with:
+          configuration-path: .github/labeler.yml
+          sync-labels: true
+
+  type:
+    name: Type from the title
+    if: github.event.action != 'synchronize'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Map the conventional commit type to a label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          TITLE: ${{ github.event.pull_request.title }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$HEAD_REF" == release-please--* ]]; then
+            echo "Release pull request, release-please owns its labels."
+            exit 0
+          fi
+
+          types='build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test'
+          if [[ ! "$TITLE" =~ ^($types)(\(([a-z0-9._/-]+)\))?!?:\ .+ ]]; then
+            echo "Title is not a Conventional Commit, nothing to label."
+            exit 0
+          fi
+          type="${BASH_REMATCH[1]}"
+          scope="${BASH_REMATCH[3]}"
+
+          # Renovate titles runtime bumps fix(deps), which is not a bug fix here.
+          # It already labels its own pull requests.
+          if [[ "$scope" == "deps" ]]; then
+            echo "Dependency update, Renovate owns its labels."
+            exit 0
+          fi
+
+          case "$type" in
+            feat) label="type: feature" ;;
+            fix) label="type: bug" ;;
+            docs) label="type: docs" ;;
+            perf) label="type: perf" ;;
+            refactor) label="type: refactor" ;;
+            test) label="type: test" ;;
+            *) label="type: chore" ;;
+          esac
+
+          # A retitle has to drop the label the old type produced.
+          gh api "repos/$REPO/issues/$NUMBER/labels" --jq '.[].name' |
+            while read -r name; do
+              if [[ "$name" == "type: "* && "$name" != "$label" ]]; then
+                gh api -X DELETE "repos/$REPO/issues/$NUMBER/labels/$(jq -rn --arg s "$name" '$s|@uri')"
+              fi
+            done
+
+          gh api -X POST "repos/$REPO/issues/$NUMBER/labels" -f "labels[]=$label"
