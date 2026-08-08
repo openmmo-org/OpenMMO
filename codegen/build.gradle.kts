@@ -57,6 +57,16 @@ jteCodegen {
     inputDirs.from(sourceDecompDir)
     extraArgs.set(listOf(sourceDecompDir.asFile.absolutePath))
   }
+  // Trainers differ per game, so this is by region like maps rather than from the canonical decomp.
+  register("trainer") {
+    mainClass.set("de.fiereu.openmmo.codegen.trainer.Main")
+    inputDirs.from(
+        regionSources.values.map { rootProject.layout.projectDirectory.dir("decomp/$it") })
+    extraArgs.set(
+        regionSources.map { (region, decomp) ->
+          "$region|${rootProject.layout.projectDirectory.dir("decomp/$decomp").asFile.absolutePath}"
+        })
+  }
   // Per region flag and var key constants for scripts. Names come from each decomp, so this is by
   // region like maps. The generic story store in server.game does not depend on these, they are the
   // GBA adapter that gives ported scripts readable keys.

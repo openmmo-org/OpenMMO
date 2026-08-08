@@ -8,6 +8,8 @@ import java.time.LocalDateTime
 
 const val MAX_MOVE_SLOTS = 4
 
+const val MAX_PARTY_SIZE = 6
+
 data class Pokemon(
     val id: Long,
     val ownerId: Long,
