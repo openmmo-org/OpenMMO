@@ -3,6 +3,7 @@ package de.fiereu.openmmo.common.auth
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -32,27 +33,41 @@ class SessionTokenIssuer(secret: ByteArray, private val clock: Clock = Clock.sys
 
   fun issue(userId: Long): SessionToken {
     val issuedAt = clock.instant()
-    val bytes = build(userId, issuedAt, secretKey)
+    val bytes = ByteArray(TOKEN_SIZE)
+    ByteBuffer.wrap(bytes, 0, PREFIX_SIZE).putLong(userId).putLong(issuedAt.epochSecond)
+    sign(bytes, secretKey)
     return SessionToken(userId, issuedAt, bytes)
   }
 }
 
-class SessionTokenVerifier(secret: ByteArray) {
+class SessionTokenVerifier(
+    secret: ByteArray,
+    private val maxAge: Duration = DEFAULT_MAX_AGE,
+    private val clock: Clock = Clock.systemUTC(),
+) {
   init {
     require(secret.isNotEmpty()) { "session token secret must not be empty" }
+    require(!maxAge.isNegative && !maxAge.isZero) { "session token maxAge must be positive" }
   }
 
   private val secretKey = SecretKeySpec(secret, MAC_ALGORITHM)
 
+  // Reads the fields only once the mac says they are ours, so a forged timestamp cannot reach
+  // Instant.ofEpochSecond, which throws on an out of range value.
   fun verify(bytes: ByteArray): SessionToken? {
     if (bytes.size != TOKEN_SIZE) return null
+    if (!isAuthentic(bytes, secretKey)) return null
     val buf = ByteBuffer.wrap(bytes)
     val userId = buf.long
-    val epochSeconds = buf.long
-    val issuedAt = Instant.ofEpochSecond(epochSeconds)
-    val expected = build(userId, issuedAt, secretKey)
-    if (!MessageDigest.isEqual(bytes, expected)) return null
+    val issuedAt = Instant.ofEpochSecond(buf.long)
+    if (isExpired(issuedAt)) return null
     return SessionToken(userId, issuedAt, bytes)
+  }
+
+  private fun isExpired(issuedAt: Instant): Boolean {
+    val now = clock.instant()
+    if (issuedAt.isAfter(now.plus(CLOCK_SKEW_LEEWAY))) return true
+    return issuedAt.isBefore(now.minus(maxAge))
   }
 }
 
@@ -61,15 +76,22 @@ private const val PREFIX_SIZE = 16
 private const val MAC_SIZE = 16
 private const val TOKEN_SIZE = PREFIX_SIZE + MAC_SIZE
 
-private fun build(userId: Long, issuedAt: Instant, key: SecretKeySpec): ByteArray {
-  val out = ByteArray(TOKEN_SIZE)
-  val prefix = ByteBuffer.wrap(out, 0, PREFIX_SIZE)
-  prefix.putLong(userId)
-  prefix.putLong(issuedAt.epochSecond)
+private val DEFAULT_MAX_AGE: Duration = Duration.ofMinutes(5)
+
+// Tolerates drift between the two servers' clocks. A token dated further ahead than this would
+// outlive maxAge by the difference.
+private val CLOCK_SKEW_LEEWAY: Duration = Duration.ofSeconds(30)
+
+private fun tagOf(token: ByteArray, key: SecretKeySpec): ByteArray {
   val mac = Mac.getInstance(MAC_ALGORITHM)
   mac.init(key)
-  mac.update(out, 0, PREFIX_SIZE)
-  val tag = mac.doFinal()
-  System.arraycopy(tag, 0, out, PREFIX_SIZE, MAC_SIZE)
-  return out
+  mac.update(token, 0, PREFIX_SIZE)
+  return mac.doFinal().copyOf(MAC_SIZE)
 }
+
+private fun sign(token: ByteArray, key: SecretKeySpec) {
+  System.arraycopy(tagOf(token, key), 0, token, PREFIX_SIZE, MAC_SIZE)
+}
+
+private fun isAuthentic(token: ByteArray, key: SecretKeySpec): Boolean =
+    MessageDigest.isEqual(tagOf(token, key), token.copyOfRange(PREFIX_SIZE, TOKEN_SIZE))

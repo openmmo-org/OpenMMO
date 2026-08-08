@@ -5,6 +5,8 @@ import com.zaxxer.hikari.HikariDataSource
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
+import de.fiereu.openmmo.common.auth.RememberMeTokenIssuer
+import de.fiereu.openmmo.common.auth.RememberMeTokenVerifier
 import de.fiereu.openmmo.common.auth.SessionTokenIssuer
 import de.fiereu.openmmo.common.io.PemKeyLoader
 import de.fiereu.openmmo.common.io.pemStream
@@ -42,6 +44,16 @@ abstract class LoginServerModule {
     @Singleton
     fun tokenIssuer(config: LoginServerConfig): SessionTokenIssuer =
         SessionTokenIssuer(config.sessionSecret)
+
+    @Provides
+    @Singleton
+    fun rememberMeIssuer(config: LoginServerConfig): RememberMeTokenIssuer =
+        RememberMeTokenIssuer(config.sessionSecret)
+
+    @Provides
+    @Singleton
+    fun rememberMeVerifier(config: LoginServerConfig): RememberMeTokenVerifier =
+        RememberMeTokenVerifier(config.sessionSecret, config.rememberMeMaxAge)
 
     @Provides
     @Singleton

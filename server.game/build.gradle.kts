@@ -35,6 +35,7 @@ dependencies {
 tasks.named<JavaExec>("run") {
   listOf(
           "OPENMMO_SESSION_SECRET",
+          "OPENMMO_SESSION_TOKEN_MAX_AGE",
           "GAME_DB_HOST",
           "GAME_DB_PORT",
           "GAME_DB_NAME",

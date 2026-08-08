@@ -23,7 +23,14 @@ constructor(
         if (user == null || user.passwordHash != password) {
           UserService.AuthResult(LoginState.INVALID_PASSWORD)
         } else {
-          UserService.AuthResult(LoginState.AUTHED, user.id)
+          UserService.AuthResult(LoginState.AUTHED, user.id, user.tokenEpoch ?: 0)
+        }
+      }
+
+  override suspend fun findForToken(userId: Int): UserService.TokenUser? =
+      withContext(dispatcher) {
+        dsl.selectFrom(USERS).where(USERS.ID.eq(userId)).fetchOne()?.let {
+          UserService.TokenUser(it.id!!, it.username, it.displayName, it.tokenEpoch ?: 0)
         }
       }
 

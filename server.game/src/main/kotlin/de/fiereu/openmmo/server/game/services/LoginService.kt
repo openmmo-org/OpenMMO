@@ -3,6 +3,7 @@ package de.fiereu.openmmo.server.game.services
 import de.fiereu.network.PacketEvent
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.CharacterInfo
+import de.fiereu.openmmo.common.auth.SessionTokenVerifier
 import de.fiereu.openmmo.common.enums.CharacterGender
 import de.fiereu.openmmo.common.enums.ChatType
 import de.fiereu.openmmo.common.enums.Language
@@ -75,27 +76,49 @@ constructor(
     private val characterStore: CharacterStore,
     private val presenceService: PresenceService,
     private val mapScriptService: MapScriptService,
+    private val tokenVerifier: SessionTokenVerifier,
 ) {
 
   fun onJoinGame(event: PacketEvent<JoinPacket>) {
     val ctx = event.session
-    val join = event.packet
-    log.info { "Player joined the game." }
+    val authData = event.packet.authData
 
-    val authData = join.authData
-    var userId = 0
-    if (authData is NewAuthData) {
-      userId = authData.userId
-      log.info { "User $userId joined with session key (${authData.sessionKey.size} bytes)" }
+    if (authData !is NewAuthData) {
+      log.warn { "Rejected join with unsupported auth data ${authData::class.simpleName}" }
+      rejectJoin(ctx)
+      return
     }
 
-    if (userId > 0) {
-      ctx.attributes[PLAYER_STATE] = PlayerState(userId = userId)
-      sessionRegistry.register(ctx)
-      log.info { "Session created for user $userId" }
+    val token = tokenVerifier.verify(authData.sessionKey)
+    if (token == null) {
+      log.warn {
+        "Rejected join for claimed userId=${authData.userId}, " +
+            "session token invalid or expired (${authData.sessionKey.size} bytes)"
+      }
+      rejectJoin(ctx)
+      return
     }
+
+    // The claim in the packet is the client's, the token is the login server's. Compare before
+    // narrowing, so a value that does not fit an Int cannot match by truncation.
+    if (token.userId != authData.userId.toLong() || token.userId <= 0) {
+      log.warn { "Join claimed userId=${authData.userId} but its token says ${token.userId}" }
+      rejectJoin(ctx)
+      return
+    }
+    val userId = token.userId.toInt()
+
+    ctx.attributes[PLAYER_STATE] = PlayerState(userId = userId)
+    sessionRegistry.register(ctx)
+    log.info { "Session created for user $userId" }
 
     ctx.send(JoinResponsePacket.acceptNow(playtime = 1337, rewardPoints = 420, balance = 187))
+  }
+
+  // Closing is what keeps a refused peer from going on to send packets the handlers would
+  // otherwise answer without a PlayerState. Close only once the refusal itself has been written.
+  private fun rejectJoin(ctx: SessionContext) {
+    ctx.send(JoinResponsePacket.reject()).addListener { ctx.close { "join rejected" } }
   }
 
   suspend fun onCreateCharacter(event: PacketEvent<CreateCharacterPacket>) {
@@ -173,14 +196,18 @@ constructor(
   suspend fun onCharacterSelected(event: PacketEvent<SelectCharacterPacket>) {
     val ctx = event.session
     val charId = event.packet.characterId
+    val state = ctx.attributes[PLAYER_STATE]
+    if (state == null) {
+      log.warn { "No session for channel" }
+      return
+    }
     val stored = characterStore.getOrLoadCharacter(charId)
     if (stored == null) {
       log.warn { "Character $charId not found" }
       return
     }
-    val state = ctx.attributes[PLAYER_STATE]
-    if (state == null) {
-      log.warn { "No session for channel" }
+    if (stored.info.userId != state.userId) {
+      log.warn { "User ${state.userId} tried to select character $charId owned by another account" }
       return
     }
 

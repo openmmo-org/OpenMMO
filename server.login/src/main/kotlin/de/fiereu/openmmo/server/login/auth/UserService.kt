@@ -9,11 +9,21 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 interface UserService {
-  data class AuthResult(val state: LoginState, val userId: Int? = null)
+  data class AuthResult(val state: LoginState, val userId: Int? = null, val tokenEpoch: Int = 0)
+
+  /** Identity a remember me token resolves to, with the epoch that token has to still match. */
+  data class TokenUser(
+      val id: Int,
+      val username: String,
+      val displayName: String,
+      val tokenEpoch: Int,
+  )
 
   suspend fun authenticate(username: String, password: String): AuthResult
 
   suspend fun getUserId(username: String): Int?
+
+  suspend fun findForToken(userId: Int): TokenUser?
 }
 
 @Suppress("kotlin:S4790")
@@ -23,7 +33,12 @@ internal fun sha1Hex(value: String): String =
 @Singleton
 class InMemoryUserStore @Inject constructor() : UserService {
 
-  private data class UserInfo(val id: Int, val passwordHash: String, val username: String)
+  private data class UserInfo(
+      val id: Int,
+      val passwordHash: String,
+      val username: String,
+      val tokenEpoch: Int = 0,
+  )
 
   private val users = ConcurrentHashMap<String, UserInfo>()
   private val nextId = AtomicInteger(1)
@@ -45,8 +60,15 @@ class InMemoryUserStore @Inject constructor() : UserService {
     if (user.passwordHash != password) {
       return UserService.AuthResult(LoginState.INVALID_PASSWORD)
     }
-    return UserService.AuthResult(LoginState.AUTHED, user.id)
+    return UserService.AuthResult(LoginState.AUTHED, user.id, user.tokenEpoch)
   }
 
   override suspend fun getUserId(username: String): Int? = users[username.lowercase()]?.id
+
+  override suspend fun findForToken(userId: Int): UserService.TokenUser? =
+      users.values
+          .firstOrNull { it.id == userId }
+          ?.let {
+            UserService.TokenUser(it.id, it.username.lowercase(), it.username, it.tokenEpoch)
+          }
 }
