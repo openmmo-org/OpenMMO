@@ -43,8 +43,13 @@ class RememberMeTokenIssuer(secret: ByteArray, private val clock: Clock = Clock.
 
   fun issue(userId: Int, epoch: Int): RememberMeToken {
     val issuedAt = clock.instant()
-    return RememberMeToken(
-        userId, epoch, issuedAt, buildRememberMe(userId, epoch, issuedAt.epochSecond, secretKey))
+    val bytes = ByteArray(REMEMBER_ME_TOKEN_SIZE)
+    ByteBuffer.wrap(bytes, 0, REMEMBER_ME_PREFIX_SIZE)
+        .putInt(userId)
+        .putInt(epoch)
+        .putLong(issuedAt.epochSecond)
+    signRememberMe(bytes, secretKey)
+    return RememberMeToken(userId, epoch, issuedAt, bytes)
   }
 }
 
@@ -63,13 +68,11 @@ class RememberMeTokenVerifier(
   /** Checks the mac and the age. The caller still has to match [RememberMeToken.epoch]. */
   fun verify(bytes: ByteArray): RememberMeToken? {
     if (bytes.size != REMEMBER_ME_TOKEN_SIZE) return null
+    if (!isAuthenticRememberMe(bytes, secretKey)) return null
     val buf = ByteBuffer.wrap(bytes)
     val userId = buf.int
     val epoch = buf.int
-    val epochSeconds = buf.long
-    val expected = buildRememberMe(userId, epoch, epochSeconds, secretKey)
-    if (!MessageDigest.isEqual(bytes, expected)) return null
-    val issuedAt = Instant.ofEpochSecond(epochSeconds)
+    val issuedAt = Instant.ofEpochSecond(buf.long)
     val now = clock.instant()
     if (issuedAt.isAfter(now.plus(REMEMBER_ME_SKEW_LEEWAY))) return null
     if (issuedAt.isBefore(now.minus(maxAge))) return null
@@ -84,20 +87,19 @@ private const val REMEMBER_ME_TOKEN_SIZE = REMEMBER_ME_PREFIX_SIZE + REMEMBER_ME
 
 private val REMEMBER_ME_SKEW_LEEWAY: Duration = Duration.ofSeconds(30)
 
-private fun buildRememberMe(
-    userId: Int,
-    epoch: Int,
-    epochSecond: Long,
-    key: SecretKeySpec,
-): ByteArray {
-  val out = ByteArray(REMEMBER_ME_TOKEN_SIZE)
-  val prefix = ByteBuffer.wrap(out, 0, REMEMBER_ME_PREFIX_SIZE)
-  prefix.putInt(userId)
-  prefix.putInt(epoch)
-  prefix.putLong(epochSecond)
+private fun rememberMeTagOf(token: ByteArray, key: SecretKeySpec): ByteArray {
   val mac = Mac.getInstance(REMEMBER_ME_MAC_ALGORITHM)
   mac.init(key)
-  mac.update(out, 0, REMEMBER_ME_PREFIX_SIZE)
-  System.arraycopy(mac.doFinal(), 0, out, REMEMBER_ME_PREFIX_SIZE, REMEMBER_ME_MAC_SIZE)
-  return out
+  mac.update(token, 0, REMEMBER_ME_PREFIX_SIZE)
+  return mac.doFinal().copyOf(REMEMBER_ME_MAC_SIZE)
 }
+
+private fun signRememberMe(token: ByteArray, key: SecretKeySpec) {
+  System.arraycopy(
+      rememberMeTagOf(token, key), 0, token, REMEMBER_ME_PREFIX_SIZE, REMEMBER_ME_MAC_SIZE)
+}
+
+private fun isAuthenticRememberMe(token: ByteArray, key: SecretKeySpec): Boolean =
+    MessageDigest.isEqual(
+        rememberMeTagOf(token, key),
+        token.copyOfRange(REMEMBER_ME_PREFIX_SIZE, REMEMBER_ME_TOKEN_SIZE))
