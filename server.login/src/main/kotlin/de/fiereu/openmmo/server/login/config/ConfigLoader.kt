@@ -11,6 +11,10 @@ object ConfigLoader {
     val config = ConfigFactory.load()
     val secret = config.getString("server.sessionSecret")
     require(secret.isNotEmpty()) { "server.sessionSecret must not be empty" }
+    val rememberMeMaxAge = config.getDuration("server.rememberMeMaxAge")
+    require(!rememberMeMaxAge.isNegative && !rememberMeMaxAge.isZero) {
+      "server.rememberMeMaxAge must be positive"
+    }
     return LoginServerConfig(
         host = config.getString("server.host"),
         port = config.getInt("server.port"),
@@ -19,6 +23,7 @@ object ConfigLoader {
         rootKey = config.stringOrNull("server.rootKey"),
         rootKeyFile = config.stringOrNull("server.rootKeyFile"),
         sessionSecret = secret.toByteArray(Charsets.UTF_8),
+        rememberMeMaxAge = rememberMeMaxAge,
         db =
             DbConfig(
                 host = config.getString("db.host"),

@@ -5,8 +5,9 @@ import com.zaxxer.hikari.HikariDataSource
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
+import de.fiereu.openmmo.common.auth.RememberMeTokenIssuer
+import de.fiereu.openmmo.common.auth.RememberMeTokenVerifier
 import de.fiereu.openmmo.common.auth.SessionTokenIssuer
-import de.fiereu.openmmo.common.auth.SessionTokenVerifier
 import de.fiereu.openmmo.common.io.PemKeyLoader
 import de.fiereu.openmmo.common.io.pemStream
 import de.fiereu.openmmo.server.login.auth.JooqUserStore
@@ -16,7 +17,6 @@ import io.netty.channel.EventLoopGroup
 import io.netty.channel.MultiThreadIoEventLoopGroup
 import io.netty.channel.nio.NioIoHandler
 import java.security.interfaces.ECPrivateKey
-import java.time.Clock
 import javax.inject.Named
 import javax.inject.Singleton
 import javax.sql.DataSource
@@ -47,10 +47,13 @@ abstract class LoginServerModule {
 
     @Provides
     @Singleton
-    fun tokenVerifier(config: LoginServerConfig): SessionTokenVerifier =
-        SessionTokenVerifier(config.sessionSecret)
+    fun rememberMeIssuer(config: LoginServerConfig): RememberMeTokenIssuer =
+        RememberMeTokenIssuer(config.sessionSecret)
 
-    @Provides @Singleton fun clock(): Clock = Clock.systemUTC()
+    @Provides
+    @Singleton
+    fun rememberMeVerifier(config: LoginServerConfig): RememberMeTokenVerifier =
+        RememberMeTokenVerifier(config.sessionSecret, config.rememberMeMaxAge)
 
     @Provides
     @Singleton

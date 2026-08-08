@@ -1,11 +1,14 @@
 package de.fiereu.openmmo.server.login.config
 
+import java.time.Duration
+
 data class LoginServerConfig(
     val host: String,
     val port: Int,
     val checksumSize: Int,
     val rootKeyResource: String,
     val sessionSecret: ByteArray,
+    val rememberMeMaxAge: Duration = Duration.ofDays(30),
     val db: DbConfig = DbConfig(),
     val rootKey: String? = null,
     val rootKeyFile: String? = null,
@@ -19,6 +22,7 @@ data class LoginServerConfig(
           rootKey == other.rootKey &&
           rootKeyFile == other.rootKeyFile &&
           sessionSecret.contentEquals(other.sessionSecret) &&
+          rememberMeMaxAge == other.rememberMeMaxAge &&
           db == other.db
 
   override fun hashCode(): Int {
@@ -29,6 +33,7 @@ data class LoginServerConfig(
     h = h * 31 + rootKey.hashCode()
     h = h * 31 + rootKeyFile.hashCode()
     h = h * 31 + sessionSecret.contentHashCode()
+    h = h * 31 + rememberMeMaxAge.hashCode()
     h = h * 31 + db.hashCode()
     return h
   }
