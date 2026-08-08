@@ -174,14 +174,12 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
     }
   }
 
-  fun sendSwitchIn(battle: BattleInstance, fullBlock: Boolean) {
+  fun sendSwitchIn(battle: BattleInstance, oldSlot: Int, fullBlock: Boolean) {
     broadcast(
         battle,
         BattleSwitchInPacket(
-            // These are field positions, not party slots: a newly revealed mon enters at field slot
-            // 1, one already seen returns to slot 0. The party slot itself rides in the block.
-            newSlot = if (fullBlock) 1 else 0,
-            oldSlot = if (fullBlock) 0 else 1,
+            newSlot = battle.activeSlot,
+            oldSlot = oldSlot,
             mon = battle.activeMon().toBlock(slot = battle.activeSlot, movesPresent = true),
             fullBlock = fullBlock,
         ),
@@ -189,12 +187,12 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
   }
 
   /** The opposing side sends out its next monster. Its moves stay hidden from the player. */
-  fun sendOpponentSwitchIn(battle: BattleInstance, fullBlock: Boolean) {
+  fun sendOpponentSwitchIn(battle: BattleInstance, oldSlot: Int, fullBlock: Boolean) {
     broadcast(
         battle,
         BattleSwitchInPacket(
-            newSlot = if (fullBlock) 1 else 0,
-            oldSlot = if (fullBlock) 0 else 1,
+            newSlot = battle.opponentSlot,
+            oldSlot = oldSlot,
             mon = battle.opponentMon().toBlock(battle.opponentSlot, movesPresent = false),
             fullBlock = fullBlock,
             side = OPPONENT_SIDE,

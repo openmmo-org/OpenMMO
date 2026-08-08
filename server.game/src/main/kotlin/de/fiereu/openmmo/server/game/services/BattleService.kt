@@ -341,18 +341,19 @@ constructor(
     when {
       battle.opponent.all { it.fainted } -> endVictory(battle)
       battle.party.all { it.fainted } -> endDefeat(battle)
-      battle.opponentMon().fainted -> {
-        awardXp(battle, battle.opponentMon())
-        sendOutNextOpponent(battle)
-        battle.turn += 1
-        emitter.sendPrompt(battle)
-      }
-      // The active mon fainted with a live backup. Open the switch screen instead of the action
-      // prompt. The replacement arrives as a normal SWITCH action.
-      battle.activeMon().fainted -> emitter.sendSwitchPrompt(battle)
       else -> {
-        battle.turn += 1
-        emitter.sendPrompt(battle)
+        if (battle.opponentMon().fainted) {
+          awardXp(battle, battle.opponentMon())
+          sendOutNextOpponent(battle)
+        }
+        // The active mon fainted with a live backup. Open the switch screen instead of the action
+        // prompt. The replacement arrives as a normal SWITCH action.
+        if (battle.activeMon().fainted) {
+          emitter.sendSwitchPrompt(battle)
+        } else {
+          battle.turn += 1
+          emitter.sendPrompt(battle)
+        }
       }
     }
   }
@@ -390,10 +391,11 @@ constructor(
     val next = battle.opponent.indexOfFirst { !it.fainted }
     if (next < 0) return
     val fullBlock = next !in battle.opponentSeen
+    val oldSlot = battle.opponentSlot
     battle.opponentSlot = next
     battle.opponentSeen.add(next)
     log.info { "Opponent sends out slot $next for char=${battle.charId}" }
-    emitter.sendOpponentSwitchIn(battle, fullBlock)
+    emitter.sendOpponentSwitchIn(battle, oldSlot, fullBlock)
   }
 
   private fun performSwitch(battle: BattleInstance, target: Int) {
@@ -402,7 +404,7 @@ constructor(
     battle.activeSlot = target
     battle.seenActive.add(target)
     log.info { "Switch char=${battle.charId} slot $oldSlot -> $target (fullBlock=$fullBlock)" }
-    emitter.sendSwitchIn(battle, fullBlock)
+    emitter.sendSwitchIn(battle, oldSlot, fullBlock)
   }
 
   private fun flee(battle: BattleInstance) {
