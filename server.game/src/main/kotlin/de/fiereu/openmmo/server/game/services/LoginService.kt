@@ -85,7 +85,7 @@ constructor(
 
     if (authData !is NewAuthData) {
       log.warn { "Rejected join with unsupported auth data ${authData::class.simpleName}" }
-      ctx.send(JoinResponsePacket.reject())
+      rejectJoin(ctx)
       return
     }
 
@@ -95,7 +95,7 @@ constructor(
         "Rejected join for claimed userId=${authData.userId}, " +
             "session token invalid or expired (${authData.sessionKey.size} bytes)"
       }
-      ctx.send(JoinResponsePacket.reject())
+      rejectJoin(ctx)
       return
     }
 
@@ -103,7 +103,7 @@ constructor(
     // narrowing, so a value that does not fit an Int cannot match by truncation.
     if (token.userId != authData.userId.toLong() || token.userId <= 0) {
       log.warn { "Join claimed userId=${authData.userId} but its token says ${token.userId}" }
-      ctx.send(JoinResponsePacket.reject())
+      rejectJoin(ctx)
       return
     }
     val userId = token.userId.toInt()
@@ -113,6 +113,12 @@ constructor(
     log.info { "Session created for user $userId" }
 
     ctx.send(JoinResponsePacket.acceptNow(playtime = 1337, rewardPoints = 420, balance = 187))
+  }
+
+  // Closing is what keeps a refused peer from going on to send packets the handlers would
+  // otherwise answer without a PlayerState. Close only once the refusal itself has been written.
+  private fun rejectJoin(ctx: SessionContext) {
+    ctx.send(JoinResponsePacket.reject()).addListener { ctx.close { "join rejected" } }
   }
 
   suspend fun onCreateCharacter(event: PacketEvent<CreateCharacterPacket>) {
@@ -190,14 +196,18 @@ constructor(
   suspend fun onCharacterSelected(event: PacketEvent<SelectCharacterPacket>) {
     val ctx = event.session
     val charId = event.packet.characterId
+    val state = ctx.attributes[PLAYER_STATE]
+    if (state == null) {
+      log.warn { "No session for channel" }
+      return
+    }
     val stored = characterStore.getOrLoadCharacter(charId)
     if (stored == null) {
       log.warn { "Character $charId not found" }
       return
     }
-    val state = ctx.attributes[PLAYER_STATE]
-    if (state == null) {
-      log.warn { "No session for channel" }
+    if (stored.info.userId != state.userId) {
+      log.warn { "User ${state.userId} tried to select character $charId owned by another account" }
       return
     }
 
