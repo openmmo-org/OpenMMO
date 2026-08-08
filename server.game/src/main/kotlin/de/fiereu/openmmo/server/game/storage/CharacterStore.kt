@@ -308,6 +308,15 @@ constructor(
     }
   }
 
+  /**
+   * Puts a character back to a [snapshot] taken earlier. Every mutator replaces the collections it
+   * touches rather than editing them, so an older [StoredCharacter] is still a complete picture of
+   * what the character was.
+   */
+  fun restoreProgress(characterId: Long, snapshot: StoredCharacter) {
+    mutate(characterId) { snapshot }
+  }
+
   fun startPeriodicFlush() {
     periodicJob =
         flushScope.launch {

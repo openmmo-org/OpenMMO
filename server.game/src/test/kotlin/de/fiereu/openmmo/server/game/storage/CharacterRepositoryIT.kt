@@ -155,8 +155,7 @@ class CharacterRepositoryIT :
         val current =
             stored.copy(
                 info =
-                    stored.info.copy(
-                        money = 999, positionX = 12, positionFacing = Direction.RIGHT),
+                    stored.info.copy(money = 999, positionX = 12, positionFacing = Direction.RIGHT),
                 pokemon = mutableListOf(kept.copy(hp = 3), added),
                 pcStorage = mutableListOf(),
                 items = mutableMapOf(4 to 9, 13 to 1),

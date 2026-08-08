@@ -11,6 +11,7 @@ import de.fiereu.openmmo.server.game.services.StoryPlayerService
 import de.fiereu.openmmo.server.game.services.StoryService
 import de.fiereu.openmmo.server.game.session.PlayerState
 import de.fiereu.openmmo.server.game.session.SCRIPT_SCOPE
+import de.fiereu.openmmo.server.game.session.SCRIPT_SNAPSHOT
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
@@ -19,6 +20,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 private val log = KotlinLogging.logger {}
@@ -47,6 +49,18 @@ constructor(
       runAll(session, state, listOf(script), entityId)
 
   /**
+   * Undoes what a script wrote when it does not reach its end. Scenes advance their story var last,
+   * so leaving the earlier writes in place would let the next login replay the scene on top of
+   * them, granting its rewards twice.
+   */
+  fun rollBack(session: SessionContext, state: PlayerState, entityId: Long) {
+    val snapshot = session.attributes.remove(SCRIPT_SNAPSHOT) ?: return
+    val charId = state.characterId ?: return
+    log.info { "Rolling back the unfinished script for entity $entityId on character $charId" }
+    characterStore.restoreProgress(charId, snapshot)
+  }
+
+  /**
    * Runs [scripts] in order on one coroutine so they share the dialog lock, for example a map's
    * on-transition script followed by its matching on-frame cutscene.
    */
@@ -57,11 +71,16 @@ constructor(
       entityId: Long,
   ) {
     if (scripts.isEmpty()) return
-    state.inDialog = true
     val scope =
         session.attributes.getOrPut(SCRIPT_SCOPE) {
           CoroutineScope(SupervisorJob() + Dispatchers.Default)
         }
+    // The disconnect that cancelled this scope also rolled the character back, so starting here
+    // would write on top of the restored state and never run its own cleanup.
+    if (!scope.isActive) return
+    state.inDialog = true
+    val snapshot = state.characterId?.let(characterStore::getCharacter)
+    if (snapshot != null) session.attributes[SCRIPT_SNAPSHOT] = snapshot
     val ctx =
         ScriptContext(
             session,
@@ -78,15 +97,21 @@ constructor(
             entryScripts,
         )
     scope.launch {
+      var finished = false
       try {
         for (script in scripts) script.run(ctx)
+        finished = true
       } catch (e: CancellationException) {
         throw e
       } catch (e: NotImplementedError) {
         log.info { "Script not ported yet for entity $entityId" }
+        // A stub wrote nothing, so there is nothing to undo.
+        finished = true
       } catch (e: Exception) {
         log.error(e) { "Script failed for entity $entityId" }
       } finally {
+        if (!finished) rollBack(session, state, entityId)
+        session.attributes.remove(SCRIPT_SNAPSHOT)
         dialogService.close(session, state)
       }
     }
