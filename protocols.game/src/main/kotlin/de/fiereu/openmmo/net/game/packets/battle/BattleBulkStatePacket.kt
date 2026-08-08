@@ -167,15 +167,10 @@ internal val BattleSerializedEntryCodec: Codec<BattleSerializedEntry> =
       }
     }
 
-// TODO Take money off the player when they lose a trainer battle
-//  The only captured loss is against a story NPC, who takes nothing, so the field carrying the
-//  deduction is unknown. [valueB] sits next to the payout and is zero in every capture, which
-//  makes it the first thing to check. Capture a loss to a normal trainer, then deduct it on defeat.
 data class BattleBulkStatePacket(
     val phase: Byte,
     val firstGroup: List<BattleSerializedEntry>,
     val secondGroup: List<BattleSerializedEntry>,
-    /** What the player won, on a trainer battle. Zero for a wild one. */
     val prizeMoney: Int,
     val valueB: Int,
     val flag: Byte,
