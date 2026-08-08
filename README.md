@@ -20,6 +20,11 @@ The goal is it to provide a free and open-source alternative to the PokeMMO serv
 
 ## Building
 
+Install JDK 25 and point `JAVA_HOME` at it before running the Gradle wrapper.
+Both the build logic and the JVM modules use a Java 25 toolchain, and the
+`buildSrc` build cannot provision that toolchain automatically. Verify the JVM
+selected by Gradle with `./gradlew --version`.
+
 The map data is generated at build time from the [pret](https://github.com/pret)
 decompilation projects, which are vendored as git submodules under `decomp/`.
 Clone the repository with its submodules:
