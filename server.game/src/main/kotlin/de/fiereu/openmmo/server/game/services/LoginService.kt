@@ -101,7 +101,7 @@ constructor(
 
     // The claim in the packet is the client's, the token is the login server's. Compare before
     // narrowing, so a value that does not fit an Int cannot match by truncation.
-    if (token.userId != authData.userId.toLong()) {
+    if (token.userId != authData.userId.toLong() || token.userId <= 0) {
       log.warn { "Join claimed userId=${authData.userId} but its token says ${token.userId}" }
       ctx.send(JoinResponsePacket.reject())
       return
