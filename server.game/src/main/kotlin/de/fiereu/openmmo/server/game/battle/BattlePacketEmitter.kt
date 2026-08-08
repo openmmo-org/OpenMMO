@@ -207,8 +207,8 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
     battle.session.send(EntityPresencePacket(entityId = battle.charId, status = PRESENCE_OVERWORLD))
   }
 
-  fun sendBattleEnd(battle: BattleInstance, party: List<Pokemon>) {
-    broadcast(battle, BattleBulkStatePacket.battleEnd())
+  fun sendBattleEnd(battle: BattleInstance, party: List<Pokemon>, prizeMoney: Int = 0) {
+    broadcast(battle, BattleBulkStatePacket.battleEnd(prizeMoney))
     battle.session.send(EntityPresencePacket(entityId = battle.charId, status = PRESENCE_OVERWORLD))
     battle.session.send(
         PokemonContainerPacket(

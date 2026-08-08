@@ -21,6 +21,8 @@ data class TrainerDef(
     val name: String,
     val trainerClass: Int,
     val doubleBattle: Boolean,
+    /** What the class pays per level of its last monster. */
+    val prizeRate: Int,
     val party: List<TrainerMon>,
 )
 

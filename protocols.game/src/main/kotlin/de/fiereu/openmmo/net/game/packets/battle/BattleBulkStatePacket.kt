@@ -167,10 +167,14 @@ internal val BattleSerializedEntryCodec: Codec<BattleSerializedEntry> =
       }
     }
 
+// TODO Take money off the player when they lose a trainer battle
+//  The only captured loss is against a story NPC, who takes nothing, so the field is unknown.
+//  [valueB] sits next to the payout and is zero in every capture, so check it first.
 data class BattleBulkStatePacket(
     val phase: Byte,
     val firstGroup: List<BattleSerializedEntry>,
     val secondGroup: List<BattleSerializedEntry>,
+    /** What the player won, on a trainer battle. Zero for a wild one. */
     val prizeMoney: Int,
     val valueB: Int,
     val flag: Byte,
@@ -180,12 +184,12 @@ data class BattleBulkStatePacket(
     /**
      * Terminal marker sent when a wild encounter resolves, telling the client to leave the scene.
      */
-    fun battleEnd(): BattleBulkStatePacket =
+    fun battleEnd(prizeMoney: Int = 0): BattleBulkStatePacket =
         BattleBulkStatePacket(
             phase = 0,
             firstGroup = listOf(NullSerializedEntry),
             secondGroup = listOf(NullSerializedEntry),
-            prizeMoney = 0,
+            prizeMoney = prizeMoney,
             valueB = 0,
             flag = 2,
             thirdGroup = emptyList(),

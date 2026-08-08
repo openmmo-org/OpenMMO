@@ -3,11 +3,15 @@ package de.fiereu.openmmo.server.game.battle
 import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.PokemonStat
 import de.fiereu.openmmo.pokemon.SpeciesDef
+import de.fiereu.openmmo.trainer.TrainerDef
 import javax.inject.Inject
 import javax.inject.Singleton
 
 private const val EV_STAT_CAP = 252
 private const val EV_TOTAL_CAP = 510
+
+// The flat multiplier the decomp applies on top of the class rate.
+private const val PRIZE_PER_LEVEL = 4
 
 data class RewardResult(
     val xpGained: Int,
@@ -23,8 +27,13 @@ data class RewardResult(
 @Singleton
 class BattleRewards @Inject constructor() {
 
+  // The live server is on a later formula and pays more. Staying on Gen 3 is deliberate.
   /** The Gen 3 wild battle experience: base yield times level over seven. */
   fun wildXp(defeated: SpeciesDef, defeatedLevel: Int): Int = defeated.expYield * defeatedLevel / 7
+
+  /** The Gen 3 payout for beating a trainer, off the level of the last monster it sent out. */
+  fun trainerPrize(trainer: TrainerDef, lastLevel: Int): Int =
+      PRIZE_PER_LEVEL * lastLevel * trainer.prizeRate
 
   fun apply(winner: BattleMonState, defeated: SpeciesDef, defeatedLevel: Int): RewardResult {
     val gained = wildXp(defeated, defeatedLevel)

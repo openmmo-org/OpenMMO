@@ -15,8 +15,9 @@ class BattleMonState(
     val entityId: Long,
     val species: SpeciesDef,
     val partyIndex: Int?,
-    val source: Pokemon,
-    val stats: ComputedStats,
+    // Both move on when a reward lands, so a second reward in the same battle builds on the first.
+    var source: Pokemon,
+    var stats: ComputedStats,
     val gender: Byte = 0,
 ) {
   var currentHp: Int = source.hp.toInt().coerceIn(0, stats.hp)

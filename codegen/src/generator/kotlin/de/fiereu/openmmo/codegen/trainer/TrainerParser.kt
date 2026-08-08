@@ -18,6 +18,7 @@ class TrainerParser(private val rootDir: File) {
 
   fun parseAll(): List<ParsedTrainer> {
     val parties = readParties()
+    val prizeRates = readPrizeRates()
     return readTrainers()
         .mapNotNull { entry ->
           val id = trainerIds[entry.constant]
@@ -37,6 +38,7 @@ class TrainerParser(private val rootDir: File) {
               name = entry.name,
               trainerClass = classIds[entry.trainerClass] ?: 0,
               doubleBattle = entry.doubleBattle,
+              prizeRate = prizeRates[entry.trainerClass] ?: 0,
               party = party,
           )
         }
@@ -103,6 +105,12 @@ class TrainerParser(private val rootDir: File) {
     }
   }
 
+  /** gTrainerMoneyTable, which pays a trainer class this much per level of its last monster. */
+  private fun readPrizeRates(): Map<String, Int> {
+    val table = MONEY_TABLE.find(read("src/battle_main.c"))?.groupValues?.get(1).orEmpty()
+    return MONEY_ENTRY.findAll(table).associate { it.groupValues[1] to it.groupValues[2].toInt() }
+  }
+
   private fun fields(body: String): Map<String, String> =
       FIELD.findAll(body).associate { it.groupValues[1] to it.groupValues[2].trim() }
 
@@ -133,5 +141,8 @@ class TrainerParser(private val rootDir: File) {
     val MEMBER = Regex("""\{((?:[^{}]|\{[^{}]*})*)}""", RegexOption.DOT_MATCHES_ALL)
     val FIELD = Regex("""\.(\w+)\s*=\s*(\{[^}]*}|[^,}]+)""")
     val MOVE = Regex("""MOVE_\w+""")
+    val MONEY_TABLE =
+        Regex("""gTrainerMoneyTable\[]\s*=\s*\{(.*?)};""", RegexOption.DOT_MATCHES_ALL)
+    val MONEY_ENTRY = Regex("""\{\s*(TRAINER_CLASS_\w+)\s*,\s*(\d+)\s*}""")
   }
 }

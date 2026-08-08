@@ -42,6 +42,7 @@ import de.fiereu.openmmo.typechart.TypeChart
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -251,6 +252,7 @@ class BattleServiceTest :
                   name = "TERRY",
                   trainerClass = 0,
                   doubleBattle = false,
+                  prizeRate = 5,
                   party =
                       listOf(
                           TrainerMon(RATTATA, 2, 0, 0, emptyList()),
@@ -278,6 +280,23 @@ class BattleServiceTest :
           battle.opponent[0].fainted.shouldBeTrue()
           battle.pendingResult.shouldBeNull()
           session.sent.filterIsInstance<BattleSwitchInPacket>().last().side shouldBe 1.toByte()
+
+          // The lead is paid for as it faints, not held back until the whole team is beaten.
+          val xpBefore = battle.activeMon().source.xp
+          xpBefore shouldBeGreaterThan 0
+          session.sent
+              .filterIsInstance<BattleEntityDeltaPacket>()
+              .any { it.experience != null }
+              .shouldBeTrue()
+
+          rounds = 0
+          while (battle.pendingResult == null && rounds < 10) {
+            session.act(fx.service, BattleAction.MOVE, TACKLE)
+            rounds += 1
+          }
+
+          // The second monster pays on top of the first, rather than replacing it.
+          battle.activeMon().source.xp shouldBeGreaterThan xpBefore
         }
       }
 

@@ -6,10 +6,13 @@ import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.GrowthRate
 import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.pokemon.SpeciesRegistry
+import de.fiereu.openmmo.trainer.TrainerRegistry
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import java.time.LocalDateTime
 
@@ -56,6 +59,14 @@ class BattleRewardsTest :
       test("wild xp follows yield times level over seven") {
         val rattata = species.get(RATTATA)!!
         rewards.wildXp(rattata, 3) shouldBe rattata.expYield * 3 / 7
+      }
+
+      // Camper LIAM, whose last monster is level 11, pays 220 on the live server too.
+      test("a trainer pays four times the class rate per level of its last monster") {
+        val liam = TrainerRegistry().get(Region.KANTO, 142).shouldNotBeNull()
+
+        liam.prizeRate shouldBe 5
+        rewards.trainerPrize(liam, liam.party.last().level) shouldBe 220
       }
 
       test("a big win jumps several levels and recomputes stats") {

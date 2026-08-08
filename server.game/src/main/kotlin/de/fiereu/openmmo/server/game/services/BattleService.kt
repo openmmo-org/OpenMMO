@@ -303,6 +303,7 @@ constructor(
       battle.opponent.all { it.fainted } -> endVictory(battle)
       battle.party.all { it.fainted } -> endDefeat(battle)
       battle.opponentMon().fainted -> {
+        awardXp(battle, battle.opponentMon())
         sendOutNextOpponent(battle)
         battle.turn += 1
         emitter.sendPrompt(battle)
@@ -416,8 +417,22 @@ constructor(
   }
 
   private fun endVictory(battle: BattleInstance) {
+    awardXp(battle, battle.opponentMon())
+    val prize = battle.trainer?.let { rewards.trainerPrize(it, battle.opponent.last().level) } ?: 0
+    if (prize > 0) {
+      characterStore.addMoney(battle.charId, prize)
+      log.info { "char=${battle.charId} won $prize from ${battle.trainer?.name}" }
+    }
+    endBattle(battle, BattleResult.VICTORY, battle.activeMon().entityId, prize)
+  }
+
+  /**
+   * Pays the active monster for knocking [defeated] out. A trainer's team is paid for one at a
+   * time, as each faints, which is when the captures show the delta going out.
+   */
+  private fun awardXp(battle: BattleInstance, defeated: BattleMonState) {
     val winner = battle.activeMon()
-    val reward = rewards.apply(winner, battle.opponentMon().species, battle.opponentMon().level)
+    val reward = rewards.apply(winner, defeated.species, defeated.level)
     log.info {
       "char=${battle.charId} won: +${reward.xpGained} xp, level ${winner.level} -> ${reward.newLevel}"
     }
@@ -433,17 +448,17 @@ constructor(
       pendingLearns[battle.charId] = PendingMoveLearn(winner.entityId, offered)
       battle.session.send(MoveLearnPromptPacket(winner.entityId, offered))
     }
-    characterStore.updatePokemon(
-        battle.charId,
+    val grown =
         winner.source.copy(
             level = reward.newLevel.toByte(),
             xp = reward.newXp,
             hp = reward.newCurrentHp.toShort(),
             eVs = reward.newEvs,
             moves = winner.moves.map { PokemonMove(it.id, it.pp) },
-        ),
-    )
-    endBattle(battle, BattleResult.VICTORY, skip = winner.entityId)
+        )
+    winner.source = grown
+    winner.stats = reward.newStats
+    characterStore.updatePokemon(battle.charId, grown)
   }
 
   private fun endDefeat(battle: BattleInstance) {
@@ -455,10 +470,11 @@ constructor(
       battle: BattleInstance,
       result: BattleResult,
       skip: Long? = null,
+      prizeMoney: Int = 0,
   ) {
     persistParty(battle, skip)
     val party = characterStore.getCharacter(battle.charId)?.pokemon ?: emptyList()
-    emitter.sendBattleEnd(battle, party)
+    emitter.sendBattleEnd(battle, party, prizeMoney)
     battle.pendingResult = result
   }
 
