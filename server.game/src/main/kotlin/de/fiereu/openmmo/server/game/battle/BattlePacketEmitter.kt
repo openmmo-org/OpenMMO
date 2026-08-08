@@ -79,8 +79,8 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
             trainerId = 0,
             playerParty = battle.party.mapIndexed { slot, mon -> mon.toBlock(slot, true) },
             activeSlot = battle.activeSlot,
-            opponentParty = listOf(battle.wild.toOpponentBlock(slot = 0)),
-            opponentActiveSlot = 0,
+            opponentParty = battle.opponent.mapIndexed { slot, mon -> mon.toOpponentBlock(slot) },
+            opponentActiveSlot = battle.opponentSlot,
         ),
     )
     sendPrompt(battle)
@@ -92,7 +92,7 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
       val event = events[i]
       when (event) {
         is BattleEvent.MoveUsed -> {
-          if (event.attackerId != battle.wild.entityId) {
+          if (battle.isPlayerSide(event.attackerId)) {
             battle.session.send(
                 EntityMovePpPacket(
                     event.attackerId, event.moveSlot.toByte(), event.ppLeft.toByte()))
@@ -244,10 +244,10 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
       attackerId: Long,
       moveId: Short
   ): BattleEffectTarget {
-    val opponent =
-        if (attackerId == battle.wild.entityId) battle.activeMon().entityId
-        else battle.wild.entityId
-    return target(opponent, DEFAULT_TARGET_MOVE, BattleEventBody.MoveFailed(moveId))
+    val defender =
+        if (battle.isPlayerSide(attackerId)) battle.opponentMon().entityId
+        else battle.activeMon().entityId
+    return target(defender, DEFAULT_TARGET_MOVE, BattleEventBody.MoveFailed(moveId))
   }
 
   fun broadcast(battle: BattleInstance, packet: Any) {

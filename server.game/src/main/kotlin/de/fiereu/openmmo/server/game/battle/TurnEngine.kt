@@ -69,30 +69,31 @@ constructor(
   fun resolveTurn(battle: BattleInstance, playerMoveId: Short): List<BattleEvent> {
     val events = mutableListOf<BattleEvent>()
     val player = battle.activeMon()
-    val wild = battle.wild
+    val enemy = battle.opponentMon()
 
-    val playerAction = TurnAction(player, wild, moves.get(playerMoveId.toInt()))
-    val wildAction = TurnAction(wild, player, pickWildMove(battle))
+    val playerAction = TurnAction(player, enemy, moves.get(playerMoveId.toInt()))
+    val enemyAction = TurnAction(enemy, player, pickEnemyMove(battle, enemy))
 
-    for (action in order(battle, playerAction, wildAction)) {
+    for (action in order(battle, playerAction, enemyAction)) {
       if (action.attacker.fainted) continue
       execute(battle, action, events)
-      if (player.fainted || wild.fainted) break
+      if (player.fainted || enemy.fainted) break
     }
     return events
   }
 
-  /** A voluntary switch spends the player's turn, so the wild attacks the incoming monster. */
+  /** A voluntary switch spends the player's turn, so the enemy attacks the incoming monster. */
   fun resolveSwitchTurn(battle: BattleInstance): List<BattleEvent> {
     val events = mutableListOf<BattleEvent>()
-    if (battle.wild.fainted) return events
-    execute(battle, TurnAction(battle.wild, battle.activeMon(), pickWildMove(battle)), events)
+    val enemy = battle.opponentMon()
+    if (enemy.fainted) return events
+    execute(battle, TurnAction(enemy, battle.activeMon(), pickEnemyMove(battle, enemy)), events)
     return events
   }
 
-  /** The wild AI picks a random usable move, falling back to Tackle with no pp left. */
-  private fun pickWildMove(battle: BattleInstance): MoveDef? {
-    val usable = battle.wild.moves.filter { it.id.toInt() != 0 && it.pp > 0 }
+  /** The enemy AI picks a random usable move, falling back to Tackle with no pp left. */
+  private fun pickEnemyMove(battle: BattleInstance, enemy: BattleMonState): MoveDef? {
+    val usable = enemy.moves.filter { it.id.toInt() != 0 && it.pp > 0 }
     if (usable.isEmpty()) return moves.get(TACKLE_ID)
     return moves.get(usable[battle.rng.pick(usable.size)].id.toInt())
   }

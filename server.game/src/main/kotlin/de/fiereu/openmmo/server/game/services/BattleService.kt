@@ -238,7 +238,7 @@ constructor(
     log.info {
       "Starting wild battle for char=$charId (${stored.info.name}): ${wildDef.name} level $level"
     }
-    val battle = battles.create(charId, session, party, wild, rng, catchable, escapable)
+    val battle = battles.create(charId, session, party, listOf(wild), rng, catchable, escapable)
     val firstAlive = party.indexOfFirst { !it.fainted }
     battle.activeSlot = firstAlive
     battle.seenActive.clear()
@@ -256,7 +256,7 @@ constructor(
 
   private fun afterTurn(battle: BattleInstance) {
     when {
-      battle.wild.fainted -> endVictory(battle)
+      battle.opponentMon().fainted -> endVictory(battle)
       battle.party.all { it.fainted } -> endDefeat(battle)
       // The active mon fainted with a live backup. Open the switch screen instead of the action
       // prompt. The replacement arrives as a normal SWITCH action.
@@ -326,20 +326,23 @@ constructor(
     val stored = characterStore.getCharacter(battle.charId) ?: return
     val nextSlot = ((stored.pokemon.maxOfOrNull { it.containerSlot } ?: -1) + 1).toShort()
     val caught =
-        battle.wild.source.copy(
-            ownerId = battle.charId,
-            container = PokemonContainer.PARTY,
-            containerSlot = nextSlot,
-            ot = stored.info.name,
-            hp = battle.wild.currentHp.toShort(),
-            moves = battle.wild.moves.map { PokemonMove(it.id, it.pp) },
-            caughtAt = LocalDateTime.now(),
-        )
-    log.info { "Caught wild ${battle.wild.species.name} for char=${battle.charId}" }
+        battle
+            .opponentMon()
+            .source
+            .copy(
+                ownerId = battle.charId,
+                container = PokemonContainer.PARTY,
+                containerSlot = nextSlot,
+                ot = stored.info.name,
+                hp = battle.opponentMon().currentHp.toShort(),
+                moves = battle.opponentMon().moves.map { PokemonMove(it.id, it.pp) },
+                caughtAt = LocalDateTime.now(),
+            )
+    log.info { "Caught wild ${battle.opponentMon().species.name} for char=${battle.charId}" }
     // The caught monster is sent as a full 148-byte record on opcode 0x14 before the ball-throw
     // event, so the client can resolve the monster when the throw lands.
     battle.session.send(SocialListEntryAddPacket(caught))
-    battle.session.send(acquiredMonsterDelta(caught, battle.wild.species))
+    battle.session.send(acquiredMonsterDelta(caught, battle.opponentMon().species))
     // "Player threw a Poke Ball" event.
     battle.session.send(
         BattleListEventPacket(
@@ -355,7 +358,7 @@ constructor(
 
   private fun endVictory(battle: BattleInstance) {
     val winner = battle.activeMon()
-    val reward = rewards.apply(winner, battle.wild.species, battle.wild.level)
+    val reward = rewards.apply(winner, battle.opponentMon().species, battle.opponentMon().level)
     log.info {
       "char=${battle.charId} won: +${reward.xpGained} xp, level ${winner.level} -> ${reward.newLevel}"
     }

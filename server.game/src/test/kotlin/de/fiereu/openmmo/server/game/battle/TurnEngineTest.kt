@@ -69,7 +69,7 @@ private fun battle(
     wild: BattleMonState,
     seed: Long,
 ): BattleInstance =
-    BattleInstance(1L, 100L, FakeSession(100L), listOf(player), wild, BattleRng(seed))
+    BattleInstance(1L, 100L, FakeSession(100L), listOf(player), listOf(wild), BattleRng(seed))
 
 private val engine = TurnEngine(MoveRegistry(), TypeChart())
 
