@@ -16,8 +16,9 @@
       "minimumReleaseAge": "3 days"
     },
     {
-      "description": "Keep the Gradle wrapper current and automerged",
+      "description": "Automerge non-major Gradle wrapper updates",
       "matchManagers": ["gradle-wrapper"],
+      "matchUpdateTypes": ["minor", "patch"],
       "automerge": true
     },
     {
@@ -32,8 +33,9 @@
       "groupName": "compose multiplatform"
     },
     {
-      "description": "Group GitHub Actions bumps into one PR",
+      "description": "Group non-major GitHub Actions bumps into one PR",
       "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin"],
       "groupName": "github actions"
     }
   ],
