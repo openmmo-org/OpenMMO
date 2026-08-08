@@ -1,3 +1,27 @@
+# The labeler cannot read the pull request title, so the type comes from the
+# branch prefix instead. A branch that matches nothing keeps no type label, which
+# is what renovate and release-please branches want.
+"type: feature":
+  - head-branch: [ '^feat/' ]
+
+"type: bug":
+  - head-branch: [ '^fix/' ]
+
+"type: docs":
+  - head-branch: [ '^docs/' ]
+
+"type: refactor":
+  - head-branch: [ '^refactor/' ]
+
+"type: test":
+  - head-branch: [ '^test/' ]
+
+"type: perf":
+  - head-branch: [ '^perf/' ]
+
+"type: chore":
+  - head-branch: [ '^(build|chore|ci|revert|style)/' ]
+
 "area: protocol":
   - changed-files:
       - any-glob-to-any-file:
