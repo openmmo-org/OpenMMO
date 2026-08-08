@@ -1,0 +1,81 @@
+# The labeler cannot read the pull request title, so the type comes from the
+# branch prefix instead. A branch that matches nothing keeps no type label, which
+# is what renovate and release-please branches want.
+"type: feature":
+  - head-branch: [ '^feat/' ]
+
+"type: bug":
+  - head-branch: [ '^fix/' ]
+
+"type: docs":
+  - head-branch: [ '^docs/' ]
+
+"type: refactor":
+  - head-branch: [ '^refactor/' ]
+
+"type: test":
+  - head-branch: [ '^test/' ]
+
+"type: perf":
+  - head-branch: [ '^perf/' ]
+
+"type: chore":
+  - head-branch: [ '^(build|chore|ci|revert|style)/' ]
+
+"area: protocol":
+  - changed-files:
+      - any-glob-to-any-file:
+          - bytecodec/**
+          - network/**
+          - protocols.game/**
+
+# The login stack is small enough to drown in area: server and area: protocol, so
+# it owns both of its modules.
+"area: login":
+  - changed-files:
+      - any-glob-to-any-file:
+          - server.login/**
+          - protocols.login/**
+
+# The game systems live inside the server.game module, so the two areas split by
+# package instead of by module.
+"area: server":
+  - changed-files:
+      - any-glob-to-any-file:
+          - server.game/src/**/game/*.kt
+          - server.game/src/**/game/config/**
+          - server.game/src/**/game/db/**
+          - server.game/src/**/game/di/**
+          - server.game/src/**/game/handler/**
+          - server.game/src/**/game/services/**
+          - server.game/src/**/game/session/**
+          - server.game/src/**/game/storage/**
+          - server.game/src/main/resources/db/**
+
+"area: game":
+  - changed-files:
+      - any-glob-to-any-file:
+          - server.game/src/**/game/battle/**
+          - server.game/src/**/game/script/**
+          - server.game/src/**/game/world/**
+
+"area: codegen":
+  - changed-files:
+      - any-glob-to-any-file:
+          - codegen/**
+          - decomp/**
+
+"area: patcher":
+  - changed-files:
+      - any-glob-to-any-file:
+          - patcher/**
+          - keys/**
+
+"area: build":
+  - changed-files:
+      - any-glob-to-any-file:
+          - buildSrc/**
+          - gradle/**
+          - "*.gradle.kts"
+          - gradle.properties
+          - .github/**
