@@ -43,7 +43,7 @@ private val StatChangeBodyCodec: Codec<BattleEventBody> =
         // direction rides in the signed stage count rather than here.
         val stat = field(S8) { (it as BattleEventBody.StatChange).stat }
         val stages = field(S8) { (it as BattleEventBody.StatChange).stageDelta.toByte() }
-        // A fourth byte, 0xFF in every captured stat change.
+        // 0xFF in every capture.
         reserved(0xFF)
         return BattleEventBody.StatChange(
             (stat.toInt() and STAT_INDEX_MASK).toByte(), stages.toShort(), changeType)

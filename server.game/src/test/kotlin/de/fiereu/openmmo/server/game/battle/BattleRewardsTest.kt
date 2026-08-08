@@ -75,8 +75,6 @@ class BattleRewardsTest :
         rewards.trainerXp(rattata, 11) shouldBe rewards.wildXp(rattata, 11) * 3 / 2
       }
 
-      // Gen 3 banks EVs until a level up, and the client is only told about stats alongside a
-      // level, so moving them apart would desync it mid battle.
       test("ev gains alone move neither the stats nor the hp") {
         val mon = winner(level = 50, xp = ExpCurves.totalXpFor(GrowthRate.MEDIUM_SLOW, 50))
         val before = mon.stats

@@ -27,8 +27,10 @@ data class RewardResult(
 @Singleton
 class BattleRewards @Inject constructor() {
 
-  // The live server is on a later formula and pays more. Staying on Gen 3 is deliberate.
-  /** The Gen 3 wild battle experience: base yield times level over seven. */
+  /**
+   * The Gen 3 wild battle experience. The live server is on a later formula and pays more, and
+   * staying on Gen 3 is deliberate.
+   */
   fun wildXp(defeated: SpeciesDef, defeatedLevel: Int): Int = defeated.expYield * defeatedLevel / 7
 
   /** The Gen 3 payout for beating a trainer, off the level of the last monster it sent out. */

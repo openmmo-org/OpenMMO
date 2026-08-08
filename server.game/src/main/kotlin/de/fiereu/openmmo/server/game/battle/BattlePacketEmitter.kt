@@ -85,7 +85,6 @@ class BattlePacketEmitter @Inject constructor(private val interestManager: Inter
             playerAppearance = CAPTURED_APPEARANCE,
             background = 0,
             opposing = if (battle.trainer == null) OpposingSide.WILD else OpposingSide.TRAINER,
-            // The client looks the trainer name and sprite up by the decomp id.
             // TODO Check whether Hoenn needs a region tag, both decomps number trainers from 1
             trainerId = (battle.trainer?.id ?: 0).toShort(),
             playerParty = battle.party.mapIndexed { slot, mon -> mon.toBlock(slot, true) },

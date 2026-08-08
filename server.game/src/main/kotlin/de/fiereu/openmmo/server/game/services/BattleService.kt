@@ -67,9 +67,9 @@ private data class PendingMoveLearn(
 )
 
 /**
- * Orchestrates wild battles: builds the battle state from the party and a rolled wild monster,
- * routes client actions through the [TurnEngine], and persists the outcome. Packets go out through
- * the [BattlePacketEmitter] over the battle's interest key.
+ * Orchestrates battles: builds the battle state from the party and the opposing side, routes client
+ * actions through the [TurnEngine], and persists the outcome. Packets go out through the
+ * [BattlePacketEmitter] over the battle's interest key.
  */
 @Singleton
 class BattleService
@@ -232,8 +232,7 @@ constructor(
     return battle.completion.await()
   }
 
-  /** One monster to roll for the opposing side. Empty [moveIds] keeps the level up moveset. */
-  /** One monster to roll for the opposing side. A null [iv] rolls one, as a wild encounter does. */
+  /** Empty [moveIds] keeps the level up moveset, a null [iv] rolls one like a wild encounter. */
   private data class OpponentSpec(
       val dexId: Int,
       val level: Int,
