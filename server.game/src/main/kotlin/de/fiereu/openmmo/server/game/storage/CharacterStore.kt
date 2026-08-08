@@ -4,6 +4,7 @@ import de.fiereu.openmmo.common.CharacterInfo
 import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.enums.CharacterGender
+import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.Region
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDateTime
@@ -186,12 +187,14 @@ constructor(
     mutate(info.id) { it.copy(info = info) }
   }
 
+  /** A null [bankId], [mapId] or [facing] leaves that part of the position alone. */
   fun updatePosition(
       characterId: Long,
       x: Short,
       y: Short,
       bankId: Byte? = null,
       mapId: Byte? = null,
+      facing: Direction? = null,
   ) {
     mutate(characterId) { stored ->
       stored.copy(
@@ -201,6 +204,7 @@ constructor(
                   positionY = y,
                   positionBankId = bankId ?: stored.info.positionBankId,
                   positionMapId = mapId ?: stored.info.positionMapId,
+                  positionFacing = facing ?: stored.info.positionFacing,
               ),
       )
     }

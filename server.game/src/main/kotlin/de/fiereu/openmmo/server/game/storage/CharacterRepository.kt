@@ -207,6 +207,7 @@ constructor(
           positionMapId = positionMapId.toShort(),
           positionX = positionX,
           positionY = positionY,
+          positionFacing = positionFacing.ordinal.toShort(),
           repelLeft = repelLeft,
           repelItemId = repelItemId,
           lureLeft = lureLeft,
@@ -240,6 +241,9 @@ constructor(
           positionMapId = positionMapId.toByte(),
           positionX = positionX,
           positionY = positionY,
+          // A row written before the column existed reads as null, which means DOWN.
+          positionFacing =
+              Direction.entries.getOrElse(positionFacing?.toInt() ?: 0) { Direction.DOWN },
           repelLeft = repelLeft,
           repelItemId = repelItemId,
           lureLeft = lureLeft,

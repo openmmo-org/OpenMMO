@@ -265,7 +265,7 @@ constructor(
       }
       return false
     }
-    characterStore.updatePosition(charId, pose.x.toShort(), pose.y.toShort())
+    characterStore.updatePosition(charId, pose.x.toShort(), pose.y.toShort(), facing = pose.facing)
     state.x = pose.x.toShort()
     state.y = pose.y.toShort()
     state.facingDirection = pose.facing

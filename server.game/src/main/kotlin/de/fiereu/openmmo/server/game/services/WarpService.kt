@@ -126,6 +126,7 @@ constructor(
             positionMapId = warp.targetMapId,
             positionX = offsetX.toShort(),
             positionY = offsetY.toShort(),
+            positionFacing = warpFacing,
         )
     characterStore.updateCharacter(newInfo)
     characterStore.flushCharacterAsync(charId)
