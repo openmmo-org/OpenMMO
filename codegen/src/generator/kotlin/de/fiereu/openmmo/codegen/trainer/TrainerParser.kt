@@ -3,6 +3,7 @@ package de.fiereu.openmmo.codegen.trainer
 import de.fiereu.openmmo.codegen.defineTable
 import de.fiereu.openmmo.codegen.pokemon.NationalDex
 import de.fiereu.openmmo.codegen.pokemon.SpeciesParser
+import de.fiereu.openmmo.common.enums.MAX_IV
 import java.io.File
 
 class TrainerParser(private val rootDir: File) {
@@ -19,9 +20,18 @@ class TrainerParser(private val rootDir: File) {
     val parties = readParties()
     return readTrainers()
         .mapNotNull { entry ->
-          val id = trainerIds[entry.constant] ?: return@mapNotNull null
+          val id = trainerIds[entry.constant]
+          if (id == null) {
+            println("[trainer] skipped ${entry.constant}, it has no id in opponents.h")
+            return@mapNotNull null
+          }
           val party = parties[entry.partySymbol]?.mapNotNull(::toMon).orEmpty()
-          if (party.isEmpty()) return@mapNotNull null
+          // A trainer whose party stopped parsing would otherwise vanish without a trace.
+          if (party.isEmpty()) {
+            println(
+                "[trainer] skipped ${entry.constant}, ${entry.partySymbol} has no usable members")
+            return@mapNotNull null
+          }
           ParsedTrainer(
               id = id,
               name = entry.name,
@@ -42,10 +52,13 @@ class TrainerParser(private val rootDir: File) {
             ?.let { MOVE.findAll(it).mapNotNull { m -> moveIds[m.value] }.toList() }
             ?.filter { it != 0 }
             .orEmpty()
+    // The decomp stores a 0 to 255 difficulty here and scales it to a real IV when it builds the
+    // party, so scale it once here rather than leaving a 255 that looks like an IV but is not.
+    val difficulty = fields["iv"]?.toIntOrNull() ?: 0
     return ParsedTrainerMon(
         dexId = dexId,
         level = level,
-        iv = fields["iv"]?.toIntOrNull() ?: 0,
+        iv = difficulty * MAX_IV / 255,
         heldItem = itemIds[fields["heldItem"]] ?: 0,
         moveIds = moves,
     )

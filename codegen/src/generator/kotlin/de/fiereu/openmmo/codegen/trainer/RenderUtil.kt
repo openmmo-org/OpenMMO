@@ -4,7 +4,7 @@ object RenderUtil {
 
   fun trainer(region: String, t: ParsedTrainer): String {
     val party = t.party.joinToString(", ", "listOf(", ")") { mon(it) }
-    return "reg.register(\"$region\", TrainerDef(${t.id}, \"${escape(t.name)}\", " +
+    return "reg.register(Region.${region.uppercase()}, TrainerDef(${t.id}, \"${escape(t.name)}\", " +
         "${t.trainerClass}, ${t.doubleBattle}, $party))"
   }
 

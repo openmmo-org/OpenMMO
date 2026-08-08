@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.trainer
 
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.trainer.generated.GeneratedHoennTrainers
 import de.fiereu.openmmo.trainer.generated.GeneratedKantoTrainers
 import java.util.concurrent.ConcurrentHashMap
@@ -23,27 +24,32 @@ data class TrainerDef(
     val party: List<TrainerMon>,
 )
 
+private data class TrainerKey(val region: Region, val id: Int)
+
 /**
  * The trainers from the decomp, keyed by region and trainer id. The two regions number their
- * trainers from zero, so the region namespaces the key the same way story flags are namespaced.
+ * trainers from zero, so the region is part of the key.
  */
 @Singleton
 class TrainerRegistry @Inject constructor() {
 
-  private val trainers = ConcurrentHashMap<String, TrainerDef>()
+  private val trainers = ConcurrentHashMap<TrainerKey, TrainerDef>()
 
   init {
     GeneratedHoennTrainers.loadInto(this)
     GeneratedKantoTrainers.loadInto(this)
   }
 
-  fun register(region: String, def: TrainerDef) {
-    trainers[key(region, def.id)] = def
+  fun register(region: Region, def: TrainerDef) {
+    val previous = trainers.put(TrainerKey(region, def.id), def)
+    // Generated data, so a clash means the parser produced two trainers for one id and the second
+    // would quietly replace the first.
+    check(previous == null) {
+      "Two $region trainers share id ${def.id}: ${previous?.name}, ${def.name}"
+    }
   }
 
-  fun get(region: String, id: Int): TrainerDef? = trainers[key(region, id)]
+  fun get(region: Region, id: Int): TrainerDef? = trainers[TrainerKey(region, id)]
 
   fun size(): Int = trainers.size
-
-  private fun key(region: String, id: Int) = "$region/$id"
 }

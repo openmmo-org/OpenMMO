@@ -8,6 +8,7 @@
 @param List<List<ParsedTrainer>> chunks
 package ${pkg}
 
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.trainer.TrainerDef
 import de.fiereu.openmmo.trainer.TrainerMon
 import de.fiereu.openmmo.trainer.TrainerRegistry

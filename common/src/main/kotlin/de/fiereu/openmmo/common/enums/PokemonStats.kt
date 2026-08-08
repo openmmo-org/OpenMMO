@@ -52,7 +52,9 @@ open class PokemonStats(private val individualCap: Int, private val totalCap: In
 
 class EVs : PokemonStats(252, 510)
 
-class IVs : PokemonStats(31, 186)
+const val MAX_IV = 31
+
+class IVs : PokemonStats(MAX_IV, 186)
 
 fun IVs.compress(): Int =
     (((hp and 31) shl 0) or
