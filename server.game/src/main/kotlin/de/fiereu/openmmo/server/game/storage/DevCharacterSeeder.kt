@@ -13,9 +13,8 @@ private val log = KotlinLogging.logger {}
 private const val DEV_USER_ID = 1
 
 /**
- * One character per region for local testing, each on its region's new game start. Built through
- * [CharacterStore.createCharacter] so the start state comes from NewGameStarts and cannot drift
- * from what a real new character gets.
+ * One character per region for local testing, built through [CharacterStore.createCharacter] so
+ * their start state cannot drift from what a real new character gets.
  */
 @Singleton
 class DevCharacterSeeder

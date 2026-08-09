@@ -16,12 +16,10 @@ private const val VIRIDIAN_MART_MAP = 3
 
 private val BULBASAUR = CheckpointMon(dexId = 1, level = 5, moveIds = listOf(33, 45))
 
-// The new game reset hides Oak in both his lab and the town. The grass cutscene is what clears the
-// lab one, so any checkpoint past it has to clear it too or NpcService never spawns him.
+// Clearing the hide flag is what makes NpcService spawn Oak in his lab.
 private val AFTER_GRASS_SCENE = KantoFlags.initiallySet - KantoFlags.FLAG_HIDE_OAK_IN_HIS_LAB
 
-// Balls the rival and the player took off the table. The scripts despawn these for the session
-// without persisting a flag, so a checkpoint that skips the scene sets them by hand.
+// The scripts despawn these without persisting a flag, so a skipped scene sets them by hand.
 private val TAKEN_BALLS =
     setOf(KantoFlags.FLAG_HIDE_BULBASAUR_BALL, KantoFlags.FLAG_HIDE_CHARMANDER_BALL)
 
@@ -45,7 +43,6 @@ private val AFTER_RIVAL =
             KantoFlags.FLAG_GOT_POTION_ON_ROUTE_1,
         )
 
-/** Story points in the implemented Kanto chain, from a new game through the Pokedex. */
 val KANTO_CHECKPOINTS: List<StoryCheckpoint> =
     listOf(
         StoryCheckpoint(
@@ -106,8 +103,7 @@ val KANTO_CHECKPOINTS: List<StoryCheckpoint> =
                 mapOf(
                     KantoVars.VAR_MAP_SCENE_PALLET_TOWN_OAK to 1,
                     KantoVars.VAR_MAP_SCENE_PALLET_TOWN_PROFESSOR_OAKS_LAB to 3,
-                    // Picks which monster the rival brings, so it has to match the party below.
-                    // Bulbasaur is 0, which is also what an unset var reads as.
+                    // Picks the rival's monster, so it has to match the party below.
                     KantoVars.VAR_STARTER_MON to 0,
                 ),
             party = listOf(BULBASAUR),

@@ -3,13 +3,10 @@ package de.fiereu.openmmo.server.game.services.command
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.Region
 
-/** A party monster a checkpoint hands out, since some scenes do nothing without one. */
 data class CheckpointMon(val dexId: Int, val level: Int, val moveIds: List<Int>)
 
 /**
- * A story scene a developer can jump straight to. [storyFlags] and [storyVars] replace the
- * character's whole story state, they are not merged into it, so a checkpoint always lands the same
- * way however the character got there.
+ * [storyFlags] and [storyVars] replace the character's whole story state rather than merge into it.
  */
 data class StoryCheckpoint(
     val name: String,

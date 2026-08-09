@@ -36,9 +36,7 @@ constructor(
       ctx.reply("reset - starts the region's story over, keeping money and the counters")
       return
     }
-    // Both paths warp and rewrite the character underneath whatever is running. A parked script
-    // would never be woken by the client it just lost, and a battle would keep playing against
-    // monsters that no longer exist.
+    // A jump warps out from under a parked script or a running battle, and neither recovers.
     if (ctx.state.inDialog) {
       ctx.reply("Finish what you are talking to first.")
       return
@@ -77,8 +75,7 @@ constructor(
         storyFlags = start.storyFlags,
         storyVars = start.storyVars,
     )
-    // Hoenn opens in the moving truck, whose exit reads the dynamic warp, so the reset has to put
-    // that back as well or the first scene has nowhere to go.
+    // Hoenn's opening reads the dynamic warp on its way out of the truck.
     characterStore.setDynamicWarp(charId, start.dynamicWarp)
 
     val refreshed = characterStore.getCharacter(charId) ?: return
@@ -114,16 +111,13 @@ constructor(
       storyPlayerService.givePokemon(ctx.session, ctx.state, it.dexId, it.level, it.moveIds)
     }
 
-    // The client caches story vars from login and has no packet for a single one, so the whole
-    // block goes again before the warp shows any of it. Flag and var ids resolve per region, so
-    // the block has to go out under the region the checkpoint is in, not the one still on the
-    // character until the warp lands.
+    // There is no packet for a single var, so the whole block goes again, and its ids resolve
+    // against the region on the character, which the warp has not moved yet.
     val stored = characterStore.getCharacter(charId) ?: return
     val aimed = stored.copy(info = stored.info.copy(positionRegionId = checkpoint.region.wireValue))
     worldStateService.send(ctx.session, aimed, fullVars = true)
 
-    // Warping rather than moving the player, so the destination runs its entry scripts on arrival
-    // and the scene the checkpoint aims at actually fires.
+    // A warp rather than a move, so the destination runs its entry scripts and the scene fires.
     warpService.executeWarp(
         ctx.session,
         charId,

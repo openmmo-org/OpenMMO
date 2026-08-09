@@ -245,10 +245,7 @@ constructor(
     markDirty(characterId)
   }
 
-  /**
-   * Replaces every monster the character owns, the party and the pc alike, along with the bag and
-   * story state, for a dev jump to a story point.
-   */
+  /** Replaces every monster, the party and the pc alike, along with the bag and story state. */
   fun replaceProgress(
       characterId: Long,
       party: List<Pokemon>,

@@ -120,8 +120,7 @@ class StoryResetTest :
           val factory =
               WildMonFactory(species, MoveRegistry(), LearnsetRegistry(), EntityIdService())
           store.addPokemon(charId, factory.create(1, 5, BattleRng(seed = 1))!!)
-          // A loaded character keeps boxed monsters in pcStorage, not in pokemon, so putting one
-          // through addPokemon would test a shape the load path never produces.
+          // A loaded character keeps boxed monsters here, so addPokemon would test the wrong shape.
           store
               .getCharacter(charId)!!
               .pcStorage
