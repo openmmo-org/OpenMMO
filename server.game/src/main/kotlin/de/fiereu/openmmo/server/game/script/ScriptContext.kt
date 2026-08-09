@@ -206,21 +206,30 @@ internal constructor(
    * same coroutine, the way the decomp's warp continues into the new map's scripts.
    */
   suspend fun warp(regionId: Int, bankId: Int, mapId: Int, x: Int, y: Int, facing: Direction) {
-    checkNotNull(warp) { "Script warp service is unavailable" }
-        .warp(
-            session,
-            state,
-            DynamicWarp(
-                regionId.toByte(),
-                bankId.toByte(),
-                mapId.toByte(),
-                x.toShort(),
-                y.toShort(),
-                facing,
-            ),
-        )
-    val destination = maps?.getMap(regionId, bankId, mapId) ?: return
-    entryScripts?.onEntry(state, destination)?.forEach { it.run(this) }
+    val warpService = checkNotNull(warp) { "Script warp service is unavailable" }
+    state.scriptOwnsMapEntry = true
+    try {
+      warpService.warp(
+          session,
+          state,
+          DynamicWarp(
+              regionId.toByte(),
+              bankId.toByte(),
+              mapId.toByte(),
+              x.toShort(),
+              y.toShort(),
+              facing,
+          ),
+      )
+      val destination = maps?.getMap(regionId, bankId, mapId) ?: return
+      val scripts = entryScripts ?: return
+      scripts.onEntry(state, destination).forEach { it.run(this) }
+      state.characterId?.let { charId ->
+        scripts.atCoordinate(charId, destination, state.x.toInt(), state.y.toInt())?.run(this)
+      }
+    } finally {
+      state.scriptOwnsMapEntry = false
+    }
   }
 
   private companion object {

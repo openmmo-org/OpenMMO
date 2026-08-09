@@ -23,7 +23,7 @@ constructor(
 ) {
   fun onMapEnter(session: SessionContext, state: PlayerState, map: MapDef) {
     // A script is already running for this player, do not start a second one on top of it.
-    if (state.inDialog) return
+    if (state.scriptOwnsMapEntry || state.inDialog) return
     val charId = state.characterId
     val entry = entryScripts.onEntry(state, map)
     val hasArrivalTrigger = entryScripts.hasCoordinate(map, state.x.toInt(), state.y.toInt())
