@@ -137,12 +137,17 @@ lock is released even when a script throws.
 
 | Outcome | What happens |
 | --- | --- |
-| `CancellationException` | Rethrown. Cancellation must not be swallowed. |
-| `NotImplementedError` | Logged at info as "Script not ported yet". This is the `TODO("port ...")` stub firing, and it is expected, not a bug. |
-| Any other `Exception` | Logged at error with the stack trace. |
+| `CancellationException` | Rethrown, and the character is rolled back. Cancellation must not be swallowed. |
+| `NotImplementedError` | Logged at info as "Script not ported yet". This is the `TODO("port ...")` stub firing, and it is expected, not a bug. A stub wrote nothing, so nothing is rolled back. |
+| Any other `Exception` | Logged at error with the stack trace, and the character is rolled back. |
 
 In all three cases the `finally` closes the dialog, so a broken script leaves the
 player able to move rather than stuck in a box.
+
+A rollback puts the character back to the snapshot taken when the script
+started. A scene writes its story state as it goes but only advances its scene
+var at the end, so a script that never finishes would otherwise leave half its
+effects behind and replay the scene on the next login.
 
 ## Scripts are per player
 

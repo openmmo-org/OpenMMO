@@ -41,6 +41,10 @@ flush immediately, and a disconnect also evicts the character from memory
 once its last write succeeded. So the database always trails memory by a few
 seconds at most, and only connected players are cached.
 
+Writes are atomic per character, since scripts write from their own coroutine
+while packets are answered on another. A write aimed at a character an eviction
+already removed is refused and logged rather than dropped quietly.
+
 ## Dev data seeding
 
 Dev seed data (the `admin`/`test` accounts, and the developer bit on the
