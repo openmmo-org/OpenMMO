@@ -92,6 +92,6 @@ constructor(
     val charId = state.characterId ?: return null
     val stored = characterStore.getCharacter(charId) ?: return null
     return mapLoadService.createLoadEntity(
-        stored.info, state.facingDirection, party = stored.pokemon)
+        stored.info, state.facingDirection, party = stored.pokemon, skins = stored.skins)
   }
 }

@@ -1,12 +1,22 @@
 package de.fiereu.openmmo.net.game.codecs
 
 import de.fiereu.bytecodec.*
+import de.fiereu.openmmo.common.Skin
 import de.fiereu.openmmo.common.enums.SkinSlot
 import java.util.*
 
-data class Skin(val slot: SkinSlot, val type: UShort?, val color: UByte?)
+// Type and color share one 16 bit word.
+private const val TYPE_MASK = 0x3FF
+private const val COLOR_SHIFT = 10
+private const val COLOR_MASK = 0x3F
 
-class SkinSet(var regionSelectionIndex: Int = 0) : EnumMap<SkinSlot, Skin>(SkinSlot::class.java) {
+class SkinSet(var regionSelectionIndex: Int = 0, skins: Map<SkinSlot, Skin> = emptyMap()) :
+    EnumMap<SkinSlot, Skin>(SkinSlot::class.java) {
+
+  init {
+    putAll(skins)
+  }
+
   fun put(skin: Skin) {
     this[skin.slot] = skin
   }
@@ -33,14 +43,14 @@ class SkinSetCodec(
         val compressed =
             field(U16LE) {
               val skin = it[slot] ?: Skin(slot, 0u, 0u)
-              val type = skin.type ?: 0x3FFFu
-              val color = skin.color ?: 0x3Fu
-              require(type <= 0x3FFFu) { "Skin type too large: ${skin.type}" }
-              require(color <= 0x3Fu) { "Skin color too large: ${skin.color}" }
-              (type and 0x3FFFu).toInt() or ((color and 0x3Fu).toInt() shl 10)
+              val type = (skin.type ?: TYPE_MASK.toUShort()).toInt()
+              val color = (skin.color ?: COLOR_MASK.toUByte()).toInt()
+              require(type <= TYPE_MASK) { "Skin type too large: ${skin.type}" }
+              require(color <= COLOR_MASK) { "Skin color too large: ${skin.color}" }
+              type or (color shl COLOR_SHIFT)
             }
-        val type = (compressed and 0x3FFF).toUShort()
-        val color = ((compressed shr 10) and 0x3F).toUByte()
+        val type = (compressed and TYPE_MASK).toUShort()
+        val color = ((compressed shr COLOR_SHIFT) and COLOR_MASK).toUByte()
         skins.put(Skin(slot, type, color))
       }
     }

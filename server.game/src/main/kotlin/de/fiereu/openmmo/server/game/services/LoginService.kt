@@ -128,7 +128,15 @@ constructor(
       ctx.send(buildCharacterList(state.userId))
       return
     }
-    characterStore.createCharacter(state.userId, name, gender, startingRegion)
+    val appearance = event.packet.appearance
+    characterStore.createCharacter(
+        state.userId,
+        name,
+        gender,
+        startingRegion,
+        skins = appearance.toMap(),
+        skinRegionSelectionIndex = appearance.regionSelectionIndex,
+    )
     ctx.send(buildCharacterList(state.userId))
   }
 
@@ -167,7 +175,7 @@ constructor(
         characters.map { stored ->
           CharacterEntry(
               characterInfo = stored.info,
-              skinSet = SkinSet(),
+              skinSet = SkinSet(stored.info.skinRegionSelectionIndex, stored.skins),
               guildId = null,
               // Character selection shows the complete party.
               pokemon = stored.pokemon,
@@ -295,7 +303,8 @@ constructor(
     log.info { "Sending LoadEntity for character '${info.name}'" }
     val facing = state.facingDirection
     val loadEntity =
-        mapLoadService.createLoadEntity(info, facing, state.elevation, party = stored.pokemon)
+        mapLoadService.createLoadEntity(
+            info, facing, state.elevation, party = stored.pokemon, skins = stored.skins)
     ctx.send(loadEntity)
 
     npcService.spawnNpcsForMap(
