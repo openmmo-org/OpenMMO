@@ -10,7 +10,6 @@ import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.moves.MoveRegistry
-import de.fiereu.openmmo.net.game.packets.ChatMessageSendPacket
 import de.fiereu.openmmo.net.game.packets.EntityMovePpPacket
 import de.fiereu.openmmo.net.game.packets.EntityPresencePacket
 import de.fiereu.openmmo.net.game.packets.MapLoadedAckPacket
@@ -113,8 +112,8 @@ private class Fixture(scope: CoroutineScope) {
   }
 }
 
-private fun FakeSession.startBattle(service: BattleService, command: String = "/testbattle 19 2") {
-  service.onChatSend(PacketEvent(ChatMessageSendPacket(0, "", command), this))
+private fun FakeSession.startBattle(service: BattleService, dexId: Int = 19, level: Int = 2) {
+  service.startWildBattle(this, dexId, level)
 }
 
 private fun FakeSession.act(service: BattleService, action: BattleAction, value: Short = 0) {
@@ -157,7 +156,7 @@ class BattleServiceTest :
           val fx = Fixture(backgroundScope)
           val (session, charId) = fx.playerWithParty()
 
-          session.startBattle(fx.service, "/testbattle 9999 5")
+          session.startBattle(fx.service, dexId = 9999, level = 5)
 
           fx.registry.byChar(charId).shouldBeNull()
           session.sent.none { it is BattleFieldStatePacket }.shouldBeTrue()
@@ -185,7 +184,7 @@ class BattleServiceTest :
           val fx = Fixture(backgroundScope)
           // A bulky matchup, so neither side can faint inside one turn.
           val (session, charId) = fx.playerWithParty(level = 30, hp = 999)
-          session.startBattle(fx.service, "/testbattle 143 10")
+          session.startBattle(fx.service, dexId = 143, level = 10)
           session.sent.clear()
 
           session.act(fx.service, BattleAction.MOVE, TACKLE)

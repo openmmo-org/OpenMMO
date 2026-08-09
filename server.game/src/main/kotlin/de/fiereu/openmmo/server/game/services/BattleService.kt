@@ -8,7 +8,6 @@ import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.moves.MoveRegistry
-import de.fiereu.openmmo.net.game.packets.ChatMessageSendPacket
 import de.fiereu.openmmo.net.game.packets.MapLoadedAckPacket
 import de.fiereu.openmmo.net.game.packets.SocialListEntryAddPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleActionSelectPacket
@@ -30,7 +29,6 @@ import de.fiereu.openmmo.server.game.battle.StatCalculator
 import de.fiereu.openmmo.server.game.battle.TurnEngine
 import de.fiereu.openmmo.server.game.battle.WildMonFactory
 import de.fiereu.openmmo.server.game.battle.acquiredMonsterDelta
-import de.fiereu.openmmo.server.game.battle.notice
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.storage.CharacterStore
 import de.fiereu.openmmo.server.game.world.interest.InterestManager
@@ -43,16 +41,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 private val log = KotlinLogging.logger {}
-
-private const val TEST_BATTLE_COMMAND = "/testbattle"
-// The bag is populated in the join flow, so /catch drives the catch sequence directly for testing
-// even though a ball can now be thrown from the UI.
-private const val CATCH_COMMAND = "/catch"
-
-private const val DEFAULT_WILD_DEX = 19
-private const val DEFAULT_WILD_LEVEL = 3
-private const val MIN_WILD_LEVEL = 2
-private const val MAX_WILD_LEVEL = 100
 
 private const val POKE_BALL_ITEM: Short = 5004
 
@@ -142,23 +130,11 @@ constructor(
     event.session.send(emitter.moveSlotsDelta(reply.entityId, moves.map { it.id to it.pp }, 0))
   }
 
-  fun onChatSend(event: PacketEvent<ChatMessageSendPacket>) {
-    val session = event.session
-    val text = (event.packet.message ?: event.packet.target).trim()
-    val parts = text.split(Regex("\\s+"))
-    when {
-      parts[0].equals(TEST_BATTLE_COMMAND, ignoreCase = true) -> {
-        val dexId = parts.getOrNull(1)?.toIntOrNull() ?: DEFAULT_WILD_DEX
-        val level =
-            (parts.getOrNull(2)?.toIntOrNull() ?: DEFAULT_WILD_LEVEL).coerceIn(
-                MIN_WILD_LEVEL, MAX_WILD_LEVEL)
-        startWildBattle(session, dexId, level)
-      }
-      text.equals(CATCH_COMMAND, ignoreCase = true) -> {
-        val charId = session.attributes[PLAYER_STATE]?.characterId ?: return
-        battles.byChar(charId)?.let { catchWild(it) }
-      }
-    }
+  /** Throws a ball at the monster. False when the character is not in a battle. */
+  fun catchActiveWild(charId: Long): Boolean {
+    val battle = battles.byChar(charId) ?: return false
+    catchWild(battle)
+    return true
   }
 
   /** Ends a running battle when the player disconnects, keeping the last hp and pp state. */

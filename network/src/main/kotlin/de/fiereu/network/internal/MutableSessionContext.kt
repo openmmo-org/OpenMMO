@@ -102,9 +102,11 @@ private class ConcurrentAttributes : SessionAttributes {
   @Suppress("UNCHECKED_CAST")
   override fun <T : Any> remove(key: SessionAttribute<T>): T? = map.remove(key) as T?
 
+  // Not getOrPut. That is a get then a put, so racing threads each build one and the loser's
+  // value is dropped while still in use.
   @Suppress("UNCHECKED_CAST")
   override fun <T : Any> getOrPut(key: SessionAttribute<T>, default: () -> T): T =
-      map.getOrPut(key) { default() } as T
+      map.computeIfAbsent(key) { default() } as T
 
   override fun contains(key: SessionAttribute<*>): Boolean = map.containsKey(key)
 }

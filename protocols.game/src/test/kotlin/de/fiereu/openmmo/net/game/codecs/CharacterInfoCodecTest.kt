@@ -1,6 +1,7 @@
 package de.fiereu.openmmo.net.game.codecs
 
 import de.fiereu.openmmo.common.CharacterInfo
+import de.fiereu.openmmo.common.CharacterPermissions
 import de.fiereu.openmmo.common.test.decodeBytes
 import de.fiereu.openmmo.common.test.encodeToBytes
 import io.kotest.core.spec.style.FunSpec
@@ -55,5 +56,39 @@ class CharacterInfoCodecTest :
                 0x02,
             )
         CharacterInfoCodecShort.decodeBytes(bytes) shouldBe info
+      }
+
+      test("permission bits above the low byte are not sent") {
+        val timestamp = LocalDateTime.of(2024, 1, 2, 3, 4, 5)
+        val info =
+            CharacterInfo(
+                id = 123,
+                name = "Uno",
+                userId = 2,
+                rivalSex = 1,
+                lastLogin = timestamp,
+                createdAt = timestamp,
+                money = 30000,
+                permissions = CharacterPermissions.DEVELOPER or 8,
+                remainingSafariSteps = 0,
+                remainingSafariBalls = 0,
+                pcExtraSlots = 0,
+                battleBoxExtraSlots = 0,
+                templateAmount = 0,
+                positionRegionId = 2,
+                positionBankId = 133.toByte(),
+                positionMapId = 1,
+                positionX = 782,
+                positionY = 749,
+                repelLeft = 0,
+                repelItemId = 0,
+                lureLeft = 0,
+                lureItemId = 0,
+            )
+
+        val decoded =
+            CharacterInfoCodecShort.decodeBytes(CharacterInfoCodecShort.encodeToBytes(info))
+
+        decoded.permissions shouldBe 8
       }
     })
