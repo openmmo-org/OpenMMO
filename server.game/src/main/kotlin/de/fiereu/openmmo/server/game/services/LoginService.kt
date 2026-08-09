@@ -256,7 +256,8 @@ constructor(
     state.x = info.positionX
     state.y = info.positionY
     state.facingDirection = info.positionFacing
-    state.elevation = map?.tileAt(info.positionX.toInt(), info.positionY.toInt())?.elevation ?: 0
+    // Elevation is left alone on purpose. Spawning the player on the tile's own elevation makes
+    // the client refuse every step, and a warp has already set the one value that works.
 
     multiplayerService.broadcastMessage(
         ChatMessagePacket(
