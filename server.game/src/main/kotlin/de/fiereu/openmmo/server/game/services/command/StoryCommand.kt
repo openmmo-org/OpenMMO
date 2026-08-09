@@ -1,11 +1,15 @@
 package de.fiereu.openmmo.server.game.services.command
 
 import de.fiereu.openmmo.common.CharacterPermissions
+import de.fiereu.openmmo.common.enums.CharacterGender
+import de.fiereu.openmmo.common.enums.Direction
+import de.fiereu.openmmo.common.enums.Region
 import de.fiereu.openmmo.maps.WarpTile
 import de.fiereu.openmmo.server.game.services.StoryPlayerService
 import de.fiereu.openmmo.server.game.services.WarpService
 import de.fiereu.openmmo.server.game.services.WorldStateService
 import de.fiereu.openmmo.server.game.storage.CharacterStore
+import de.fiereu.openmmo.server.game.storage.NewGameStarts
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,7 +23,7 @@ constructor(
     private val warpService: WarpService,
 ) : ChatCommand {
   override val name = "story"
-  override val usage = "/story [checkpoint]"
+  override val usage = "/story [checkpoint|reset]"
   override val description = "jumps to a story scene, or lists them with no argument"
   override val permission = CharacterPermissions.DEVELOPER
 
@@ -27,6 +31,11 @@ constructor(
     val wanted = ctx.args.firstOrNull()
     if (wanted == null) {
       KANTO_CHECKPOINTS.forEach { ctx.reply("${it.name} - ${it.description}") }
+      ctx.reply("reset - starts the region over, as a new character")
+      return
+    }
+    if (wanted.equals(RESET, ignoreCase = true)) {
+      reset(ctx)
       return
     }
     val checkpoint = KANTO_CHECKPOINTS.find { it.name.equals(wanted, ignoreCase = true) }
@@ -35,6 +44,49 @@ constructor(
       return
     }
     apply(ctx, checkpoint)
+  }
+
+  /** Puts the character back to the state and place its region's new game would have given it. */
+  private fun reset(ctx: CommandContext) {
+    val charId = ctx.characterId
+    val stored = characterStore.getCharacter(charId) ?: return
+    val region = Region.byWireValue(stored.info.positionRegionId)
+    if (region == null) {
+      ctx.reply("You are standing in a region I do not know, so I cannot find its start.")
+      return
+    }
+    val female = stored.info.rivalSex == CharacterGender.FEMALE.wireValue
+    val start = NewGameStarts.forRegion(region, female)
+
+    characterStore.replaceProgress(
+        characterId = charId,
+        party = emptyList(),
+        items = emptyMap(),
+        storyFlags = start.storyFlags,
+        storyVars = start.storyVars,
+    )
+    // Hoenn opens in the moving truck, whose exit reads the dynamic warp, so the reset has to put
+    // that back as well or the first scene has nowhere to go.
+    characterStore.updateCharacter(stored.info.copy(dynamicWarp = start.dynamicWarp))
+
+    val refreshed = characterStore.getCharacter(charId) ?: return
+    worldStateService.send(ctx.session, refreshed, fullVars = true)
+    warpService.executeWarp(
+        ctx.session,
+        charId,
+        WarpTile(
+            x = 0,
+            y = 0,
+            targetRegionId = region.wireValue,
+            targetBankId = start.bankId,
+            targetMapId = start.mapId,
+            targetX = start.x.toInt(),
+            targetY = start.y.toInt(),
+            exitFacing = Direction.DOWN,
+        ),
+    )
+    characterStore.flushCharacterAsync(charId)
+    ctx.reply("Reset to the ${region.name.lowercase()} start. Party, pc and bag are gone.")
   }
 
   private fun apply(ctx: CommandContext, checkpoint: StoryCheckpoint) {
@@ -73,5 +125,9 @@ constructor(
     )
     characterStore.flushCharacterAsync(charId)
     ctx.reply("Jumped to ${checkpoint.name}.")
+  }
+
+  private companion object {
+    const val RESET = "reset"
   }
 }
