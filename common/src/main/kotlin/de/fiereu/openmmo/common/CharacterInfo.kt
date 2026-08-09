@@ -9,6 +9,8 @@ data class CharacterInfo(
     val namePrefix: String = "",
     val userId: Int,
     val rivalSex: Byte,
+    /** Leading byte of the skin set on the wire. */
+    val skinRegionSelectionIndex: Int = 0,
     val lastLogin: LocalDateTime,
     val createdAt: LocalDateTime,
     val money: Int,

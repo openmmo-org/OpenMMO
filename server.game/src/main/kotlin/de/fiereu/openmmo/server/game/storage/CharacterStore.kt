@@ -3,9 +3,11 @@ package de.fiereu.openmmo.server.game.storage
 import de.fiereu.openmmo.common.CharacterInfo
 import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.Pokemon
+import de.fiereu.openmmo.common.Skin
 import de.fiereu.openmmo.common.enums.CharacterGender
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.Region
+import de.fiereu.openmmo.common.enums.SkinSlot
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
@@ -38,6 +40,7 @@ data class StoredCharacter(
     // Keys are opaque strings supplied by the content layer, so the store stays game agnostic.
     val storyFlags: MutableSet<String> = mutableSetOf(),
     val storyVars: MutableMap<String, Int> = mutableMapOf(),
+    val skins: Map<SkinSlot, Skin> = emptyMap(),
 )
 
 /**
@@ -73,6 +76,8 @@ constructor(
       name: String,
       gender: CharacterGender,
       startingRegion: Region,
+      skins: Map<SkinSlot, Skin> = emptyMap(),
+      skinRegionSelectionIndex: Int = 0,
   ): StoredCharacter {
     val female = gender == CharacterGender.FEMALE
     val start = NewGameStarts.forRegion(startingRegion, female)
@@ -86,6 +91,7 @@ constructor(
             userId = userId,
             // This historical field stores the player's gender.
             rivalSex = gender.wireValue,
+            skinRegionSelectionIndex = skinRegionSelectionIndex,
             lastLogin = now,
             createdAt = now,
             money = 30000,
@@ -114,6 +120,7 @@ constructor(
             mutableMapOf(),
             storyFlags = start.storyFlags.toMutableSet(),
             storyVars = start.storyVars.toMutableMap(),
+            skins = skins.toMap(),
         )
     repository.insertAggregate(stored)
     characters[id] = stored

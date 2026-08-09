@@ -7,6 +7,7 @@ import de.fiereu.openmmo.net.game.codecs.DefaultSkinSetCodec
 import de.fiereu.openmmo.net.game.codecs.PokemonCodec
 import de.fiereu.openmmo.net.game.codecs.SkinSetCodecNoLeading
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.maps.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 
 class CharactersListPacketTest :
@@ -15,10 +16,11 @@ class CharactersListPacketTest :
         val buf = fixtureBuffer("game/s2c/02/character_list_32710.bin")
         val names = mutableListOf<String>()
         val parties = mutableListOf<Int>()
+        val skinSlotCounts = mutableListOf<Int>()
         repeat(U8.read(buf)) {
           names += CharacterInfoCodecShort.read(buf).name
-          DefaultSkinSetCodec.read(buf)
-          SkinSetCodecNoLeading.read(buf)
+          skinSlotCounts += DefaultSkinSetCodec.read(buf).size
+          SkinSetCodecNoLeading.read(buf).shouldBeEmpty()
           val hasGuild = buf.readByte().toInt() != 0
           hasGuild shouldBe false
           val party = U8.read(buf)
@@ -28,6 +30,7 @@ class CharactersListPacketTest :
 
         names shouldBe listOf("MacherRin", "astridefour", "MacherDer")
         parties shouldBe listOf(0, 1, 0)
+        skinSlotCounts shouldBe listOf(5, 5, 5)
         buf.remaining() shouldBe 0
       }
 
