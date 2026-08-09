@@ -22,8 +22,10 @@ import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Provider
 import javax.inject.Singleton
+import kotlin.time.Duration.Companion.seconds
 
 private val log = KotlinLogging.logger {}
+private val READER_IDLE_TIMEOUT = 45.seconds
 
 @Singleton
 class GameServer
@@ -52,7 +54,11 @@ constructor(
                         identity = SessionIdentity.ServerRoot(rootKey),
                         applicationProtocol = GameProtocol,
                         applicationHandlerFactory = { handlerProvider.get() },
-                        options = PipelineOptions(checksumSize = config.checksumSize),
+                        options =
+                            PipelineOptions(
+                                checksumSize = config.checksumSize,
+                                readerIdleTimeout = READER_IDLE_TIMEOUT,
+                            ),
                     )
                     val session = ch.session() ?: error("session missing after installPipeline")
                     ch.pipeline()

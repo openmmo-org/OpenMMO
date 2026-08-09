@@ -6,6 +6,7 @@ import de.fiereu.network.handlers.ChecksumFrameDecoder
 import de.fiereu.network.handlers.ChecksumFrameEncoder
 import de.fiereu.network.handlers.CipherDecoder
 import de.fiereu.network.handlers.CipherEncoder
+import de.fiereu.network.handlers.CloseOnReaderIdleHandler
 import de.fiereu.network.handlers.PacketFrameDecoder
 import de.fiereu.network.handlers.PacketFrameEncoder
 import de.fiereu.network.handshake.ClientSessionHandshakeHandler
@@ -16,6 +17,7 @@ import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelPipeline
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
+import io.netty.handler.timeout.IdleStateHandler
 import io.netty.handler.timeout.WriteTimeoutHandler
 import java.util.concurrent.TimeUnit
 
@@ -70,6 +72,18 @@ fun installPipeline(
   pipeline.addLast(PipelineNames.CHECKSUM_ENCODER, ChecksumFrameEncoder(NoOpChecksum))
   pipeline.addLast(PipelineNames.CIPHER_DECODER, CipherDecoder(NoOpSessionCipher))
   pipeline.addLast(PipelineNames.CIPHER_ENCODER, CipherEncoder(NoOpSessionCipher))
+  if (options.readerIdleTimeout.isPositive()) {
+    pipeline.addLast(
+        PipelineNames.READER_IDLE_STATE,
+        IdleStateHandler(
+            options.readerIdleTimeout.inWholeNanoseconds,
+            0,
+            0,
+            TimeUnit.NANOSECONDS,
+        ),
+    )
+    pipeline.addLast(PipelineNames.READER_IDLE_CLOSE, CloseOnReaderIdleHandler())
+  }
   if (options.frameLogging) {
     pipeline.addLast(PipelineNames.PROTOCOL_LOGGER, LoggingHandler(LogLevel.TRACE))
   }

@@ -9,6 +9,8 @@ object PipelineNames {
   const val CHECKSUM_ENCODER = "checksum-encoder"
   const val CIPHER_DECODER = "cipher-decoder"
   const val CIPHER_ENCODER = "cipher-encoder"
+  const val READER_IDLE_STATE = "reader-idle-state"
+  const val READER_IDLE_CLOSE = "reader-idle-close"
   const val COMPRESSION_DECODER = "compression-decoder"
   const val COMPRESSION_ENCODER = "compression-encoder"
   const val PROTOCOL_LOGGER = "protocol-logger"
