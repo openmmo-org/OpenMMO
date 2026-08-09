@@ -42,11 +42,14 @@ jteCodegen {
         })
   }
   // Item ids scripts hand to giveItem. Both GBA games number items the same, so one decomp is
-  // enough, like moves and species.
+  // enough, like moves and species. The client holds one item table per region, so the region
+  // decides what a number means. Checked against a real client: region 0 reads 3, 4 and 13 as
+  // Great Ball, Poke Ball and Potion, matching the decomp, while region 1 and region 5 read the
+  // same numbers as unrelated items.
   register("item") {
     mainClass.set("de.fiereu.openmmo.codegen.item.Main")
     inputDirs.from(sourceDecompDir)
-    extraArgs.set(listOf(sourceDecompDir.asFile.absolutePath))
+    extraArgs.set(listOf("kanto|${sourceDecompDir.asFile.absolutePath}"))
   }
   register("moves") {
     mainClass.set("de.fiereu.openmmo.codegen.move.Main")

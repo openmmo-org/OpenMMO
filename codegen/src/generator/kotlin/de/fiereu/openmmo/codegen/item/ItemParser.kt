@@ -6,11 +6,11 @@ import java.io.File
  * Reads the item constants out of a GBA decomp header. The two GBA decomps use the same item
  * numbering, so one decomp is the single source of truth, the same way moves and species are.
  *
- * The client keys items by `regionId * 1000 + itemId`. Both GBA games share region id
- * [GBA_REGION_ID], which is what makes the Poke Ball (GBA 4) the client's 5004 and the Great Ball
- * (GBA 3) its 5003, the two ids the battle code already sends.
+ * The client keys an item by `regionId * 1000 + itemId` and holds one item table per region.
+ * [regionId] picks the table that matches the decomp's own numbering, which leaves the Poke Ball at
+ * its decomp 4.
  */
-class ItemParser(private val decompDir: File) {
+class ItemParser(private val decompDir: File, private val regionId: Int) {
 
   fun parseAll(): List<ParsedItem> {
     val header = File(decompDir, "include/constants/items.h")
@@ -22,13 +22,9 @@ class ItemParser(private val decompDir: File) {
         .readLines()
         .takeWhile { !it.trimStart().startsWith("#define ITEMS_COUNT") }
         .mapNotNull { define.find(it.trim()) }
-        .map { ParsedItem(it.groupValues[1], GBA_REGION_ID * 1000 + it.groupValues[2].toInt()) }
+        .map { ParsedItem(it.groupValues[1], regionId * 1000 + it.groupValues[2].toInt()) }
         // Placeholder slots are named after their hex index, for example ITEM_15C.
         .filterNot { it.name.first().isDigit() }
         .distinctBy(ParsedItem::name)
-  }
-
-  private companion object {
-    const val GBA_REGION_ID = 5
   }
 }

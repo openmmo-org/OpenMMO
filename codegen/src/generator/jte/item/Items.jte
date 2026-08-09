@@ -5,8 +5,8 @@
 package de.fiereu.openmmo.items.generated
 
 /**
- * Item ids the client uses, covering Hoenn and Kanto alike. Generated from the GBA decomp item
- * header, do not edit by hand.
+ * Item ids the client uses, already carrying the region prefix of the decomp they were read from.
+ * Generated from the GBA decomp item header, do not edit by hand.
  */
 object Items {
 @for(ParsedItem item : items)

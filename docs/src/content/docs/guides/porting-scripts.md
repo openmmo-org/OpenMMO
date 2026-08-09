@@ -69,7 +69,10 @@ end of your function.
 
 Item ids come from the generated `Items` object, never a raw number:
 `ctx.giveItem(Items.POKE_BALL, 5)`. It is generated from the decomp item header,
-so every item the games know about is in it.
+so every item the games know about is in it. The client keys an item by
+`regionId * 1000 + itemId` and holds one item table per region, so the ids in
+`Items` sit in the region whose table matches the decomp numbering. Sending the
+same number under another region reaches a different item entirely.
 
 `ctx.warp` continues into the destination map's ON_TRANSITION and ON_FRAME
 scripts on the same coroutine, exactly the way the decomp's `warp` does, so a

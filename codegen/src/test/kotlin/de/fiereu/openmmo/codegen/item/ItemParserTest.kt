@@ -1,11 +1,12 @@
 package de.fiereu.openmmo.codegen.item
 
+import de.fiereu.openmmo.common.enums.Region
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 class ItemParserTest :
     FunSpec({
-      test("shifts decomp item ids into the client's item region and stops at the list end") {
+      test("prefixes decomp item ids with their region and stops at the list end") {
         val decomp = kotlin.io.path.createTempDirectory("items").toFile()
         decomp.resolve("include/constants").mkdirs()
         decomp
@@ -23,11 +24,18 @@ class ItemParserTest :
             """
                     .trimIndent())
 
-        ItemParser(decomp).parseAll() shouldBe
+        ItemParser(decomp, Region.KANTO.wireValue.toInt()).parseAll() shouldBe
             listOf(
-                ParsedItem("NONE", 5000),
-                ParsedItem("GREAT_BALL", 5003),
-                ParsedItem("POKE_BALL", 5004),
+                ParsedItem("NONE", 0),
+                ParsedItem("GREAT_BALL", 3),
+                ParsedItem("POKE_BALL", 4),
+            )
+
+        ItemParser(decomp, Region.HOENN.wireValue.toInt()).parseAll() shouldBe
+            listOf(
+                ParsedItem("NONE", 1000),
+                ParsedItem("GREAT_BALL", 1003),
+                ParsedItem("POKE_BALL", 1004),
             )
       }
     })
