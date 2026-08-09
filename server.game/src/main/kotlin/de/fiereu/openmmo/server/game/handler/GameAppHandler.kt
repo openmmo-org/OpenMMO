@@ -69,6 +69,7 @@ import de.fiereu.openmmo.server.game.services.MovementService
 import de.fiereu.openmmo.server.game.services.MultiplayerService
 import de.fiereu.openmmo.server.game.services.PresenceService
 import de.fiereu.openmmo.server.game.services.SocialService
+import de.fiereu.openmmo.server.game.services.command.ChatCommandService
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.session.SCRIPT_SCOPE
 import de.fiereu.openmmo.server.game.session.SessionRegistry
@@ -92,6 +93,7 @@ constructor(
     private val socialService: SocialService,
     private val guildService: GuildService,
     private val battleService: BattleService,
+    private val chatCommandService: ChatCommandService,
     private val sessionRegistry: SessionRegistry,
     private val characterStore: CharacterStore,
     scope: CoroutineScope,
@@ -158,7 +160,11 @@ constructor(
     on<NullPacket> {}
     on<KeepAlivePacket> { event -> event.session.send(event.packet) }
     on<ChatMessagePacket> { event -> onChatMessage(event) }
-    on<ChatMessageSendPacket> { event -> battleService.onChatSend(event) }
+    // What the client sends when the player types. The text rides in target unless the mode
+    // carries a message of its own.
+    on<ChatMessageSendPacket> { event ->
+      chatCommandService.tryHandle(event.session, event.packet.message ?: event.packet.target)
+    }
   }
 
   override fun onInactive() {
@@ -191,8 +197,8 @@ constructor(
       return
     }
     val charId = state.characterId ?: return
-    val sender = characterStore.getCharacter(charId)?.info?.name ?: "Unknown"
     val msg = event.packet
+    val sender = characterStore.getCharacter(charId)?.info?.name ?: "Unknown"
     log.info { "Chat [${msg.type}] $sender: ${msg.message}" }
     multiplayerService.broadcastMessage(
         ChatMessagePacket(

@@ -1,12 +1,9 @@
 package de.fiereu.openmmo.server.game.battle
 
 import de.fiereu.openmmo.common.Pokemon
-import de.fiereu.openmmo.common.enums.ChatType
 import de.fiereu.openmmo.common.enums.EVs
-import de.fiereu.openmmo.common.enums.Language
 import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.common.utils.hexToBytes
-import de.fiereu.openmmo.net.game.packets.ChatMessagePacket
 import de.fiereu.openmmo.net.game.packets.EntityMovePpPacket
 import de.fiereu.openmmo.net.game.packets.EntityPresencePacket
 import de.fiereu.openmmo.net.game.packets.PokemonContainerPacket
@@ -28,6 +25,7 @@ import de.fiereu.openmmo.net.game.packets.battle.BattleTileMapPacket
 import de.fiereu.openmmo.net.game.packets.battle.Experience
 import de.fiereu.openmmo.net.game.packets.battle.MoveSlots
 import de.fiereu.openmmo.net.game.packets.battle.OpposingSide
+import de.fiereu.openmmo.server.game.services.notice
 import de.fiereu.openmmo.server.game.world.interest.InterestManager
 import de.fiereu.openmmo.typechart.TypeChart
 import javax.inject.Inject
@@ -334,11 +332,3 @@ private fun statOrder(hp: Int, atk: Int, def: Int, spd: Int, spAtk: Int, spDef: 
 internal fun ComputedStats.asWireList(): List<Short> = statOrder(hp, atk, def, spd, spAtk, spDef)
 
 private fun EVs.asWireList(): List<Short> = statOrder(hp, atk, def, spd, spAtk, spDef)
-
-fun notice(message: String): ChatMessagePacket =
-    ChatMessagePacket(
-        type = ChatType.GAME_NOTIFICATIONS,
-        language = Language.EN,
-        message = message,
-        sender = "",
-    )

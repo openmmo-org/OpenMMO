@@ -12,6 +12,9 @@ import io.kotest.matchers.shouldBe
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
 import io.netty.channel.embedded.EmbeddedChannel
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 
 private data class Ping(val n: Int)
 
@@ -119,6 +122,35 @@ class TypedProtocolHandlerTest :
         session.attributes[key] = 42L
         session.attributes[key] shouldBe 42L
         session.attributes.contains(key) shouldBe true
+      }
+
+      test("getOrPut builds one value however many threads race for it") {
+        val handler = ServerHandler()
+        val channel = channelWithHandler(handler)
+        val session = channel.attr(SESSION_KEY).get()
+        val key = SessionAttribute.of<Any>("scope")
+        val built = AtomicInteger()
+        val threads = 16
+        val start = CountDownLatch(1)
+        val pool = Executors.newFixedThreadPool(threads)
+
+        val results =
+            (1..threads)
+                .map {
+                  pool.submit<Any> {
+                    start.await()
+                    session.attributes.getOrPut(key) {
+                      built.incrementAndGet()
+                      Any()
+                    }
+                  }
+                }
+                .also { start.countDown() }
+                .map { it.get() }
+        pool.shutdown()
+
+        built.get() shouldBe 1
+        results.all { it === results.first() } shouldBe true
       }
 
       test("OutgoingPacket goes through ProtocolHandler.write") {

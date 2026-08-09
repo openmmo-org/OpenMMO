@@ -7,9 +7,7 @@ import de.fiereu.openmmo.common.auth.SessionTokenVerifier
 import de.fiereu.openmmo.common.enums.CharacterGender
 import de.fiereu.openmmo.common.enums.ChatType
 import de.fiereu.openmmo.common.enums.Language
-import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.common.enums.Region
-import de.fiereu.openmmo.common.utils.hexToBytes
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.codecs.SkinSet
 import de.fiereu.openmmo.net.game.packets.CharacterEntry
@@ -20,19 +18,16 @@ import de.fiereu.openmmo.net.game.packets.DeleteCharacterPacket
 import de.fiereu.openmmo.net.game.packets.DeleteCharacterResultPacket
 import de.fiereu.openmmo.net.game.packets.JoinPacket
 import de.fiereu.openmmo.net.game.packets.JoinResponsePacket
-import de.fiereu.openmmo.net.game.packets.LocalPlayerStatePacket
 import de.fiereu.openmmo.net.game.packets.MenuPagePayloadPacket
 import de.fiereu.openmmo.net.game.packets.NewAuthData
 import de.fiereu.openmmo.net.game.packets.ObjectiveProgressBulkPacket
 import de.fiereu.openmmo.net.game.packets.PokedexSpeciesResetPacket
-import de.fiereu.openmmo.net.game.packets.PokemonContainerPacket
 import de.fiereu.openmmo.net.game.packets.RenderScreenPacket
 import de.fiereu.openmmo.net.game.packets.RequestCharactersPacket
 import de.fiereu.openmmo.net.game.packets.RequestPlayerPacket
 import de.fiereu.openmmo.net.game.packets.SelectCharacterPacket
 import de.fiereu.openmmo.net.game.packets.SelectedCharacterPacket
 import de.fiereu.openmmo.net.game.packets.ViewScalePacket
-import de.fiereu.openmmo.net.game.packets.WorldFlagTableResetPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleRatingBulkPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleStateBytePacket
 import de.fiereu.openmmo.server.game.session.PENDING_MAP_LOAD
@@ -40,25 +35,12 @@ import de.fiereu.openmmo.server.game.session.PLAYER_STATE
 import de.fiereu.openmmo.server.game.session.PlayerState
 import de.fiereu.openmmo.server.game.session.SessionRegistry
 import de.fiereu.openmmo.server.game.storage.CharacterStore
-import de.fiereu.openmmo.server.game.storage.StoredCharacter
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
 private val log = KotlinLogging.logger {}
-
-// The world-flag table the client loads on join. Groups one to three are zlib streams that each
-// decompress to a 67-byte flag block, the fourth is empty. The client reads real flag state while
-// building the follower and party, so empty groups leave a lookup null and crash it.
-private val WORLD_FLAG_GROUPS =
-    listOf(
-            "789c637060a00434a8b0320000133900ea",
-            "789c637060a00434303032000012c500c2",
-            "789c637060a00434303032000012c500c2",
-            "",
-        )
-        .map(String::hexToBytes)
 
 private const val DELETE_SUCCESS = 0
 private const val DELETE_REJECTED = 1
@@ -77,6 +59,7 @@ constructor(
     private val presenceService: PresenceService,
     private val mapScriptService: MapScriptService,
     private val tokenVerifier: SessionTokenVerifier,
+    private val worldStateService: WorldStateService,
 ) {
 
   fun onJoinGame(event: PacketEvent<JoinPacket>) {
@@ -215,49 +198,12 @@ constructor(
     sessionRegistry.bindCharacter(ctx, charId)
     log.info { "Player selected character '${stored.info.name}' (id=$charId)" }
 
-    // Initialise the client world-flag table before any monster or follower is built. Without it
-    // the table stays null and the client crashes constructing a party monster that reads a flag.
-    // Restore persisted story state after resetting client flags.
-    ctx.send(WorldFlagTableResetPacket(WORLD_FLAG_GROUPS))
-    ctx.send(buildLocalPlayerState(stored))
-    StoryClientState.flags(stored.info.positionRegionId, stored.storyFlags).forEach { ctx.send(it) }
+    worldStateService.send(ctx, stored)
 
     val info = stored.info
     val now = LocalDateTime.now()
     val updatedInfo = info.copy(lastLogin = now)
     characterStore.updateCharacter(updatedInfo)
-
-    val containers =
-        mapOf(
-            PokemonContainer.PARTY to stored.pokemon,
-            PokemonContainer.PC to stored.pcStorage,
-            PokemonContainer.BATTLE_BOX_1 to emptyList(),
-            PokemonContainer.BATTLE_BOX_2 to emptyList(),
-            PokemonContainer.DAYCARE to emptyList(),
-        )
-    for ((container, pokemon) in containers) {
-      ctx.send(
-          PokemonContainerPacket(
-              container = container,
-              hasChange = true,
-              delete = false,
-              pokemon = pokemon,
-          ))
-    }
-
-    listOf(PokemonContainer.UNKNOWN_13, PokemonContainer.UNKNOWN_14).forEach { container ->
-      ctx.send(
-          PokemonContainerPacket(
-              container = container,
-              hasChange = true,
-              delete = false,
-              pokemon = emptyList(),
-          ))
-    }
-
-    // The bag item stacks (opcode 0x40). The real server sends these during join, interleaved with
-    // the container packets, so the client has the items before entering the world.
-    ctx.send(storyItemStacksPacket(stored.items))
 
     ctx.send(SelectedCharacterPacket(info))
     sendJoinState(ctx)
@@ -270,33 +216,6 @@ constructor(
         ))
 
     preloadMapAndJoin(ctx, state, info)
-  }
-
-  // The full local-player state snapshot the client loads on login. Missing it leaves player state
-  // uninitialised and the client crashes reading it (for example when opening the battle bag).
-  private fun buildLocalPlayerState(stored: StoredCharacter): LocalPlayerStatePacket {
-    val info = stored.info
-    val partyDex = stored.pokemon.map { it.dexId.toShort() }
-    return LocalPlayerStatePacket(
-        region = info.positionRegionId,
-        mapId = info.positionMapId.toShort(),
-        moveSpeed = 0.05f,
-        x = info.positionX,
-        y = info.positionY,
-        z = 0,
-        money = info.money,
-        gender = info.rivalSex,
-        skinTone = 0,
-        hairColor = 0,
-        playtime = 0.0,
-        flags = 0,
-        partyDex = partyDex,
-        partyForms = partyDex.map { 0.toByte() },
-        pokedexSeen = emptyList(),
-        pokedexCaught = emptyList(),
-        badges = emptyList(),
-        variables = StoryClientState.variables(info.positionRegionId, stored.storyVars),
-    )
   }
 
   // Small state packets the real server sends in the join flow. The battle-state byte and menu
