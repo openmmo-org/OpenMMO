@@ -11,7 +11,11 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import java.time.LocalDateTime
+import java.util.concurrent.atomic.AtomicInteger
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 
 /**
@@ -73,6 +77,29 @@ class CharacterStoreDurabilityTest :
         }
       }
 
+      test("granting an item waits for a flush already in flight rather than riding on it") {
+        runTest {
+          val entered = CompletableDeferred<Unit>()
+          val release = CompletableDeferred<Unit>()
+          val repo = GatedRepository(entered, release)
+          val store = CharacterStore(repo, EntityIdService(), backgroundScope)
+          val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
+
+          // A checkpoint is mid write when the grant arrives.
+          store.updateCharacter(store.getCharacter(id)!!.info.copy(positionX = 9))
+          store.flushCharacterAsync(id)
+          entered.await()
+
+          val grant = async { store.addItem(id, itemId = 17, amount = 1) }
+          advanceUntilIdle()
+          grant.isCompleted shouldBe false
+
+          release.complete(Unit)
+          grant.await() shouldBe true
+          repo.saved[id]!!.items[17] shouldBe 1
+        }
+      }
+
       test("a refused item change neither mutates nor writes") {
         runTest {
           val repo = FakeCharacterRepository()
@@ -113,3 +140,31 @@ private fun caughtMonster(ownerId: Long): Pokemon =
         isRaidEncounter = false,
         caughtAt = LocalDateTime.now(),
     )
+
+/** Holds the first write open so a grant can be raced against a checkpoint already in flight. */
+private class GatedRepository(
+    private val entered: CompletableDeferred<Unit>,
+    private val release: CompletableDeferred<Unit>,
+) : CharacterRepository {
+  private val delegate = FakeCharacterRepository()
+  private val writes = AtomicInteger(0)
+
+  val saved
+    get() = delegate.saved
+
+  override suspend fun loadByUser(userId: Int) = delegate.loadByUser(userId)
+
+  override suspend fun loadById(id: Long) = delegate.loadById(id)
+
+  override suspend fun insertAggregate(stored: StoredCharacter) = delegate.insertAggregate(stored)
+
+  override suspend fun deleteById(userId: Int, id: Long) = delegate.deleteById(userId, id)
+
+  override suspend fun saveChanges(previous: StoredCharacter?, current: StoredCharacter) {
+    if (writes.incrementAndGet() == 1) {
+      entered.complete(Unit)
+      release.await()
+    }
+    delegate.saveChanges(previous, current)
+  }
+}

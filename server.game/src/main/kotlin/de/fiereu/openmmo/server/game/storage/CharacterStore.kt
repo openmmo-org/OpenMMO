@@ -22,6 +22,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 private val log = KotlinLogging.logger {}
 
@@ -77,6 +79,7 @@ constructor(
   private val persisted = ConcurrentHashMap<Long, StoredCharacter>()
   private val dirtySince = ConcurrentHashMap<Long, Long>()
   private val pendingUnload = ConcurrentHashMap.newKeySet<Long>()
+  private val flushLocks = ConcurrentHashMap<Long, Mutex>()
 
   /** Create a character with its own entity id and an empty party. */
   suspend fun createCharacter(
@@ -374,7 +377,14 @@ constructor(
     }
   }
 
+  // Serialised per character. Without this a second flush takes the dirty marker, skips its own
+  // write and returns while the first is still inside saveChanges, so persistNow would promise a
+  // write it did not make.
   private suspend fun flush(id: Long) {
+    flushLocks.computeIfAbsent(id) { Mutex() }.withLock { flushLocked(id) }
+  }
+
+  private suspend fun flushLocked(id: Long) {
     val since = dirtySince.remove(id)
     val stored = characters[id]
     if (since != null && stored != null) {
@@ -399,6 +409,7 @@ constructor(
     }
     val stored = characters.remove(id) ?: return
     persisted.remove(id)
+    flushLocks.remove(id)
     charactersByUser.remove(stored.info.userId)
   }
 }
