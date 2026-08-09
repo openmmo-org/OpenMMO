@@ -16,7 +16,7 @@ interface ChatCommand {
 
   // Runs on the thread the packet arrived on. Anything that waits for the client needs its own
   // scope first.
-  fun run(ctx: CommandContext)
+  suspend fun run(ctx: CommandContext)
 }
 
 class CommandContext(

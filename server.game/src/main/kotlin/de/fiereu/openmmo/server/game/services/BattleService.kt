@@ -83,7 +83,7 @@ constructor(
     log.info { "Battle packet ${event.packet::class.simpleName} received: ${event.packet}" }
   }
 
-  fun onBattleAction(event: PacketEvent<BattleActionSelectPacket>) {
+  suspend fun onBattleAction(event: PacketEvent<BattleActionSelectPacket>) {
     val charId = event.session.attributes[PLAYER_STATE]?.characterId ?: return
     val battle = battles.byChar(charId) ?: return
     if (battle.pendingResult != null) return
@@ -132,7 +132,7 @@ constructor(
   }
 
   /** Throws a ball at the monster. False when the character is not in a battle. */
-  fun catchActiveWild(charId: Long): Boolean {
+  suspend fun catchActiveWild(charId: Long): Boolean {
     val battle = battles.byChar(charId) ?: return false
     catchWild(battle)
     return true
@@ -308,13 +308,13 @@ constructor(
     return battle
   }
 
-  private fun resolveTurn(battle: BattleInstance, moveId: Short) {
+  private suspend fun resolveTurn(battle: BattleInstance, moveId: Short) {
     val events = engine.resolveTurn(battle, moveId)
     emitter.sendEvents(battle, events)
     afterTurn(battle)
   }
 
-  private fun afterTurn(battle: BattleInstance) {
+  private suspend fun afterTurn(battle: BattleInstance) {
     when {
       battle.opponent.all { it.fainted } -> endVictory(battle)
       battle.party.all { it.fainted } -> endDefeat(battle)
@@ -335,7 +335,7 @@ constructor(
     }
   }
 
-  private fun switchMon(battle: BattleInstance, partyIndex: Short) {
+  private suspend fun switchMon(battle: BattleInstance, partyIndex: Short) {
     val target = partyIndex.toInt()
     val mon = battle.party.getOrNull(target)
     val forced = battle.activeMon().fainted
@@ -395,7 +395,7 @@ constructor(
     battle.pendingResult = BattleResult.FLED
   }
 
-  private fun catchWild(battle: BattleInstance) {
+  private suspend fun catchWild(battle: BattleInstance) {
     if (!battle.catchable) {
       emitter.sendNotice(battle, "You can't catch this monster.")
       emitter.sendPrompt(battle)
@@ -430,18 +430,20 @@ constructor(
             detail = BattleListEventDetail(listType = 1, value = 1),
         ),
     )
-    characterStore.addPokemon(battle.charId, caught)
+    if (!characterStore.addPokemon(battle.charId, caught)) {
+      log.error { "Could not persist the monster char=${battle.charId} just caught" }
+    }
     endBattle(battle, BattleResult.CAUGHT)
   }
 
-  private fun endVictory(battle: BattleInstance) {
+  private suspend fun endVictory(battle: BattleInstance) {
     awardXp(battle, battle.opponentMon())
     val prize = battle.trainer?.let { rewards.trainerPrize(it, battle.opponent.last().level) } ?: 0
-    if (prize > 0) {
-      characterStore.addMoney(battle.charId, prize)
-      log.info { "char=${battle.charId} won $prize from ${battle.trainer?.name}" }
+    val paid = prize > 0 && characterStore.addMoney(battle.charId, prize)
+    if (prize > 0 && !paid) {
+      log.error { "Could not pay char=${battle.charId} the $prize prize" }
     }
-    endBattle(battle, BattleResult.VICTORY, battle.activeMon().entityId, prize)
+    endBattle(battle, BattleResult.VICTORY, battle.activeMon().entityId, if (paid) prize else 0)
   }
 
   /**

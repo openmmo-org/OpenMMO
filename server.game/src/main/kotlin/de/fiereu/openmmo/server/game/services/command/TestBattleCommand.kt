@@ -18,7 +18,7 @@ class TestBattleCommand @Inject constructor(private val battleService: BattleSer
   override val description = "starts a wild battle against the given species"
   override val permission = CharacterPermissions.DEVELOPER
 
-  override fun run(ctx: CommandContext) {
+  override suspend fun run(ctx: CommandContext) {
     val dexId = ctx.args.getOrNull(0)?.toIntOrNull() ?: DEFAULT_WILD_DEX
     val level =
         (ctx.args.getOrNull(1)?.toIntOrNull() ?: DEFAULT_WILD_LEVEL).coerceIn(

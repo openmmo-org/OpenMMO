@@ -122,21 +122,25 @@ constructor(
     on<RequestSocialProfilePacket> { event -> socialService.onRequestSocialProfile(event) }
     on<CancelSocialInteractionPacket> { event -> socialService.onCancelSocialInteraction(event) }
 
-    on<GuildCreatePacket> { event -> guildService.onCreateGuild(event) }
-    on<GuildInvitePacket> { event -> guildService.onGuildInvite(event) }
-    on<GuildRankPermissionUpdatePacket> { event -> guildService.onRankPermissionUpdate(event) }
-    on<GuildMemberRankAssignPacket> { event -> guildService.onRankAssign(event) }
-    on<GuildMemberKickPacket> { event -> guildService.onKick(event) }
-    on<GuildLeavePacket> { event -> guildService.onLeave(event) }
-    on<GuildDisbandPacket> { event -> guildService.onDisband(event) }
-    on<GuildMotdUpdatePacket> { event -> guildService.onMotdUpdate(event) }
-    on<GuildRankLabelUpdatePacket> { event -> guildService.onRankLabelUpdate(event) }
-    on<GuildActivityLogPageRequestPacket> { event -> guildService.onActivityLogPageRequest(event) }
+    onSuspend<GuildCreatePacket> { event -> guildService.onCreateGuild(event) }
+    onSuspend<GuildInvitePacket> { event -> guildService.onGuildInvite(event) }
+    onSuspend<GuildRankPermissionUpdatePacket> { event ->
+      guildService.onRankPermissionUpdate(event)
+    }
+    onSuspend<GuildMemberRankAssignPacket> { event -> guildService.onRankAssign(event) }
+    onSuspend<GuildMemberKickPacket> { event -> guildService.onKick(event) }
+    onSuspend<GuildLeavePacket> { event -> guildService.onLeave(event) }
+    onSuspend<GuildDisbandPacket> { event -> guildService.onDisband(event) }
+    onSuspend<GuildMotdUpdatePacket> { event -> guildService.onMotdUpdate(event) }
+    onSuspend<GuildRankLabelUpdatePacket> { event -> guildService.onRankLabelUpdate(event) }
+    onSuspend<GuildActivityLogPageRequestPacket> { event ->
+      guildService.onActivityLogPageRequest(event)
+    }
 
-    on<MoveLearnReplyPacket> { event -> battleService.onMoveLearnReply(event) }
+    onSuspend<MoveLearnReplyPacket> { event -> battleService.onMoveLearnReply(event) }
     on<BattlePartySwitchPacket> { event -> battleService.onBattlePacket(event) }
     on<BattleActionPacket> { event -> battleService.onBattlePacket(event) }
-    on<BattleActionSelectPacket> { event -> battleService.onBattleAction(event) }
+    onSuspend<BattleActionSelectPacket> { event -> battleService.onBattleAction(event) }
     on<BattleLeavePacket> { event -> battleService.onBattlePacket(event) }
     on<BattleSequencePacket> { event -> battleService.onBattlePacket(event) }
     on<BattleSlotActionPacket> { event -> battleService.onBattlePacket(event) }
@@ -154,15 +158,15 @@ constructor(
     on<BattleTransitionReadyPacket> { event -> battleService.onBattlePacket(event) }
     on<BattleTeamPreviewConfirmPacket> { event -> battleService.onBattlePacket(event) }
     on<BattleRewardSelectPacket> { event -> battleService.onBattlePacket(event) }
-    on<MapLoadedAckPacket> { event -> battleService.onClientReady(event) }
+    onSuspend<MapLoadedAckPacket> { event -> battleService.onClientReady(event) }
 
     // The client sends an empty heartbeat packet.
     on<NullPacket> {}
     on<KeepAlivePacket> { event -> event.session.send(event.packet) }
-    on<ChatMessagePacket> { event -> onChatMessage(event) }
+    onSuspend<ChatMessagePacket> { event -> onChatMessage(event) }
     // What the client sends when the player types. The text rides in target unless the mode
     // carries a message of its own.
-    on<ChatMessageSendPacket> { event ->
+    onSuspend<ChatMessageSendPacket> { event ->
       chatCommandService.tryHandle(event.session, event.packet.message ?: event.packet.target)
     }
   }
@@ -190,7 +194,7 @@ constructor(
     )
   }
 
-  private fun onChatMessage(event: PacketEvent<ChatMessagePacket>) {
+  private suspend fun onChatMessage(event: PacketEvent<ChatMessagePacket>) {
     val state = event.session.attributes[PLAYER_STATE]
     if (state == null) {
       log.warn { "Chat message from session without PlayerState" }

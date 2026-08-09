@@ -73,7 +73,7 @@ class CharacterStoreCacheTest :
           val store = CharacterStore(repo, EntityIdService(), backgroundScope)
           val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
 
-          store.addMoney(id, 5000)
+          store.bumpMoneyLazily(id, 5000)
 
           store.getCharacter(id)!!.info.money shouldBe 35000
           repo.saved[id]!!.info.money shouldBe 30000
@@ -122,7 +122,7 @@ class CharacterStoreCacheTest :
           val store = CharacterStore(repo, EntityIdService(), backgroundScope)
           val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
 
-          store.addMoney(id, 1)
+          store.bumpMoneyLazily(id, 1)
           repo.failNextSave = true
           store.flushAll()
           repo.saveCount.get() shouldBe 0
@@ -139,11 +139,11 @@ class CharacterStoreCacheTest :
           val store = CharacterStore(repo, EntityIdService(), backgroundScope)
           val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
 
-          store.addMoney(id, 1)
+          store.bumpMoneyLazily(id, 1)
           store.flushAll()
           repo.lastPrevious[id]!!.info.money shouldBe 30000
 
-          store.addMoney(id, 1)
+          store.bumpMoneyLazily(id, 1)
           store.flushAll()
           repo.lastPrevious[id]!!.info.money shouldBe 30001
         }
@@ -155,11 +155,11 @@ class CharacterStoreCacheTest :
           val store = CharacterStore(repo, EntityIdService(), backgroundScope)
           val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
 
-          store.addMoney(id, 1)
+          store.bumpMoneyLazily(id, 1)
           repo.failNextSave = true
           store.flushAll()
 
-          store.addMoney(id, 2)
+          store.bumpMoneyLazily(id, 2)
           store.flushAll()
 
           repo.lastPrevious[id]!!.info.money shouldBe 30000
@@ -176,7 +176,7 @@ class CharacterStoreCacheTest :
 
           val store = CharacterStore(repo, EntityIdService(), backgroundScope)
           store.getOrLoadCharacter(id).shouldNotBeNull()
-          store.addMoney(id, 3)
+          store.bumpMoneyLazily(id, 3)
           store.flushAll()
 
           repo.lastPrevious[id]!!.info.money shouldBe 30000
@@ -188,7 +188,7 @@ class CharacterStoreCacheTest :
           val repo = FakeCharacterRepository()
           val store = CharacterStore(repo, EntityIdService(), this)
           val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
-          store.addMoney(id, 5)
+          store.bumpMoneyLazily(id, 5)
 
           store.unloadCharacterAsync(id)
           advanceUntilIdle()
@@ -204,7 +204,7 @@ class CharacterStoreCacheTest :
           val repo = FakeCharacterRepository()
           val store = CharacterStore(repo, EntityIdService(), this)
           val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
-          store.addMoney(id, 1)
+          store.bumpMoneyLazily(id, 1)
           repo.failNextSave = true
 
           store.unloadCharacterAsync(id)
@@ -236,7 +236,7 @@ class CharacterStoreCacheTest :
           val repo = FakeCharacterRepository()
           val store = CharacterStore(repo, EntityIdService(), this)
           val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
-          store.addMoney(id, 7)
+          store.bumpMoneyLazily(id, 7)
 
           store.shutdown()
 
@@ -285,3 +285,11 @@ class CharacterStoreCacheTest :
         }
       }
     })
+
+/**
+ * Marks the character dirty without persisting, for tests about flush diffing rather than money.
+ */
+private fun CharacterStore.bumpMoneyLazily(id: Long, by: Int) {
+  val info = getCharacter(id)!!.info
+  updateCharacter(info.copy(money = info.money + by))
+}

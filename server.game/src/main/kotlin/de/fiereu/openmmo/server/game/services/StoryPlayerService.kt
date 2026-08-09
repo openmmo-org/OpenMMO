@@ -32,7 +32,7 @@ constructor(
 ) {
 
   /** Gives a story Pokemon and syncs it. */
-  fun givePokemon(
+  suspend fun givePokemon(
       session: SessionContext,
       state: PlayerState,
       dexId: Int,
@@ -51,7 +51,8 @@ constructor(
             ot = stored.info.name,
             moves = paddedMoves(moveIds),
         )
-    characters.addPokemon(characterId, pokemon)
+    // Only tell the client about it once the database has it.
+    if (!characters.addPokemon(characterId, pokemon)) return null
     // Send the granted Pokemon's full record.
     session.send(SocialListEntryAddPacket(pokemon))
     species.get(dexId)?.let { session.send(acquiredMonsterDelta(pokemon, it)) }
@@ -90,7 +91,12 @@ constructor(
         ))
   }
 
-  fun giveItem(session: SessionContext, state: PlayerState, itemId: Int, quantity: Int): Boolean {
+  suspend fun giveItem(
+      session: SessionContext,
+      state: PlayerState,
+      itemId: Int,
+      quantity: Int
+  ): Boolean {
     val characterId = state.characterId ?: return false
     if (!characters.addItem(characterId, itemId, quantity)) return false
     val items = characters.getCharacter(characterId)?.items ?: return false
