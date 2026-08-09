@@ -54,6 +54,7 @@ constructor(
             positionMapId = destination.mapId,
             positionX = destination.x,
             positionY = destination.y,
+            positionFacing = destination.facing,
         )
 
     characterStore.updateCharacter(info)

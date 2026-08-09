@@ -255,6 +255,8 @@ constructor(
     state.mapId = info.positionMapId.toInt()
     state.x = info.positionX
     state.y = info.positionY
+    state.facingDirection = info.positionFacing
+    state.elevation = map?.tileAt(info.positionX.toInt(), info.positionY.toInt())?.elevation ?: 0
 
     multiplayerService.broadcastMessage(
         ChatMessagePacket(

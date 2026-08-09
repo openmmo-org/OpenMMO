@@ -4,6 +4,7 @@ import de.fiereu.openmmo.common.CharacterInfo
 import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.enums.CharacterGender
+import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.Region
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDateTime
@@ -156,10 +157,34 @@ constructor(
     return true
   }
 
+  /**
+   * Applies [change] to the cached character under the map's own lock. Scripts run on their own
+   * coroutine while packets are answered on the mailbox coroutine, so a plain read, copy and write
+   * would let one thread drop the other's field.
+   */
+  private fun mutate(characterId: Long, change: (StoredCharacter) -> StoredCharacter?): Boolean {
+    var applied = false
+    val present =
+        characters.computeIfPresent(characterId) { _, stored ->
+          val updated = change(stored)
+          if (updated == null) {
+            stored
+          } else {
+            applied = true
+            updated
+          }
+        }
+    if (present == null) {
+      // A disconnect evicts the character, so a script finishing its last statements reaches this.
+      log.warn { "Dropped a write for character $characterId, it is no longer cached" }
+      return false
+    }
+    if (applied) markDirty(characterId)
+    return applied
+  }
+
   fun updateCharacter(info: CharacterInfo) {
-    val stored = characters[info.id] ?: return
-    characters[info.id] = stored.copy(info = info)
-    markDirty(info.id)
+    mutate(info.id) { it.copy(info = info) }
   }
 
   fun updatePosition(
@@ -168,18 +193,20 @@ constructor(
       y: Short,
       bankId: Byte? = null,
       mapId: Byte? = null,
+      facing: Direction? = null,
   ) {
-    val stored = characters[characterId] ?: return
-    val oldInfo = stored.info
-    val newInfo =
-        oldInfo.copy(
-            positionX = x,
-            positionY = y,
-            positionBankId = bankId ?: oldInfo.positionBankId,
-            positionMapId = mapId ?: oldInfo.positionMapId,
-        )
-    characters[characterId] = stored.copy(info = newInfo)
-    markDirty(characterId)
+    mutate(characterId) { stored ->
+      stored.copy(
+          info =
+              stored.info.copy(
+                  positionX = x,
+                  positionY = y,
+                  positionBankId = bankId ?: stored.info.positionBankId,
+                  positionMapId = mapId ?: stored.info.positionMapId,
+                  positionFacing = facing ?: stored.info.positionFacing,
+              ),
+      )
+    }
   }
 
   /** False when the monster could not be written, in which case the party is left as it was. */
@@ -195,10 +222,10 @@ constructor(
 
   /** Replace one party monster by id, for example after a battle changed hp, xp, or level. */
   fun updatePokemon(characterId: Long, updated: Pokemon) {
-    val stored = characters[characterId] ?: return
-    val party = stored.pokemon.map { if (it.id == updated.id) updated else it }
-    characters[characterId] = stored.copy(pokemon = party.toMutableList())
-    markDirty(characterId)
+    mutate(characterId) { stored ->
+      stored.copy(
+          pokemon = stored.pokemon.map { if (it.id == updated.id) updated else it }.toMutableList())
+    }
   }
 
   /** False when the change could not be written, in which case the balance is left as it was. */
@@ -233,34 +260,31 @@ constructor(
 
   /** Set (or clear with null) the runtime destination for MAP_DYNAMIC warps (setdynamicwarp). */
   fun setDynamicWarp(characterId: Long, warp: DynamicWarp?) {
-    val stored = characters[characterId] ?: return
-    characters[characterId] = stored.copy(info = stored.info.copy(dynamicWarp = warp))
-    markDirty(characterId)
+    mutate(characterId) { it.copy(info = it.info.copy(dynamicWarp = warp)) }
   }
 
   /** Set a story flag. Copies the set so flusher snapshots never see a half-updated collection. */
   fun setStoryFlag(characterId: Long, flag: String) {
-    val stored = characters[characterId] ?: return
-    if (flag in stored.storyFlags) return
-    characters[characterId] = stored.copy(storyFlags = (stored.storyFlags + flag).toMutableSet())
-    markDirty(characterId)
+    mutate(characterId) { stored ->
+      if (flag in stored.storyFlags) null
+      else stored.copy(storyFlags = (stored.storyFlags + flag).toMutableSet())
+    }
   }
 
   fun clearStoryFlag(characterId: Long, flag: String) {
-    val stored = characters[characterId] ?: return
-    if (flag !in stored.storyFlags) return
-    characters[characterId] = stored.copy(storyFlags = (stored.storyFlags - flag).toMutableSet())
-    markDirty(characterId)
+    mutate(characterId) { stored ->
+      if (flag !in stored.storyFlags) null
+      else stored.copy(storyFlags = (stored.storyFlags - flag).toMutableSet())
+    }
   }
 
   /** Set a story var. A value of 0 is the default, so it drops the row instead of storing it. */
   fun setStoryVar(characterId: Long, key: String, value: Int) {
-    val stored = characters[characterId] ?: return
-    val newVars = stored.storyVars.toMutableMap()
-    if (value == 0) newVars.remove(key) else newVars[key] = value
-    if (newVars == stored.storyVars) return
-    characters[characterId] = stored.copy(storyVars = newVars)
-    markDirty(characterId)
+    mutate(characterId) { stored ->
+      val newVars = stored.storyVars.toMutableMap()
+      if (value == 0) newVars.remove(key) else newVars[key] = value
+      if (newVars == stored.storyVars) null else stored.copy(storyVars = newVars)
+    }
   }
 
   /** Replaces every monster, the party and the pc alike, along with the bag and story state. */
@@ -271,17 +295,21 @@ constructor(
       storyFlags: Set<String>,
       storyVars: Map<String, Int>,
   ) {
-    val stored = characters[characterId] ?: return
-    characters[characterId] =
-        stored.copy(
-            pokemon = party.toMutableList(),
-            pcStorage = mutableListOf(),
-            items = items.toMutableMap(),
-            storyFlags = storyFlags.toMutableSet(),
-            // A var of 0 is the default, so it is stored as absent everywhere else too.
-            storyVars = storyVars.filterValues { it != 0 }.toMutableMap(),
-        )
-    markDirty(characterId)
+    mutate(characterId) { stored ->
+      stored.copy(
+          pokemon = party.toMutableList(),
+          pcStorage = mutableListOf(),
+          items = items.toMutableMap(),
+          storyFlags = storyFlags.toMutableSet(),
+          // A var of 0 is the default, so it is stored as absent everywhere else too.
+          storyVars = storyVars.filterValues { it != 0 }.toMutableMap(),
+      )
+    }
+  }
+
+  /** Puts a character back to a [snapshot] taken earlier. */
+  fun restoreProgress(characterId: Long, snapshot: StoredCharacter) {
+    mutate(characterId) { snapshot }
   }
 
   fun startPeriodicFlush() {
@@ -315,12 +343,11 @@ constructor(
       rollback: (StoredCharacter) -> StoredCharacter,
   ): Boolean =
       lockFor(characterId).withLock {
-        val before = characters[characterId] ?: return@withLock false
-        val after = apply(before) ?: return@withLock false
-        characters[characterId] = after
-        markDirty(characterId)
+        // Through [mutate] rather than a read and a write, so a script writing another field
+        // between the two is not clobbered by the one this puts back.
+        if (!mutate(characterId, apply)) return@withLock false
         if (flushLocked(characterId, allowEvict = false)) return@withLock true
-        characters[characterId]?.let { characters[characterId] = rollback(it) }
+        mutate(characterId, rollback)
         dirtySince.remove(characterId)
         false
       }

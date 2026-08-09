@@ -46,36 +46,8 @@ fun movementService(
   val presence = PresenceService(interest, PassThroughInterestPolicy(), mapLoad, store)
   val npcs = NpcService(mapManager, store)
   val story = StoryService(store)
-  val species = SpeciesRegistry()
-  val moves = MoveRegistry()
-  val wildMons = WildMonFactory(species, moves, LearnsetRegistry(), EntityIdService())
-  val battles =
-      BattleService(
-          characterStore = store,
-          battles = BattleRegistry(),
-          engine = TurnEngine(moves, TypeChart()),
-          wildMons = wildMons,
-          emitter = BattlePacketEmitter(interest),
-          rewards = BattleRewards(),
-          moveLearner = MoveLearner(LearnsetRegistry(), moves),
-          interestManager = interest,
-          speciesRegistry = species,
-          moveRegistry = moves,
-          trainers = TrainerRegistry(),
-      )
+  val battles = battleService(store, interest)
   val entryScripts = MapEntryScripts(ScriptRegistry(emptyMap()), story)
-  val runner =
-      ScriptRunner(
-          DialogService(),
-          story,
-          ScriptMovementService(mapManager, npcs, store),
-          ScriptWarpService(mapManager, mapLoad, store, presence),
-          StoryPlayerService(store, wildMons, species, moves),
-          battles,
-          store,
-          mapManager,
-          entryScripts,
-      )
   return MovementService(
       WarpService(mapLoad, mapManager, store, presence),
       mapLoad,
@@ -84,6 +56,54 @@ fun movementService(
       mapManager,
       store,
       EncounterService(store, battles),
-      MapScriptService(entryScripts, runner),
+      MapScriptService(entryScripts, scriptRunner(store, mapManager, interest, battles)),
+  )
+}
+
+/**
+ * A real [ScriptRunner]. It launches on whatever scope the session carries under SCRIPT_SCOPE, so
+ * put the test's own scope there to be able to step a script.
+ */
+fun scriptRunner(
+    store: CharacterStore,
+    mapManager: MapManager = MapManager(),
+    interest: InterestManager = InterestManager(),
+    battles: BattleService = battleService(store, interest),
+): ScriptRunner {
+  val mapLoad = MapLoadService(mapManager)
+  val presence = PresenceService(interest, PassThroughInterestPolicy(), mapLoad, store)
+  val npcs = NpcService(mapManager, store)
+  val story = StoryService(store)
+  val species = SpeciesRegistry()
+  val moves = MoveRegistry()
+  val wildMons = WildMonFactory(species, moves, LearnsetRegistry(), EntityIdService())
+  return ScriptRunner(
+      DialogService(),
+      story,
+      ScriptMovementService(mapManager, npcs, store),
+      ScriptWarpService(mapManager, mapLoad, store, presence),
+      StoryPlayerService(store, wildMons, species, moves),
+      battles,
+      store,
+      mapManager,
+      MapEntryScripts(ScriptRegistry(emptyMap()), story),
+  )
+}
+
+private fun battleService(store: CharacterStore, interest: InterestManager): BattleService {
+  val species = SpeciesRegistry()
+  val moves = MoveRegistry()
+  return BattleService(
+      characterStore = store,
+      battles = BattleRegistry(),
+      engine = TurnEngine(moves, TypeChart()),
+      wildMons = WildMonFactory(species, moves, LearnsetRegistry(), EntityIdService()),
+      emitter = BattlePacketEmitter(interest),
+      rewards = BattleRewards(),
+      moveLearner = MoveLearner(LearnsetRegistry(), moves),
+      interestManager = interest,
+      speciesRegistry = species,
+      moveRegistry = moves,
+      trainers = TrainerRegistry(),
   )
 }

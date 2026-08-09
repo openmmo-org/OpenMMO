@@ -179,7 +179,7 @@ constructor(
       return
     }
 
-    characterStore.updatePosition(charId, toX.toShort(), toY.toShort())
+    characterStore.updatePosition(charId, toX.toShort(), toY.toShort(), facing = msg.direction)
     state.x = toX.toShort()
     state.y = toY.toShort()
 
@@ -251,6 +251,7 @@ constructor(
     }
     val msg = event.packet
     state.facingDirection = msg.direction
+    characterStore.updatePosition(charId, state.x, state.y, facing = msg.direction)
 
     presenceService.broadcastToObservers(
         ctx,

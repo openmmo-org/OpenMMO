@@ -3,15 +3,19 @@ package de.fiereu.openmmo.server.game.services
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.enums.Direction
+import de.fiereu.openmmo.maps.MapDef
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.packets.DialogDataPacket
 import de.fiereu.openmmo.net.game.packets.NpcUpdatePacket
 import de.fiereu.openmmo.server.game.script.MovementStep
 import de.fiereu.openmmo.server.game.session.PlayerState
 import de.fiereu.openmmo.server.game.storage.CharacterStore
+import io.github.oshai.kotlinlogging.KotlinLogging
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.delay
+
+private val log = KotlinLogging.logger {}
 
 /**
  * Drives scripted overworld movement (the decomp applymovement/waitmovement). Steps play one tile
@@ -108,11 +112,7 @@ constructor(
         ))
 
     val start = Pose(info.positionX.toInt(), info.positionY.toInt(), state.facingDirection)
-    val end = applySteps(start, selfSteps)
-    characterStore.updatePosition(charId, end.x.toShort(), end.y.toShort())
-    state.x = end.x.toShort()
-    state.y = end.y.toShort()
-    state.facingDirection = end.facing
+    commitPose(charId, state, map, applySteps(start, selfSteps))
   }
 
   /** Show a normally hidden map npc to the player for a cutscene (the decomp addobject). */
@@ -168,6 +168,9 @@ constructor(
   ) {
     val charId = state.characterId ?: return
     val info = characterStore.getCharacter(charId)?.info ?: return
+    val map =
+        mapManager.getMap(info.positionRegionId, info.positionBankId, info.positionMapId) ?: return
+    if (!commitPose(charId, state, map, Pose(x, y, facing))) return
     session.send(
         NpcUpdatePacket(
             entityId = info.id,
@@ -179,10 +182,6 @@ constructor(
             facing = 0xF6,
             unk = facing.ordinal,
         ))
-    characterStore.updatePosition(charId, x.toShort(), y.toShort())
-    state.x = x.toShort()
-    state.y = y.toShort()
-    state.facingDirection = facing
   }
 
   /** Removes a cutscene NPC and its collision. */
@@ -230,14 +229,11 @@ constructor(
   ) {
     val charId = state.characterId ?: return
     val info = characterStore.getCharacter(charId)?.info ?: return
+    val map =
+        mapManager.getMap(info.positionRegionId, info.positionBankId, info.positionMapId) ?: return
     val start = Pose(info.positionX.toInt(), info.positionY.toInt(), state.facingDirection)
     val end = drive(session, info.id, start, steps)
-    // Keep the server position in step with where the cutscene left the player, otherwise the next
-    // move packet from the client looks like a desync and the player is snapped back.
-    characterStore.updatePosition(charId, end.x.toShort(), end.y.toShort())
-    state.x = end.x.toShort()
-    state.y = end.y.toShort()
-    state.facingDirection = end.facing
+    commitPose(charId, state, map, end)
   }
 
   /** Sends one packet per step from [start] and waits between them. Returns the final pose. */
@@ -252,6 +248,25 @@ constructor(
     // waitmovement: hold until the client has had time to play the sequence.
     delay(durationMs(steps))
     return applySteps(start, steps)
+  }
+
+  /**
+   * Commits where a cutscene left the player, unless that is off the map, which would persist a
+   * position every later step reads as a desync and snaps back from.
+   */
+  private fun commitPose(charId: Long, state: PlayerState, map: MapDef, pose: Pose): Boolean {
+    if (pose.x !in 0 until map.width || pose.y !in 0 until map.height) {
+      log.warn {
+        "Refused a scripted move of character $charId to (${pose.x}, ${pose.y}) on " +
+            "${map.bankId}:${map.mapId}, which is outside the map"
+      }
+      return false
+    }
+    characterStore.updatePosition(charId, pose.x.toShort(), pose.y.toShort(), facing = pose.facing)
+    state.x = pose.x.toShort()
+    state.y = pose.y.toShort()
+    state.facingDirection = pose.facing
+    return true
   }
 
   private fun applySteps(start: Pose, steps: List<MovementStep>): Pose {

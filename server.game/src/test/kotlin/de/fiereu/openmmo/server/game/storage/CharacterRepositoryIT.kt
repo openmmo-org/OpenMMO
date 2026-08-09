@@ -154,7 +154,8 @@ class CharacterRepositoryIT :
         val added = monster(stored.info.id, PokemonContainer.PARTY, 1)
         val current =
             stored.copy(
-                info = stored.info.copy(money = 999, positionX = 12),
+                info =
+                    stored.info.copy(money = 999, positionX = 12, positionFacing = Direction.RIGHT),
                 pokemon = mutableListOf(kept.copy(hp = 3), added),
                 pcStorage = mutableListOf(),
                 items = mutableMapOf(4 to 9, 13 to 1),
@@ -164,6 +165,7 @@ class CharacterRepositoryIT :
         val loaded = repository.loadById(stored.info.id).shouldNotBeNull()
         loaded.info.money shouldBe 999
         loaded.info.positionX shouldBe 12
+        loaded.info.positionFacing shouldBe Direction.RIGHT
         loaded.pokemon.map { it.id } shouldBe listOf(kept.id, added.id)
         loaded.pokemon.first().hp shouldBe 3
         loaded.pcStorage.shouldBeEmpty()

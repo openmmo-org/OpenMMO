@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.common
 
+import de.fiereu.openmmo.common.enums.Direction
 import java.time.LocalDateTime
 
 data class CharacterInfo(
@@ -22,6 +23,8 @@ data class CharacterInfo(
     val positionMapId: Byte,
     val positionX: Short,
     val positionY: Short,
+    /** Not on the wire. LoadEntity carries the facing the client draws. */
+    val positionFacing: Direction = Direction.DOWN,
     val repelLeft: Short,
     val repelItemId: Short,
     val lureLeft: Short,

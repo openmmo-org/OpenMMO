@@ -2,6 +2,7 @@ package de.fiereu.openmmo.server.game.session
 
 import de.fiereu.network.SessionAttribute
 import de.fiereu.openmmo.net.game.packets.dialog.DialogActionResponsePacket
+import de.fiereu.openmmo.server.game.storage.StoredCharacter
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 
@@ -19,3 +20,8 @@ val PENDING_MAP_LOAD = SessionAttribute.of<CompletableDeferred<Unit>>("pendingMa
 
 /** Scope the connection's scripts run in. Cancelled on disconnect so a waiting script unwinds. */
 val SCRIPT_SCOPE = SessionAttribute.of<CoroutineScope>("scriptScope")
+
+/**
+ * The character as it was before the running script started, so an unfinished one can be undone.
+ */
+val SCRIPT_SNAPSHOT = SessionAttribute.of<StoredCharacter>("scriptSnapshot")
