@@ -43,9 +43,10 @@ seconds at most, and only connected players are cached.
 
 ## Dev data seeding
 
-Dev seed data (the `admin`/`test` accounts and the `Test`/`Test2` characters)
-does NOT belong in `db/migration`. Anything there runs in every environment,
-including production. Seeds live in a separate Flyway location:
+Dev seed data (the `admin`/`test` accounts, and the developer bit on the
+characters those accounts make) does NOT belong in `db/migration`. Anything
+there runs in every environment, including production. Seeds live in a separate
+Flyway location:
 
 - Files go into `src/main/resources/db/dev/`.
 - They are repeatable migrations (`R__seed_something.sql`), not versioned
@@ -64,3 +65,10 @@ variables.
 To add more dev data, extend an existing `R__` file or add a new one, keep it
 idempotent, and restart the server. Flyway reapplies the changed file on the
 next start.
+
+Dev characters are the exception, because a character built by SQL drifts from
+what a real new character gets. `DevCharacterSeeder` makes one per region on
+startup, named after the region, through the same `CharacterStore.createCharacter`
+the client uses, so their start state comes from `NewGameStarts`. It also skips
+regions that already have their character, so it never overwrites one you have
+played.

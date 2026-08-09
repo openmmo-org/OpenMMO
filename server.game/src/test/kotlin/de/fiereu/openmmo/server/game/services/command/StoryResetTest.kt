@@ -9,8 +9,14 @@ import de.fiereu.openmmo.moves.MoveRegistry
 import de.fiereu.openmmo.net.game.packets.ChatMessagePacket
 import de.fiereu.openmmo.pokemon.LearnsetRegistry
 import de.fiereu.openmmo.pokemon.SpeciesRegistry
+import de.fiereu.openmmo.server.game.battle.BattlePacketEmitter
+import de.fiereu.openmmo.server.game.battle.BattleRegistry
+import de.fiereu.openmmo.server.game.battle.BattleRewards
 import de.fiereu.openmmo.server.game.battle.BattleRng
+import de.fiereu.openmmo.server.game.battle.MoveLearner
+import de.fiereu.openmmo.server.game.battle.TurnEngine
 import de.fiereu.openmmo.server.game.battle.WildMonFactory
+import de.fiereu.openmmo.server.game.services.BattleService
 import de.fiereu.openmmo.server.game.services.MapLoadService
 import de.fiereu.openmmo.server.game.services.PresenceService
 import de.fiereu.openmmo.server.game.services.StoryPlayerService
@@ -25,7 +31,10 @@ import de.fiereu.openmmo.server.game.world.interest.InterestManager
 import de.fiereu.openmmo.server.game.world.interest.PassThroughInterestPolicy
 import de.fiereu.openmmo.story.generated.kanto.KantoFlags
 import de.fiereu.openmmo.story.generated.kanto.KantoVars
+import de.fiereu.openmmo.trainer.TrainerRegistry
+import de.fiereu.openmmo.typechart.TypeChart
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -56,6 +65,21 @@ class StoryResetTest :
                     mapManager,
                     store,
                     PresenceService(interest, PassThroughInterestPolicy(), mapLoad, store),
+                ),
+            battleService =
+                BattleService(
+                    characterStore = store,
+                    battles = BattleRegistry(),
+                    engine = TurnEngine(moves, TypeChart()),
+                    wildMons =
+                        WildMonFactory(species, moves, LearnsetRegistry(), EntityIdService()),
+                    emitter = BattlePacketEmitter(interest),
+                    rewards = BattleRewards(),
+                    moveLearner = MoveLearner(LearnsetRegistry(), moves),
+                    interestManager = interest,
+                    speciesRegistry = species,
+                    moveRegistry = moves,
+                    trainers = TrainerRegistry(),
                 ),
         )
       }
@@ -88,28 +112,47 @@ class StoryResetTest :
         }
       }
 
-      test(
-          "reset empties the party and the pc, since it replaces every monster the character has") {
-            runTest {
-              val store =
-                  CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
-              val charId = developer(store)
-              val species = SpeciesRegistry()
-              val factory =
-                  WildMonFactory(species, MoveRegistry(), LearnsetRegistry(), EntityIdService())
-              store.addPokemon(charId, factory.create(1, 5, BattleRng(seed = 1))!!)
-              store.addPokemon(
-                  charId,
+      test("reset empties the party and the pc") {
+        runTest {
+          val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
+          val charId = developer(store)
+          val species = SpeciesRegistry()
+          val factory =
+              WildMonFactory(species, MoveRegistry(), LearnsetRegistry(), EntityIdService())
+          store.addPokemon(charId, factory.create(1, 5, BattleRng(seed = 1))!!)
+          // A loaded character keeps boxed monsters in pcStorage, not in pokemon, so putting one
+          // through addPokemon would test a shape the load path never produces.
+          store
+              .getCharacter(charId)!!
+              .pcStorage
+              .add(
                   factory
                       .create(4, 5, BattleRng(seed = 2))!!
-                      .copy(container = PokemonContainer.PC, containerSlot = 0),
-              )
-              val session = FakeSession(characterId = charId)
-              val service = ChatCommandService(store, setOf(storyCommand(store)))
+                      .copy(container = PokemonContainer.PC, containerSlot = 0))
+          val session = FakeSession(characterId = charId)
+          val service = ChatCommandService(store, setOf(storyCommand(store)))
 
-              service.tryHandle(session, "/story reset") shouldBe true
+          service.tryHandle(session, "/story reset") shouldBe true
 
-              store.getCharacter(charId)!!.pokemon shouldBe emptyList()
-            }
-          }
+          val after = store.getCharacter(charId)!!
+          after.pokemon shouldBe emptyList()
+          after.pcStorage shouldBe emptyList()
+        }
+      }
+
+      test("reset is refused while a dialog is open") {
+        runTest {
+          val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
+          val charId = developer(store)
+          store.setStoryFlag(charId, KantoFlags.FLAG_SYS_POKEMON_GET)
+          val session = FakeSession(characterId = charId)
+          session.state().inDialog = true
+          val service = ChatCommandService(store, setOf(storyCommand(store)))
+
+          service.tryHandle(session, "/story reset") shouldBe true
+
+          store.getCharacter(charId)!!.storyFlags shouldContain KantoFlags.FLAG_SYS_POKEMON_GET
+          session.sent.filterIsInstance<ChatMessagePacket>().last().message shouldContain "Finish"
+        }
+      }
     })

@@ -1,5 +1,4 @@
--- Dev characters are built by DevCharacterSeeder now, so their start state comes from
--- NewGameStarts instead of being copied into SQL. This only clears the rows the old seed left.
+-- Drops the two characters the SQL seed used to create, which DevCharacterSeeder now replaces.
 DELETE FROM characters WHERE id IN (102400, 364544);
 
 -- Gives the developer bit to characters made through the client, on the dev accounts only.

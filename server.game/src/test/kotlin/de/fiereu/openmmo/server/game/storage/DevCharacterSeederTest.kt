@@ -7,7 +7,6 @@ import de.fiereu.openmmo.server.game.config.ConfigLoader
 import de.fiereu.openmmo.server.game.testsupport.FakeCharacterRepository
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 
@@ -26,10 +25,7 @@ class DevCharacterSeederTest :
           seeded.size shouldBe Region.entries.size
           Region.entries.forEach { region ->
             val start = NewGameStarts.forRegion(region, female = false)
-            val character =
-                seeded
-                    .single { it.info.positionRegionId == region.wireValue }
-                    .also { it shouldNotBe null }
+            val character = seeded.single { it.info.positionRegionId == region.wireValue }
             character.info.positionBankId shouldBe start.bankId
             character.info.positionMapId shouldBe start.mapId
             character.info.positionX shouldBe start.x

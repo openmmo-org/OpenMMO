@@ -133,7 +133,7 @@ val KANTO_CHECKPOINTS: List<StoryCheckpoint> =
         ),
         StoryCheckpoint(
             name = "pokedex",
-            description = "in front of Oak with the parcel, talk to him for the Pokedex",
+            description = "in front of Oak with the parcel, ready for the Pokedex",
             region = Region.KANTO,
             bankId = INDOOR_PALLET_BANK,
             mapId = OAKS_LAB_MAP,

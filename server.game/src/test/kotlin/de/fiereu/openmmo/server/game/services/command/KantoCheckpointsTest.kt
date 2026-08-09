@@ -49,7 +49,6 @@ class KantoCheckpointsTest :
         val rivalBattle = KANTO_CHECKPOINTS.single { it.name == "rival-battle" }
 
         rivalBattle.storyVars[KantoVars.VAR_STARTER_MON] shouldBe 0
-        // 0 is Bulbasaur, and the scene picks the rival's monster from it.
         rivalBattle.party.single().dexId shouldBe 1
       }
 
