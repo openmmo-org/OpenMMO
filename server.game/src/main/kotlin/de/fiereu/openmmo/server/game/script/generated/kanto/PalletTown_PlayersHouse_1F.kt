@@ -24,7 +24,6 @@ internal object PalletTown_PlayersHouse_1F_EventScript_Mom : Script {
 
 internal object PalletTown_PlayersHouse_1F_EventScript_TV : Script {
   override suspend fun run(ctx: ScriptContext) {
-    // The screen only reads from the front, the sides show a different line.
     if (ctx.facingDirection != Direction.UP) {
       return ctx.sign(PalletTown_PlayersHouse_1F.OopsWrongSide)
     }

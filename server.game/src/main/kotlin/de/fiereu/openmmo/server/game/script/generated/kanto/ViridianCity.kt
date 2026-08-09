@@ -39,7 +39,7 @@ internal object ViridianCity_EventScript_GymDoorLocked : Script {
   override suspend fun run(ctx: ScriptContext) {
     ctx.moveSelf(FACE_UP)
     ctx.sign(ViridianCity.GymDoorsAreLocked)
-    // The decomp hops the player back down the ledge; a plain step down is the closest we have.
+    // The decomp hops the player back down the ledge, and a plain step down is the closest we have.
     ctx.moveSelf(WALK_DOWN)
   }
 }
@@ -73,6 +73,13 @@ private suspend fun tutorialBattle(ctx: ScriptContext) {
   ctx.sayNpc(LOCALID_TUTORIAL_MAN, ViridianCity.WatchThatToLearnBasics)
 }
 
+/**
+ * Not ported yet. Decomp body:
+ * ```
+ * goto EventScript_DreamEaterTutor
+ * end
+ * ```
+ */
 internal object ViridianCity_EventScript_DreamEaterTutor : Script {
   override suspend fun run(ctx: ScriptContext) =
       TODO("port ViridianCity_EventScript_DreamEaterTutor")

@@ -21,7 +21,6 @@ import de.fiereu.openmmo.story.generated.kanto.KantoVars
 private const val LOCALID_SIGN_LADY = 0
 private const val LOCALID_PROF_OAK = 2
 
-// Oak walks the player into his lab, which is region 0 bank 4 map 3.
 private const val OAKS_LAB_BANK = 4
 private const val OAKS_LAB_MAP = 3
 private const val OAKS_LAB_ENTRY_X = 6

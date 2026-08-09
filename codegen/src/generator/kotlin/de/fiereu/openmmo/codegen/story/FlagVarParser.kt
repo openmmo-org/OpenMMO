@@ -24,7 +24,7 @@ object FlagVarParser {
 
   /**
    * Gender-specific flags the source game establishes during its intro. Emerald sets them in the
-   * moving truck; a game without such a script contributes nothing.
+   * moving truck. A game without such a script contributes nothing.
    */
   fun maleIntroFlags(decompDir: File): List<String> =
       scriptFlags(decompDir, "InsideOfTruck_EventScript_SetIntroFlagsMale")

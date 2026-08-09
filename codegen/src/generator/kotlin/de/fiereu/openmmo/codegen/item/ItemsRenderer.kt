@@ -6,7 +6,6 @@ import gg.jte.output.FileOutput
 import gg.jte.resolve.DirectoryCodeResolver
 import java.io.File
 
-/** Emits one Kotlin object holding every item id, for scripts that hand out items. */
 class ItemsRenderer(
     private val templatesDir: File,
     private val outputDir: File,
