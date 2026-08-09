@@ -139,7 +139,7 @@ internal constructor(
       checkNotNull(player) { STORY_PLAYER_UNAVAILABLE }.giveItem(session, state, itemId, quantity)
 
   /** Take an item back out of the bag, the decomp removeitem. False when the bag lacks it. */
-  fun takeItem(itemId: Int, quantity: Int = 1): Boolean = giveItem(itemId, -quantity)
+  suspend fun takeItem(itemId: Int, quantity: Int = 1): Boolean = giveItem(itemId, -quantity)
 
   /** Run a non-catchable, non-escapable story battle and wait for its result. */
   suspend fun battle(dexId: Int, level: Int, vararg moveIds: Int): BattleResult =

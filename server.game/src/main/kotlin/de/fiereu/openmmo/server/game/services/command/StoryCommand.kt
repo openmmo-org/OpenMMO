@@ -29,7 +29,7 @@ constructor(
   override val description = "jumps to a story scene, or lists the scenes with no argument"
   override val permission = CharacterPermissions.DEVELOPER
 
-  override fun run(ctx: CommandContext) {
+  override suspend fun run(ctx: CommandContext) {
     val wanted = ctx.args.firstOrNull()
     if (wanted == null) {
       KANTO_CHECKPOINTS.forEach { ctx.reply("${it.name} - ${it.description}") }
@@ -98,7 +98,7 @@ constructor(
     ctx.reply("Reset to the ${region.displayName} start. Your party, PC and bag are empty.")
   }
 
-  private fun apply(ctx: CommandContext, checkpoint: StoryCheckpoint) {
+  private suspend fun apply(ctx: CommandContext, checkpoint: StoryCheckpoint) {
     val charId = ctx.characterId
     characterStore.replaceProgress(
         characterId = charId,
