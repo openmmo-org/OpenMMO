@@ -245,7 +245,7 @@ constructor(
     markDirty(characterId)
   }
 
-  /** Replaces the whole party, bag and story state at once, for a dev jump to a story point. */
+  /** Replaces every monster, the party and the pc alike, along with the bag and story state. */
   fun replaceProgress(
       characterId: Long,
       party: List<Pokemon>,
@@ -257,6 +257,7 @@ constructor(
     characters[characterId] =
         stored.copy(
             pokemon = party.toMutableList(),
+            pcStorage = mutableListOf(),
             items = items.toMutableMap(),
             storyFlags = storyFlags.toMutableSet(),
             // A var of 0 is the default, so it is stored as absent everywhere else too.

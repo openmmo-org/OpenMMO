@@ -8,6 +8,7 @@ import de.fiereu.openmmo.server.game.db.DatabaseBootstrap
 import de.fiereu.openmmo.server.game.handler.GameAppHandler
 import de.fiereu.openmmo.server.game.session.SessionRegistry
 import de.fiereu.openmmo.server.game.storage.CharacterStore
+import de.fiereu.openmmo.server.game.storage.DevCharacterSeeder
 import javax.inject.Provider
 import javax.inject.Singleton
 
@@ -24,6 +25,8 @@ interface GameServerComponent {
   fun databaseBootstrap(): DatabaseBootstrap
 
   fun characterStore(): CharacterStore
+
+  fun devCharacterSeeder(): DevCharacterSeeder
 
   @Component.Factory
   fun interface Factory {
