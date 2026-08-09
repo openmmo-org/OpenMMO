@@ -116,7 +116,11 @@ private fun FakeSession.startBattle(service: BattleService, dexId: Int = 19, lev
   service.startWildBattle(this, dexId, level)
 }
 
-private fun FakeSession.act(service: BattleService, action: BattleAction, value: Short = 0) {
+private suspend fun FakeSession.act(
+    service: BattleService,
+    action: BattleAction,
+    value: Short = 0,
+) {
   service.onBattleAction(PacketEvent(BattleActionSelectPacket(0, action, value, 0L, 0), this))
 }
 

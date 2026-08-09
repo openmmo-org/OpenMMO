@@ -9,7 +9,7 @@ class HelpCommand @Inject constructor() : ChatCommand {
   override val usage = "/help"
   override val description = "lists the commands you can run"
 
-  override fun run(ctx: CommandContext) {
+  override suspend fun run(ctx: CommandContext) {
     ctx.commands.sortedBy { it.name }.forEach { ctx.reply("${it.usage} - ${it.description}") }
   }
 }

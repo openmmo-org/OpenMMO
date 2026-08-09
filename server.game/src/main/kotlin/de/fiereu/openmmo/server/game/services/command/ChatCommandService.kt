@@ -24,7 +24,7 @@ constructor(
   private val commands = registered.associateBy { it.name.lowercase() }
 
   /** Handles a chat line. Returns false when it is ordinary chat the caller should broadcast. */
-  fun tryHandle(session: SessionContext, message: String): Boolean {
+  suspend fun tryHandle(session: SessionContext, message: String): Boolean {
     val text = message.trim()
     if (!text.startsWith(PREFIX)) return false
 

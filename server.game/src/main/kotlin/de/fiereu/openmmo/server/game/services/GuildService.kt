@@ -43,7 +43,7 @@ constructor(
     private val characterStore: CharacterStore,
 ) {
 
-  fun onCreateGuild(event: PacketEvent<GuildCreatePacket>) {
+  suspend fun onCreateGuild(event: PacketEvent<GuildCreatePacket>) {
     val ctx = event.session
     val state = ctx.attributes[PLAYER_STATE] ?: return
     val charId = state.characterId ?: return

@@ -125,13 +125,13 @@ internal constructor(
     characterId?.let { story.setVar(it, key, value) }
   }
 
-  fun givePokemon(dexId: Int, level: Int, vararg moveIds: Int) =
+  suspend fun givePokemon(dexId: Int, level: Int, vararg moveIds: Int) =
       checkNotNull(player) { STORY_PLAYER_UNAVAILABLE }
           .givePokemon(session, state, dexId, level, moveIds.toList())
 
   fun healParty() = checkNotNull(player) { STORY_PLAYER_UNAVAILABLE }.healParty(session, state)
 
-  fun giveItem(itemId: Int, quantity: Int = 1): Boolean =
+  suspend fun giveItem(itemId: Int, quantity: Int = 1): Boolean =
       checkNotNull(player) { STORY_PLAYER_UNAVAILABLE }.giveItem(session, state, itemId, quantity)
 
   /** Run a non-catchable, non-escapable story battle and wait for its result. */

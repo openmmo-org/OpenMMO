@@ -23,7 +23,7 @@ private class RecordingCommand(
   override val description = "only for developers"
   var ran = false
 
-  override fun run(ctx: CommandContext) {
+  override suspend fun run(ctx: CommandContext) {
     ran = true
     if (fail) error("boom")
   }

@@ -224,11 +224,11 @@ constructor(
     markDirty(characterId)
   }
 
-  fun addPokemon(characterId: Long, pokemon: Pokemon) {
+  suspend fun addPokemon(characterId: Long, pokemon: Pokemon) {
     val stored = characters[characterId] ?: return
     // Copy instead of mutating in place, so flusher snapshots never see a half-updated list.
     characters[characterId] = stored.copy(pokemon = (stored.pokemon + pokemon).toMutableList())
-    markDirty(characterId)
+    persistNow(characterId)
   }
 
   /** Replace one party monster by id, for example after a battle changed hp, xp, or level. */
@@ -239,15 +239,15 @@ constructor(
     markDirty(characterId)
   }
 
-  fun addMoney(characterId: Long, amount: Int) {
+  suspend fun addMoney(characterId: Long, amount: Int) {
     val stored = characters[characterId] ?: return
     val newInfo = stored.info.copy(money = stored.info.money + amount)
     characters[characterId] = stored.copy(info = newInfo)
-    markDirty(characterId)
+    persistNow(characterId)
   }
 
   /** Add (or remove with a negative amount) one persisted bag stack. */
-  fun addItem(characterId: Long, itemId: Int, amount: Int): Boolean {
+  suspend fun addItem(characterId: Long, itemId: Int, amount: Int): Boolean {
     val stored = characters[characterId] ?: return false
     val oldQuantity = stored.items[itemId] ?: 0
     val newQuantity = oldQuantity + amount
@@ -255,7 +255,7 @@ constructor(
     val items = stored.items.toMutableMap()
     if (newQuantity == 0) items.remove(itemId) else items[itemId] = newQuantity
     characters[characterId] = stored.copy(items = items)
-    markDirty(characterId)
+    persistNow(characterId)
     return true
   }
 
@@ -324,6 +324,16 @@ constructor(
   /** Flush one character soon, skipping the debounce. Safe to call from Netty threads. */
   fun flushCharacterAsync(characterId: Long) {
     flushScope.launch { flush(characterId) }
+  }
+
+  /**
+   * Marks the character dirty and writes it before returning. Anything a player can trade or spend
+   * goes through here, so a crash cannot lose an item that the client was already told it has.
+   * Position, hp and story progress do not, since replaying a few seconds of those costs nothing.
+   */
+  private suspend fun persistNow(characterId: Long) {
+    markDirty(characterId)
+    flush(characterId)
   }
 
   /**

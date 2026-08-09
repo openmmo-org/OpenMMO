@@ -12,7 +12,7 @@ class CatchCommand @Inject constructor(private val battleService: BattleService)
   override val description = "throws a ball at the monster you are fighting"
   override val permission = CharacterPermissions.DEVELOPER
 
-  override fun run(ctx: CommandContext) {
+  override suspend fun run(ctx: CommandContext) {
     if (!battleService.catchActiveWild(ctx.characterId)) {
       ctx.reply("You are not in a battle.")
     }

@@ -9,7 +9,7 @@ class PosCommand @Inject constructor() : ChatCommand {
   override val usage = "/pos"
   override val description = "shows the map and tile you are standing on"
 
-  override fun run(ctx: CommandContext) {
+  override suspend fun run(ctx: CommandContext) {
     val s = ctx.state
     ctx.reply(
         "region ${s.regionId} bank ${s.bankId} map ${s.mapId} " +

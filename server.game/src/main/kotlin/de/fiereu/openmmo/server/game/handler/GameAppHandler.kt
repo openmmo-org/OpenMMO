@@ -122,7 +122,7 @@ constructor(
     on<RequestSocialProfilePacket> { event -> socialService.onRequestSocialProfile(event) }
     on<CancelSocialInteractionPacket> { event -> socialService.onCancelSocialInteraction(event) }
 
-    on<GuildCreatePacket> { event -> guildService.onCreateGuild(event) }
+    onSuspend<GuildCreatePacket> { event -> guildService.onCreateGuild(event) }
     on<GuildInvitePacket> { event -> guildService.onGuildInvite(event) }
     on<GuildRankPermissionUpdatePacket> { event -> guildService.onRankPermissionUpdate(event) }
     on<GuildMemberRankAssignPacket> { event -> guildService.onRankAssign(event) }
@@ -136,7 +136,7 @@ constructor(
     on<MoveLearnReplyPacket> { event -> battleService.onMoveLearnReply(event) }
     on<BattlePartySwitchPacket> { event -> battleService.onBattlePacket(event) }
     on<BattleActionPacket> { event -> battleService.onBattlePacket(event) }
-    on<BattleActionSelectPacket> { event -> battleService.onBattleAction(event) }
+    onSuspend<BattleActionSelectPacket> { event -> battleService.onBattleAction(event) }
     on<BattleLeavePacket> { event -> battleService.onBattlePacket(event) }
     on<BattleSequencePacket> { event -> battleService.onBattlePacket(event) }
     on<BattleSlotActionPacket> { event -> battleService.onBattlePacket(event) }
@@ -159,10 +159,10 @@ constructor(
     // The client sends an empty heartbeat packet.
     on<NullPacket> {}
     on<KeepAlivePacket> { event -> event.session.send(event.packet) }
-    on<ChatMessagePacket> { event -> onChatMessage(event) }
+    onSuspend<ChatMessagePacket> { event -> onChatMessage(event) }
     // What the client sends when the player types. The text rides in target unless the mode
     // carries a message of its own.
-    on<ChatMessageSendPacket> { event ->
+    onSuspend<ChatMessageSendPacket> { event ->
       chatCommandService.tryHandle(event.session, event.packet.message ?: event.packet.target)
     }
   }
@@ -190,7 +190,7 @@ constructor(
     )
   }
 
-  private fun onChatMessage(event: PacketEvent<ChatMessagePacket>) {
+  private suspend fun onChatMessage(event: PacketEvent<ChatMessagePacket>) {
     val state = event.session.attributes[PLAYER_STATE]
     if (state == null) {
       log.warn { "Chat message from session without PlayerState" }
