@@ -185,7 +185,6 @@ private suspend fun starterBall(ctx: ScriptContext, starter: Starter) {
   ctx.setVar(KantoVars.VAR_STARTER_MON, starter.starterNumber)
   ctx.sign(PalletTown_ProfessorOaksLab.ReceivedMonFromOak)
 
-  // The rival helps himself to the one that beats it.
   val rivalStarter = starter.rival
   ctx.moveNpc(LOCALID_RIVAL, *rivalStarter.rivalWalk.toTypedArray())
   ctx.sayNpc(LOCALID_RIVAL, PalletTown_ProfessorOaksLab.RivalIllTakeThisOneThen)
@@ -227,10 +226,10 @@ private suspend fun rivalBattle(ctx: ScriptContext, playerX: Int) {
   val approach = List(stepsLeft) { WALK_LEFT } + listOf(WALK_DOWN, WALK_DOWN)
   ctx.moveNpc(LOCALID_RIVAL, *approach.toTypedArray())
 
-  if (ctx.battle(rivalStarter.species, STARTER_LEVEL, *rivalStarter.moves) !=
-      BattleResult.VICTORY) {
-    return
-  }
+  // The decomp ends this scene the same way whether the player won or lost, so a loss must not
+  // leave the rival standing on the exit tile with the trigger still armed.
+  val result = ctx.battle(rivalStarter.species, STARTER_LEVEL, *rivalStarter.moves)
+  if (result == BattleResult.DISCONNECTED || result == BattleResult.FAILED) return
 
   ctx.healParty()
   ctx.sayNpc(LOCALID_RIVAL, PalletTown_ProfessorOaksLab.RivalGoToughenMyMon)
@@ -269,7 +268,6 @@ private suspend fun receiveDexScene(ctx: ScriptContext) {
   ctx.takeItem(Items.OAKS_PARCEL)
   ctx.say(PalletTown_ProfessorOaksLab.OakCustomBallIOrdered)
 
-  // The rival shouts from outside before he walks in.
   ctx.sign(PalletTown_ProfessorOaksLab.RivalGramps)
   // A player facing Oak stands in the middle column, so the rival comes up the one beside it.
   val facing = ctx.facingDirection
