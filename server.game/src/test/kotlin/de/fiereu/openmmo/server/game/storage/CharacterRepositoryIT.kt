@@ -248,9 +248,7 @@ class CharacterRepositoryIT :
         shouldThrowAny { repository.insertAggregate(stored) }
       }
 
-      test("the seed migration provides the dev characters with their starters") {
-        val seeded = repository.loadByUser(1)
-        seeded.map { it.info.name } shouldBe listOf("Test")
-        seeded.single().pokemon.map { it.dexId } shouldBe listOf(1, 19)
+      test("the seed migration leaves the dev user without characters for the seeder to make") {
+        repository.loadByUser(1).shouldBeEmpty()
       }
     })
