@@ -26,6 +26,18 @@ internal object StoryClientState {
           }
           .sortedBy { it.key.toInt() and 0xff }
 
+  /**
+   * Every var in the GBA range, zeros included. A var back at 0 is stored as absent, so sending
+   * only what is stored would leave the client holding the old value. There is no var equivalent of
+   * [de.fiereu.openmmo.net.game.packets.WorldFlagTableResetPacket] to clear it first.
+   */
+  fun allVariables(regionId: Byte, vars: Map<String, Int>): List<PlayerVariableEntry> {
+    val byId = variables(regionId, vars).associate { it.key.toInt() and 0xff to it.value }
+    return (0..(GBA_VARS_END - GBA_VARS_START)).map {
+      PlayerVariableEntry(it.toByte(), byId[it] ?: 0)
+    }
+  }
+
   private fun flagId(regionId: Byte, key: String): Int? =
       when (regionId.toInt()) {
         KANTO_REGION -> KantoFlags.numericId(key)

@@ -291,6 +291,26 @@ constructor(
     markDirty(characterId)
   }
 
+  /** Replaces the whole party, bag and story state at once, for a dev jump to a story point. */
+  fun replaceProgress(
+      characterId: Long,
+      party: List<Pokemon>,
+      items: Map<Int, Int>,
+      storyFlags: Set<String>,
+      storyVars: Map<String, Int>,
+  ) {
+    val stored = characters[characterId] ?: return
+    characters[characterId] =
+        stored.copy(
+            pokemon = party.toMutableList(),
+            items = items.toMutableMap(),
+            storyFlags = storyFlags.toMutableSet(),
+            // A var of 0 is the default, so it is stored as absent everywhere else too.
+            storyVars = storyVars.filterValues { it != 0 }.toMutableMap(),
+        )
+    markDirty(characterId)
+  }
+
   fun startPeriodicFlush() {
     periodicJob =
         flushScope.launch {
