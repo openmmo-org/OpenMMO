@@ -187,7 +187,6 @@ constructor(
     mutate(info.id) { it.copy(info = info) }
   }
 
-  /** A null [bankId], [mapId] or [facing] leaves that part of the position alone. */
   fun updatePosition(
       characterId: Long,
       x: Short,
@@ -308,11 +307,7 @@ constructor(
     }
   }
 
-  /**
-   * Puts a character back to a [snapshot] taken earlier. Every mutator replaces the collections it
-   * touches rather than editing them, so an older [StoredCharacter] is still a complete picture of
-   * what the character was.
-   */
+  /** Puts a character back to a [snapshot] taken earlier. */
   fun restoreProgress(characterId: Long, snapshot: StoredCharacter) {
     mutate(characterId) { snapshot }
   }

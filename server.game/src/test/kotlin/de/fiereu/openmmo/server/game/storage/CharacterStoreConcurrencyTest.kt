@@ -19,13 +19,11 @@ class CharacterStoreConcurrencyTest :
         runTest {
           val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
           val charId = store.createCharacter(1, "Red", CharacterGender.MALE, Region.KANTO).info.id
-          // A new Kanto character already carries the flags its region starts with.
           val baseline = store.getCharacter(charId)!!.storyFlags.size
           val pool = Executors.newFixedThreadPool(2)
           val start = CountDownLatch(1)
 
-          // Both threads add their own flags, so every lost update loses a flag and shows up in
-          // the count. A script and the mailbox coroutine really do write this set at once.
+          // Both threads add their own flags, so a lost update loses a flag and shows in the count.
           val writers =
               (0 until 2).map { thread ->
                 pool.submit {

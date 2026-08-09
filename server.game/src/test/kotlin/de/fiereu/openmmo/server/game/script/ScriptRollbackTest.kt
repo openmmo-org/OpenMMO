@@ -65,7 +65,6 @@ class ScriptRollbackTest :
 
           runner.run(session, session.state(), grantingScript(CompletableDeferred()), entityId = -1)
           runCurrent()
-          // The rewards are written while the scene var still says the scene never finished.
           store.getCharacter(charId)!!.storyFlags.contains(FLAG) shouldBe true
 
           // What onInactive does for a player who closed the client mid scene.

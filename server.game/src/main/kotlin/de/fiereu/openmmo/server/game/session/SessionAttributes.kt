@@ -22,8 +22,6 @@ val PENDING_MAP_LOAD = SessionAttribute.of<CompletableDeferred<Unit>>("pendingMa
 val SCRIPT_SCOPE = SessionAttribute.of<CoroutineScope>("scriptScope")
 
 /**
- * The character as it was before the running script started. A script writes its story state as it
- * goes but only advances its scene var at the end, so a script that never finishes has to be undone
- * or the next login replays the scene on top of half its own effects.
+ * The character as it was before the running script started, so an unfinished one can be undone.
  */
 val SCRIPT_SNAPSHOT = SessionAttribute.of<StoredCharacter>("scriptSnapshot")

@@ -174,8 +174,7 @@ constructor(
   }
 
   override fun onInactive() {
-    // Cancel any script coroutine still waiting on a dialog reply from this connection, and take
-    // the scope with it. A cancelled scope left behind makes every later launch a silent no-op.
+    // A cancelled scope left behind would make every later launch a silent no-op.
     session.attributes.remove(SCRIPT_SCOPE)?.cancel()
     val state = session.attributes[PLAYER_STATE] ?: return
     log.info { "Player ${state.characterId} disconnected." }

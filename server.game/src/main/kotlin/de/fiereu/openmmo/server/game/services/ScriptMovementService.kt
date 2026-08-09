@@ -233,8 +233,6 @@ constructor(
         mapManager.getMap(info.positionRegionId, info.positionBankId, info.positionMapId) ?: return
     val start = Pose(info.positionX.toInt(), info.positionY.toInt(), state.facingDirection)
     val end = drive(session, info.id, start, steps)
-    // Keep the server position in step with where the cutscene left the player, otherwise the next
-    // move packet from the client looks like a desync and the player is snapped back.
     commitPose(charId, state, map, end)
   }
 
@@ -253,9 +251,8 @@ constructor(
   }
 
   /**
-   * Commits where a cutscene left the player, unless that is off the map. A script whose steps do
-   * not match the tile it started from would otherwise persist a position the player can never move
-   * off, because every later step reads as a desync and gets snapped back.
+   * Commits where a cutscene left the player, unless that is off the map, which would persist a
+   * position every later step reads as a desync and snaps back from.
    */
   private fun commitPose(charId: Long, state: PlayerState, map: MapDef, pose: Pose): Boolean {
     if (pose.x !in 0 until map.width || pose.y !in 0 until map.height) {

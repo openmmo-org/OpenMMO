@@ -256,7 +256,6 @@ constructor(
     state.x = info.positionX
     state.y = info.positionY
     state.facingDirection = info.positionFacing
-    // Elevation is a property of the tile, so it is read back rather than stored.
     state.elevation = map?.tileAt(info.positionX.toInt(), info.positionY.toInt())?.elevation ?: 0
 
     multiplayerService.broadcastMessage(
