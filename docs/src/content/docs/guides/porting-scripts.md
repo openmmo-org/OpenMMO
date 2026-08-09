@@ -137,10 +137,7 @@ There is no verb for these. Do not fake them:
 - **Shops.** `pokemart` and its item list.
 - **Hiding the player.** `hideplayer`/`showplayer`. Npcs can be hidden with
   `removeNpc` or by ending a movement with `SET_INVISIBLE`, the player cannot.
-- **Trainer battles.** `trainerbattle` in all its forms. `ctx.battle` runs one
-  monster against the player's own party, which covers the early rival fights
-  but not a real trainer with a team.
-- **Money.** Buying, selling and prize money.
+- **Money.** Buying and selling.
 - **Temporary state.** `VAR_TEMP_*` and `FLAG_TEMP_*` reset when the player
   leaves the map in the source game. Story flags and vars here are persistent,
   so a script that leans on a temp value needs another way to say the same thing.

@@ -100,7 +100,7 @@ value it already has, is a no-op and does not dirty the character.
 
 ## Reading story state outside a script
 
-`MapScriptService` reads vars directly to pick which `ON_FRAME` script to run on
+`MapEntryScripts` reads vars directly to pick which `ON_FRAME` script to run on
 map entry, comparing `storyService.getVar(charId, it.varKey)` against each
 entry's value. Any other service can do the same: inject `StoryService` and pass
 the character id. `ScriptContext` is only a convenience wrapper for the common
