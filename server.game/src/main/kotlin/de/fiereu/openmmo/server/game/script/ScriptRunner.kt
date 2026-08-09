@@ -75,8 +75,7 @@ constructor(
         session.attributes.getOrPut(SCRIPT_SCOPE) {
           CoroutineScope(SupervisorJob() + Dispatchers.Default)
         }
-    // The disconnect that cancelled this scope also rolled the character back, so starting here
-    // would write on top of the restored state and never run its own cleanup.
+    // A cancelled scope cannot launch, so bail before claiming the dialog lock.
     if (!scope.isActive) return
     state.inDialog = true
     val snapshot = state.characterId?.let(characterStore::getCharacter)
@@ -98,10 +97,14 @@ constructor(
         )
     scope.launch {
       var finished = false
+      var cancelled = false
       try {
         for (script in scripts) script.run(ctx)
         finished = true
       } catch (e: CancellationException) {
+        // The disconnect that cancelled this rolls back itself, in order with the battle flush
+        // and the unload. Doing it here as well would race that and lose to the eviction.
+        cancelled = true
         throw e
       } catch (e: NotImplementedError) {
         log.info { "Script not ported yet for entity $entityId" }
@@ -110,8 +113,10 @@ constructor(
       } catch (e: Exception) {
         log.error(e) { "Script failed for entity $entityId" }
       } finally {
-        if (!finished) rollBack(session, state, entityId)
-        session.attributes.remove(SCRIPT_SNAPSHOT)
+        if (!cancelled) {
+          if (!finished) rollBack(session, state, entityId)
+          session.attributes.remove(SCRIPT_SNAPSHOT)
+        }
         dialogService.close(session, state)
       }
     }

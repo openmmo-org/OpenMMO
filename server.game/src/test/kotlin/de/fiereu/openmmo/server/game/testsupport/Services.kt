@@ -46,7 +46,7 @@ fun movementService(
   val presence = PresenceService(interest, PassThroughInterestPolicy(), mapLoad, store)
   val npcs = NpcService(mapManager, store)
   val story = StoryService(store)
-  val battles = battleService(store, mapManager, interest)
+  val battles = battleService(store, interest)
   val entryScripts = MapEntryScripts(ScriptRegistry(emptyMap()), story)
   return MovementService(
       WarpService(mapLoad, mapManager, store, presence),
@@ -56,7 +56,7 @@ fun movementService(
       mapManager,
       store,
       EncounterService(store, battles),
-      MapScriptService(entryScripts, scriptRunner(store, mapManager)),
+      MapScriptService(entryScripts, scriptRunner(store, mapManager, interest, battles)),
   )
 }
 
@@ -67,9 +67,10 @@ fun movementService(
 fun scriptRunner(
     store: CharacterStore,
     mapManager: MapManager = MapManager(),
+    interest: InterestManager = InterestManager(),
+    battles: BattleService = battleService(store, interest),
 ): ScriptRunner {
   val mapLoad = MapLoadService(mapManager)
-  val interest = InterestManager()
   val presence = PresenceService(interest, PassThroughInterestPolicy(), mapLoad, store)
   val npcs = NpcService(mapManager, store)
   val story = StoryService(store)
@@ -82,18 +83,14 @@ fun scriptRunner(
       ScriptMovementService(mapManager, npcs, store),
       ScriptWarpService(mapManager, mapLoad, store, presence),
       StoryPlayerService(store, wildMons, species, moves),
-      battleService(store, mapManager, interest),
+      battles,
       store,
       mapManager,
       MapEntryScripts(ScriptRegistry(emptyMap()), story),
   )
 }
 
-private fun battleService(
-    store: CharacterStore,
-    mapManager: MapManager,
-    interest: InterestManager,
-): BattleService {
+private fun battleService(store: CharacterStore, interest: InterestManager): BattleService {
   val species = SpeciesRegistry()
   val moves = MoveRegistry()
   return BattleService(

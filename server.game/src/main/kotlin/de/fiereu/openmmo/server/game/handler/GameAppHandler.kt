@@ -180,12 +180,13 @@ constructor(
     log.info { "Player ${state.characterId} disconnected." }
     val charId = state.characterId
     if (charId != null) {
+      // The battle flush must land before the unload evicts the character from the cache, and
+      // before the rollback, which would otherwise be overwritten by the party it persists.
+      battleService.onDisconnect(session)
       // Undo the interrupted script here rather than leaving it to the coroutine's own cleanup,
       // which runs on another thread and would race the flush below.
       scriptRunner.rollBack(session, state, entityId = -1)
       state.inDialog = false
-      // The battle flush must land before the unload evicts the character from the cache.
-      battleService.onDisconnect(session)
       presenceService.leave(session)
       sessionRegistry.unbindCharacter(charId)
       characterStore.unloadCharacterAsync(charId)
