@@ -429,18 +429,20 @@ constructor(
             detail = BattleListEventDetail(listType = 1, value = 1),
         ),
     )
-    characterStore.addPokemon(battle.charId, caught)
+    if (!characterStore.addPokemon(battle.charId, caught)) {
+      log.error { "Could not persist the monster char=${battle.charId} just caught" }
+    }
     endBattle(battle, BattleResult.CAUGHT)
   }
 
   private suspend fun endVictory(battle: BattleInstance) {
     awardXp(battle, battle.opponentMon())
     val prize = battle.trainer?.let { rewards.trainerPrize(it, battle.opponent.last().level) } ?: 0
-    if (prize > 0) {
-      characterStore.addMoney(battle.charId, prize)
-      log.info { "char=${battle.charId} won $prize from ${battle.trainer?.name}" }
+    val paid = prize > 0 && characterStore.addMoney(battle.charId, prize)
+    if (prize > 0 && !paid) {
+      log.error { "Could not pay char=${battle.charId} the $prize prize" }
     }
-    endBattle(battle, BattleResult.VICTORY, battle.activeMon().entityId, prize)
+    endBattle(battle, BattleResult.VICTORY, battle.activeMon().entityId, if (paid) prize else 0)
   }
 
   /**

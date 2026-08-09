@@ -100,6 +100,49 @@ class CharacterStoreDurabilityTest :
         }
       }
 
+      test("a write that fails grants nothing and says so") {
+        runTest {
+          val repo = FakeCharacterRepository()
+          val store = CharacterStore(repo, EntityIdService(), backgroundScope)
+          val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
+          repo.failNextSave = true
+
+          store.addItem(id, itemId = 17, amount = 3) shouldBe false
+
+          // Neither the caller nor a later checkpoint may resurrect the refused grant.
+          store.getCharacter(id)!!.items[17] shouldBe null
+          store.flushAll()
+          repo.saved[id]!!.items[17] shouldBe null
+        }
+      }
+
+      test("a failed payment leaves the balance alone") {
+        runTest {
+          val repo = FakeCharacterRepository()
+          val store = CharacterStore(repo, EntityIdService(), backgroundScope)
+          val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
+          repo.failNextSave = true
+
+          store.addMoney(id, 5000) shouldBe false
+
+          store.getCharacter(id)!!.info.money shouldBe 30000
+        }
+      }
+
+      test("granting an item does not evict the character its caller is still using") {
+        runTest {
+          val repo = FakeCharacterRepository()
+          val store = CharacterStore(repo, EntityIdService(), backgroundScope)
+          val id = store.createCharacter(1, "Ash", CharacterGender.MALE, Region.HOENN).info.id
+          // The disconnect path has already asked for this character to be dropped.
+          store.unloadCharacterAsync(id)
+
+          store.addItem(id, itemId = 17, amount = 1) shouldBe true
+
+          store.getCharacter(id).shouldNotBeNull().items[17] shouldBe 1
+        }
+      }
+
       test("a refused item change neither mutates nor writes") {
         runTest {
           val repo = FakeCharacterRepository()

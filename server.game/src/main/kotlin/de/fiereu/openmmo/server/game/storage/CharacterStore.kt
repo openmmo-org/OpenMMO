@@ -228,12 +228,16 @@ constructor(
     markDirty(characterId)
   }
 
-  suspend fun addPokemon(characterId: Long, pokemon: Pokemon) {
-    val stored = characters[characterId] ?: return
-    // Copy instead of mutating in place, so flusher snapshots never see a half-updated list.
-    characters[characterId] = stored.copy(pokemon = (stored.pokemon + pokemon).toMutableList())
-    persistNow(characterId)
-  }
+  /** False when the monster could not be written, in which case the party is left as it was. */
+  suspend fun addPokemon(characterId: Long, pokemon: Pokemon): Boolean =
+      mutateDurably(
+          characterId,
+          // Copy instead of mutating in place, so flusher snapshots never see a half-updated list.
+          apply = { it.copy(pokemon = (it.pokemon + pokemon).toMutableList()) },
+          rollback = {
+            it.copy(pokemon = it.pokemon.filter { m -> m.id != pokemon.id }.toMutableList())
+          },
+      )
 
   /** Replace one party monster by id, for example after a battle changed hp, xp, or level. */
   fun updatePokemon(characterId: Long, updated: Pokemon) {
@@ -243,25 +247,35 @@ constructor(
     markDirty(characterId)
   }
 
-  suspend fun addMoney(characterId: Long, amount: Int) {
-    val stored = characters[characterId] ?: return
-    val newInfo = stored.info.copy(money = stored.info.money + amount)
-    characters[characterId] = stored.copy(info = newInfo)
-    persistNow(characterId)
-  }
+  /** False when the change could not be written, in which case the balance is left as it was. */
+  suspend fun addMoney(characterId: Long, amount: Int): Boolean =
+      mutateDurably(
+          characterId,
+          apply = { it.copy(info = it.info.copy(money = it.info.money + amount)) },
+          // Undo the delta rather than restoring a snapshot, so a concurrent edit to another field
+          // of the same character survives.
+          rollback = { it.copy(info = it.info.copy(money = it.info.money - amount)) },
+      )
 
   /** Add (or remove with a negative amount) one persisted bag stack. */
-  suspend fun addItem(characterId: Long, itemId: Int, amount: Int): Boolean {
-    val stored = characters[characterId] ?: return false
-    val oldQuantity = stored.items[itemId] ?: 0
-    val newQuantity = oldQuantity + amount
-    if (newQuantity < 0) return false
-    val items = stored.items.toMutableMap()
-    if (newQuantity == 0) items.remove(itemId) else items[itemId] = newQuantity
-    characters[characterId] = stored.copy(items = items)
-    persistNow(characterId)
-    return true
-  }
+  /** False when the bag would go negative, or when the change could not be written. */
+  suspend fun addItem(characterId: Long, itemId: Int, amount: Int): Boolean =
+      mutateDurably(
+          characterId,
+          apply = { stored ->
+            val newQuantity = (stored.items[itemId] ?: 0) + amount
+            if (newQuantity < 0) return@mutateDurably null
+            val items = stored.items.toMutableMap()
+            if (newQuantity == 0) items.remove(itemId) else items[itemId] = newQuantity
+            stored.copy(items = items)
+          },
+          rollback = { stored ->
+            val reverted = (stored.items[itemId] ?: 0) - amount
+            val items = stored.items.toMutableMap()
+            if (reverted <= 0) items.remove(itemId) else items[itemId] = reverted
+            stored.copy(items = items)
+          },
+      )
 
   /** Set (or clear with null) the runtime destination for MAP_DYNAMIC warps (setdynamicwarp). */
   fun setDynamicWarp(characterId: Long, warp: DynamicWarp?) {
@@ -335,10 +349,26 @@ constructor(
    * goes through here, so a crash cannot lose an item that the client was already told it has.
    * Position, hp and story progress do not, since replaying a few seconds of those costs nothing.
    */
-  private suspend fun persistNow(characterId: Long) {
-    markDirty(characterId)
-    flush(characterId)
-  }
+  /**
+   * Applies a change to something a player can trade or spend and writes it before returning. A
+   * failed write is undone by [rollback] and reported, so a caller never tells a player about an
+   * item, a coin or a monster the database did not accept.
+   */
+  private suspend fun mutateDurably(
+      characterId: Long,
+      apply: (StoredCharacter) -> StoredCharacter?,
+      rollback: (StoredCharacter) -> StoredCharacter,
+  ): Boolean =
+      lockFor(characterId).withLock {
+        val before = characters[characterId] ?: return@withLock false
+        val after = apply(before) ?: return@withLock false
+        characters[characterId] = after
+        markDirty(characterId)
+        if (flushLocked(characterId, allowEvict = false)) return@withLock true
+        characters[characterId]?.let { characters[characterId] = rollback(it) }
+        dirtySince.remove(characterId)
+        false
+      }
 
   /**
    * Persist the character and drop it from the cache once the write succeeded. While the save keeps
@@ -382,10 +412,13 @@ constructor(
   // write and returns while the first is still inside saveChanges, so persistNow would promise a
   // write it did not make.
   private suspend fun flush(id: Long) {
-    flushLocks.computeIfAbsent(id) { Mutex() }.withLock { flushLocked(id) }
+    lockFor(id).withLock { flushLocked(id, allowEvict = true) }
   }
 
-  private suspend fun flushLocked(id: Long) {
+  private fun lockFor(id: Long): Mutex = flushLocks.computeIfAbsent(id) { Mutex() }
+
+  /** True when the character is in the database, either because it was written or was not dirty. */
+  private suspend fun flushLocked(id: Long, allowEvict: Boolean): Boolean {
     val since = dirtySince.remove(id)
     val stored = characters[id]
     if (since != null && stored != null) {
@@ -400,10 +433,12 @@ constructor(
       } catch (e: Exception) {
         log.warn(e) { "Failed to persist character $id, will retry" }
         dirtySince.putIfAbsent(id, since)
-        return
+        return false
       }
     }
-    maybeEvict(id)
+    // A durable mutation must not evict the character its own caller is still working with.
+    if (allowEvict) maybeEvict(id)
+    return true
   }
 
   private fun maybeEvict(id: Long) {

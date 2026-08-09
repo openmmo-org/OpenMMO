@@ -51,7 +51,8 @@ constructor(
             ot = stored.info.name,
             moves = paddedMoves(moveIds),
         )
-    characters.addPokemon(characterId, pokemon)
+    // Only tell the client about it once the database has it.
+    if (!characters.addPokemon(characterId, pokemon)) return null
     // Send the granted Pokemon's full record.
     session.send(SocialListEntryAddPacket(pokemon))
     species.get(dexId)?.let { session.send(acquiredMonsterDelta(pokemon, it)) }
