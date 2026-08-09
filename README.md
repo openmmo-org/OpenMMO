@@ -90,7 +90,7 @@ the release and attaches the server archives. The version lives in
 
 ## Wiki
 
-The documentation wiki can be found [here](https://openmmo.readthedocs.io/en/latest/).
+The documentation wiki can be found [here](https://docs.openmmo.dev/).
 Or you can navigate to it via the `docs` folder in this repository.
 
 ## Disclaimer
