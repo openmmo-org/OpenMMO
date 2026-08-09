@@ -1,42 +1,38 @@
 package de.fiereu.openmmo.server.game.script.generated.kanto
 
+import de.fiereu.openmmo.common.enums.Direction
+import de.fiereu.openmmo.dialog.generated.kanto.PalletTown_PlayersHouse_1F
 import de.fiereu.openmmo.server.game.script.Script
 import de.fiereu.openmmo.server.game.script.ScriptContext
+import de.fiereu.openmmo.story.generated.kanto.KantoFlags
 
-/**
- * Not ported yet. Decomp body:
- * ```
- * lock
- * faceplayer
- * goto_if_set FLAG_BEAT_RIVAL_IN_OAKS_LAB, PalletTown_PlayersHouse_1F_EventScript_MomHeal
- * checkplayergender
- * call_if_eq VAR_RESULT, MALE, PalletTown_PlayersHouse_1F_EventScript_MomOakLookingForYouMale
- * call_if_eq VAR_RESULT, FEMALE, PalletTown_PlayersHouse_1F_EventScript_MomOakLookingForYouFemale
- * closemessage
- * applymovement LOCALID_MOM, Common_Movement_FaceOriginalDirection
- * waitmovement 0
- * release
- * end
- * ```
- */
 internal object PalletTown_PlayersHouse_1F_EventScript_Mom : Script {
-  override suspend fun run(ctx: ScriptContext) =
-      TODO("port PalletTown_PlayersHouse_1F_EventScript_Mom")
+  override suspend fun run(ctx: ScriptContext) {
+    if (ctx.isFlagSet(KantoFlags.FLAG_BEAT_RIVAL_IN_OAKS_LAB)) {
+      ctx.say(PalletTown_PlayersHouse_1F.YouShouldTakeQuickRest)
+      ctx.healParty()
+      ctx.say(PalletTown_PlayersHouse_1F.LookingGreatTakeCare)
+      return
+    }
+    if (ctx.isFemale) {
+      ctx.say(PalletTown_PlayersHouse_1F.AllGirlsLeaveOakLookingForYou)
+    } else {
+      ctx.say(PalletTown_PlayersHouse_1F.AllBoysLeaveOakLookingForYou)
+    }
+  }
 }
 
-/**
- * Not ported yet. Decomp body:
- * ```
- * lockall
- * goto_if_eq VAR_FACING, DIR_NORTH, PalletTown_PlayersHouse_1F_EventScript_TVScreen
- * msgbox PalletTown_PlayersHouse_1F_Text_OopsWrongSide
- * releaseall
- * end
- * ```
- */
 internal object PalletTown_PlayersHouse_1F_EventScript_TV : Script {
-  override suspend fun run(ctx: ScriptContext) =
-      TODO("port PalletTown_PlayersHouse_1F_EventScript_TV")
+  override suspend fun run(ctx: ScriptContext) {
+    if (ctx.facingDirection != Direction.UP) {
+      return ctx.sign(PalletTown_PlayersHouse_1F.OopsWrongSide)
+    }
+    if (ctx.isFemale) {
+      ctx.sign(PalletTown_PlayersHouse_1F.MovieOnTVGirlOnBrickRoad)
+    } else {
+      ctx.sign(PalletTown_PlayersHouse_1F.MovieOnTVFourBoysOnRailroad)
+    }
+  }
 }
 
 internal val PalletTown_PlayersHouse_1FScripts: Map<String, Script> =

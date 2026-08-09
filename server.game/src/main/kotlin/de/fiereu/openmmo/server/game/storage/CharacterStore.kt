@@ -4,10 +4,7 @@ import de.fiereu.openmmo.common.CharacterInfo
 import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.enums.CharacterGender
-import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.Region
-import de.fiereu.openmmo.story.generated.hoenn.HoennFlags
-import de.fiereu.openmmo.story.generated.hoenn.HoennVars
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.time.LocalDateTime
 import java.util.concurrent.ConcurrentHashMap
@@ -27,19 +24,6 @@ private val log = KotlinLogging.logger {}
 
 private val FLUSH_TICK = 5.seconds
 private val FLUSH_DEBOUNCE = 10.seconds
-
-private data class StartingPosition(
-    val bankId: Byte,
-    val mapId: Byte,
-    val x: Short,
-    val y: Short,
-)
-
-private val SHOWCASE_STARTS =
-    mapOf(
-        Region.KANTO to StartingPosition(4, 1, 6, 6),
-        Region.HOENN to StartingPosition(75, 40, 2, 2),
-    )
 
 data class StoredCharacter(
     val info: CharacterInfo,
@@ -86,8 +70,7 @@ constructor(
       startingRegion: Region,
   ): StoredCharacter {
     val female = gender == CharacterGender.FEMALE
-    val startingPosition = SHOWCASE_STARTS.getValue(startingRegion)
-    val isHoenn = startingRegion == Region.HOENN
+    val start = NewGameStarts.forRegion(startingRegion, female)
     val id = entityIds.newCharacterId()
     val now = LocalDateTime.now()
     val info =
@@ -107,54 +90,25 @@ constructor(
             pcExtraSlots = 0,
             battleBoxExtraSlots = 0,
             templateAmount = 0,
-            // Hoenn starts inside the moving truck.
             positionRegionId = startingRegion.wireValue,
-            positionBankId = startingPosition.bankId,
-            positionMapId = startingPosition.mapId,
-            positionX = startingPosition.x,
-            positionY = startingPosition.y,
+            positionBankId = start.bankId,
+            positionMapId = start.mapId,
+            positionX = start.x,
+            positionY = start.y,
             repelLeft = 0,
             repelItemId = 0,
             lureLeft = 0,
             lureItemId = 0,
-            // The truck exit uses the player's dynamic warp.
-            dynamicWarp =
-                if (!isHoenn) null
-                else
-                    DynamicWarp(
-                        1,
-                        50,
-                        9,
-                        if (female) 12 else 3,
-                        10,
-                        Direction.RIGHT,
-                    ),
+            dynamicWarp = start.dynamicWarp,
         )
-    val storyFlags =
-        if (!isHoenn) mutableSetOf<String>()
-        else
-            (HoennFlags.initiallySet +
-                    (if (female) HoennFlags.femaleIntro else HoennFlags.maleIntro) +
-                    HoennFlags.FLAG_HIDE_MAP_NAME_POPUP)
-                .toMutableSet()
-    val housesState =
-        if (female) HoennVars.VAR_LITTLEROOT_HOUSES_STATE_MAY
-        else HoennVars.VAR_LITTLEROOT_HOUSES_STATE_BRENDAN
-    val storyVars =
-        if (!isHoenn) mutableMapOf<String, Int>()
-        else
-            mutableMapOf(
-                HoennVars.VAR_LITTLEROOT_INTRO_STATE to if (female) 2 else 1,
-                housesState to 1,
-            )
     val stored =
         StoredCharacter(
             info,
             mutableListOf(),
             mutableListOf(),
             mutableMapOf(),
-            storyFlags = storyFlags,
-            storyVars = storyVars,
+            storyFlags = start.storyFlags.toMutableSet(),
+            storyVars = start.storyVars.toMutableMap(),
         )
     repository.insertAggregate(stored)
     characters[id] = stored

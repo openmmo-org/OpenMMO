@@ -74,17 +74,26 @@ Everything goes through `ctx`, the `ScriptContext`:
 | Call | What it does |
 | --- | --- |
 | `ctx.say(line)` | An npc box from the entity the player talked to. Waits. |
+| `ctx.sayNpc(localId, line)` | A box from a cutscene npc that the player did not talk to. Waits. |
 | `ctx.sign(line)` | A sign or object box, no speaker. Waits. |
+| `ctx.askYesNo(line)` / `ctx.askYesNoNpc(localId, line)` | A yes/no box. Waits and returns the answer. |
 | `ctx.isFlagSet(f)` / `ctx.setFlag(f)` / `ctx.clearFlag(f)` | Read and write a story flag. |
 | `ctx.getVar(k)` / `ctx.setVar(k, n)` | Read and write a story var. |
 | `ctx.moveNpc(localId, ...steps)` | Walk a map npc through a path. Waits for it to finish. |
 | `ctx.moveSelf(...steps)` | Walk the player's own avatar. Waits. |
-| `ctx.showNpc(localId)` | Reveal a normally hidden npc for a cutscene. |
+| `ctx.moveSelfAndNpcs(selfSteps, ...paths)` | Walk the player and npcs together. Waits for all of them. |
+| `ctx.showNpc(localId)` / `ctx.showNpcAt(localId, x, y)` | Reveal a normally hidden npc for a cutscene. |
+| `ctx.repositionNpc(localId, x, y)` / `ctx.removeNpc(localId)` | Move or delete an npc for this player. |
+| `ctx.givePokemon(dexId, level, ...moveIds)` / `ctx.healParty()` | Party changes. |
+| `ctx.giveItem(itemId, n)` / `ctx.takeItem(itemId, n)` | Bag changes. Ids come from the generated `Items`. |
+| `ctx.battle(dexId, level, ...moveIds)` | A story battle against one monster. Waits and returns the result. |
+| `ctx.trainerBattle(trainerId)` | A decomp trainer and its whole party, in the region the player is standing in. |
+| `ctx.warp(...)` | Move the player to another map, then run that map's entry scripts. |
 | `ctx.setDynamicWarp(...)` | Point this player's `MAP_DYNAMIC` warp somewhere. |
-| `ctx.entityId` | The npc that was talked to, or `-1` for a sign or map script. |
+| `ctx.isFemale` / `ctx.facingDirection` / `ctx.entityId` | The player's gender, their facing, and the npc that was talked to (`-1` for a sign or map script). |
 
-That is the whole api. Plenty of decomp commands have no equivalent in it yet,
-choices, doors, giving items, trainer battles,
+That is the whole api. Plenty of decomp commands still have no equivalent in it,
+doors, shops and sound effects among them,
 [which the porting guide lists](../porting-scripts/#commands-with-no-equivalent-yet).
 
 The calls that say "waits" suspend until the player acts, so you can write boxes

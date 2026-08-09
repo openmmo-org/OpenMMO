@@ -23,6 +23,12 @@ data class PlayerState(
     @field:Volatile var elevation: Int = 0,
     /** Trusts one source tile after scripted movement. */
     @field:Volatile var acceptNextMoveSource: Boolean = false,
+    /**
+     * A script is warping and will run the destination's entry scripts itself. The arrival must not
+     * start a second copy, which [inDialog] alone cannot prevent because a stray dialog packet
+     * clears it while the script is parked on the map load.
+     */
+    @field:Volatile var scriptOwnsMapEntry: Boolean = false,
     /** Maps the client already holds. A warp sends deleteCache, which empties this. */
     val loadedMaps: MutableSet<Int> = ConcurrentHashMap.newKeySet(),
 )

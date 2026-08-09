@@ -5,11 +5,13 @@ import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.dialog.DialogLine
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.Region
+import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.packets.dialog.TextPokemonSpeciesArg
 import de.fiereu.openmmo.server.game.battle.BattleResult
 import de.fiereu.openmmo.server.game.services.BattleService
 import de.fiereu.openmmo.server.game.services.DialogPresentation
 import de.fiereu.openmmo.server.game.services.DialogService
+import de.fiereu.openmmo.server.game.services.MapEntryScripts
 import de.fiereu.openmmo.server.game.services.ScriptMovementService
 import de.fiereu.openmmo.server.game.services.ScriptWarpService
 import de.fiereu.openmmo.server.game.services.StoryClientState
@@ -32,6 +34,8 @@ internal constructor(
     internal val player: StoryPlayerService? = null,
     private val battles: BattleService? = null,
     internal val characters: CharacterStore? = null,
+    private val maps: MapManager? = null,
+    private val entryScripts: MapEntryScripts? = null,
 ) {
   private val characterId: Long?
     get() = state.characterId
@@ -134,6 +138,9 @@ internal constructor(
   fun giveItem(itemId: Int, quantity: Int = 1): Boolean =
       checkNotNull(player) { STORY_PLAYER_UNAVAILABLE }.giveItem(session, state, itemId, quantity)
 
+  /** Take an item back out of the bag, the decomp removeitem. False when the bag lacks it. */
+  fun takeItem(itemId: Int, quantity: Int = 1): Boolean = giveItem(itemId, -quantity)
+
   /** Run a non-catchable, non-escapable story battle and wait for its result. */
   suspend fun battle(dexId: Int, level: Int, vararg moveIds: Int): BattleResult =
       checkNotNull(battles) { "Battle service is unavailable" }
@@ -194,21 +201,35 @@ internal constructor(
           DynamicWarp(
               regionId.toByte(), bankId.toByte(), mapId.toByte(), x.toShort(), y.toShort(), facing))
 
-  /** Warps the player without door movement. */
+  /**
+   * Warps the player without door movement, then runs the destination map's entry scripts on this
+   * same coroutine, the way the decomp's warp continues into the new map's scripts.
+   */
   suspend fun warp(regionId: Int, bankId: Int, mapId: Int, x: Int, y: Int, facing: Direction) {
-    checkNotNull(warp) { "Script warp service is unavailable" }
-        .warp(
-            session,
-            state,
-            DynamicWarp(
-                regionId.toByte(),
-                bankId.toByte(),
-                mapId.toByte(),
-                x.toShort(),
-                y.toShort(),
-                facing,
-            ),
-        )
+    val warpService = checkNotNull(warp) { "Script warp service is unavailable" }
+    state.scriptOwnsMapEntry = true
+    try {
+      warpService.warp(
+          session,
+          state,
+          DynamicWarp(
+              regionId.toByte(),
+              bankId.toByte(),
+              mapId.toByte(),
+              x.toShort(),
+              y.toShort(),
+              facing,
+          ),
+      )
+      val destination = maps?.getMap(regionId, bankId, mapId) ?: return
+      val scripts = entryScripts ?: return
+      scripts.onEntry(state, destination).forEach { it.run(this) }
+      state.characterId?.let { charId ->
+        scripts.atCoordinate(charId, destination, state.x.toInt(), state.y.toInt())?.run(this)
+      }
+    } finally {
+      state.scriptOwnsMapEntry = false
+    }
   }
 
   private companion object {

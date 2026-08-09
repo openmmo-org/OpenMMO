@@ -85,8 +85,8 @@ Scripts triggered this way get `entityId = -1`.
 ### Entering a map
 
 `MapScriptService.onMapEnter` runs on every entry, however the player got there:
-login, a warp, or walking across a map connection. It builds a list of up to two
-scripts and runs them in order:
+login, a warp, or walking across a map connection. `MapEntryScripts.onEntry`
+builds the list and `MapScriptService` runs it in order:
 
 1. `map.onTransitionScript`, unconditionally.
 2. The **first** entry in `map.onFrameScripts` whose story var currently equals
@@ -94,6 +94,10 @@ scripts and runs them in order:
 
 Both go through `ScriptRunner.runAll` on one coroutine, so an on-transition
 script and the cutscene it enables share a single dialog lock instead of racing.
+
+A script that warps is the exception: `ctx.warp` runs the destination map's
+entry scripts inline on the coroutine it is already on, the way the decomp's
+warp continues into the destination's scripts, rather than starting a new one.
 The conditional `ON_WARP` table is not wired up yet.
 
 ## Why scripts are coroutines

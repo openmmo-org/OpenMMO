@@ -56,8 +56,27 @@ end of your function.
 | `goto_if_ne VAR_X, n, Label` | `if (ctx.getVar(HoennVars.VAR_X) != n) { ... }` |
 | `applymovement id, M` + `waitmovement 0` | `ctx.moveNpc(LOCALID_X, WALK_UP, ...)` |
 | `applymovement OBJ_EVENT_ID_PLAYER, M` + `waitmovement 0` | `ctx.moveSelf(WALK_UP, ...)` |
+| Two `applymovement` lines then one `waitmovement 0` | `ctx.moveSelfAndNpcs(selfSteps, LOCALID_X to steps)` |
 | `addobject id` | `ctx.showNpc(LOCALID_X)` |
+| `setobjectxyperm id, x, y` | `ctx.repositionNpc(LOCALID_X, x, y)` |
+| `removeobject id` | `ctx.removeNpc(LOCALID_X)` |
+| `msgbox TEXT, MSGBOX_YESNO` + `goto_if_eq VAR_RESULT, YES` | `if (ctx.askYesNo(Map.Text)) { ... }` |
+| `givemon SPECIES, level` | `ctx.givePokemon(dexId, level, ...moveIds)` |
+| `giveitem`, `additem` / `removeitem` | `ctx.giveItem(Items.X, n)` / `ctx.takeItem(Items.X, n)` |
+| `special HealPlayerParty` | `ctx.healParty()` |
+| `warp MAP, x, y` | `ctx.warp(region, bank, map, x, y, facing)` |
 | `setdynamicwarp ...` | `ctx.setDynamicWarp(region, bank, map, x, y, facing)` |
+
+Item ids come from the generated `Items` object, never a raw number:
+`ctx.giveItem(Items.POKE_BALL, 5)`. It is generated from the decomp item header,
+so every item the games know about is in it. The client keys an item by
+`regionId * 1000 + itemId` and holds one item table per region, so the ids in
+`Items` sit in the region whose table matches the decomp numbering. Sending the
+same number under another region reaches a different item entirely.
+
+`ctx.warp` continues into the destination map's ON_TRANSITION and ON_FRAME
+scripts on the same coroutine, exactly the way the decomp's `warp` does, so a
+cutscene that walks the player into a building keeps running on the other side.
 
 `ctx.say` and `ctx.sign` both **wait** for the player to close the box, so
 consecutive calls show consecutive boxes with no extra plumbing. `moveNpc` and
@@ -116,22 +135,18 @@ private const val LOCALID_MOM = 3
 
 There is no verb for these. Do not fake them:
 
-- **Choices.** `MSGBOX_YESNO`, `multichoice` and anything reading `VAR_RESULT`
-  from a prompt. `DialogService` can see a choice packet come back, but
-  `ScriptContext` has no way to ask a question and branch on the answer.
+- **More than two answers.** `multichoice`. Yes/no works, a longer menu does not.
 - **Doors.** `opendoor`, `closedoor`, `waitdooranim`.
-- **Warping from a script.** `warp`, `warpsilent`, `warphole`. Only
-  `setDynamicWarp`, which changes where an existing `MAP_DYNAMIC` warp tile
-  sends the player, exists.
-- **Hiding things.** `hideobjectat`, `hideplayer`/`showplayer`. `showNpc` exists,
-  its inverse does not, beyond ending a movement with `SET_INVISIBLE`.
-- **Items, money, party.** `giveitem`, `takeitem`, `checkitemspace`,
-  `givemon`, `addvar` on money, and so on.
-- **Battles.** `trainerbattle` in all its forms.
-- **Player identity.** `checkplayergender`, and the `VAR_RESULT` branch that
-  usually follows it.
+- **Shops.** `pokemart` and its item list.
+- **Hiding the player.** `hideplayer`/`showplayer`. Npcs can be hidden with
+  `removeNpc` or by ending a movement with `SET_INVISIBLE`, the player cannot.
+- **Money.** Buying and selling.
+- **Temporary state.** `VAR_TEMP_*` and `FLAG_TEMP_*` reset when the player
+  leaves the map in the source game. Story flags and vars here are persistent,
+  so a script that leans on a temp value needs another way to say the same thing.
 - **Presentation.** `playse`, `playfanfare`, `waitfanfare`, `fadescreen`,
-  `delay`, and `special` calls into engine C code generally.
+  `delay`, `showmonpic`, emotes like the exclamation mark, and `special` calls
+  into engine C code generally.
 
 When a script needs one of these, port the part you can and leave a scoped `TODO`
 comment naming what is missing, the way the Littleroot intro does:

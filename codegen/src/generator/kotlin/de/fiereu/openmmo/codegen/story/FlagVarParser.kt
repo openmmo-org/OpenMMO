@@ -18,32 +18,27 @@ object FlagVarParser {
   fun vars(decompDir: File): List<StoryConstant> =
       constants(decompDir, "include/constants/vars.h", "VAR_")
 
-  /** Emerald new-game reset flags. */
+  /** Flags the source game's new-game reset sets. */
   fun initialFlags(decompDir: File): List<String> =
-      scriptFlags(
-          decompDir,
-          "data/scripts/new_game.inc",
-          "EventScript_ResetAllMapFlags",
-      )
+      scriptFlags(decompDir, "EventScript_ResetAllMapFlags")
 
-  /** Gender-specific flags normally established by InsideOfTruck's intro script. */
+  /**
+   * Gender-specific flags the source game establishes during its intro. Emerald sets them in the
+   * moving truck. A game without such a script contributes nothing.
+   */
   fun maleIntroFlags(decompDir: File): List<String> =
-      scriptFlags(
-          decompDir,
-          "data/maps/InsideOfTruck/scripts.inc",
-          "InsideOfTruck_EventScript_SetIntroFlagsMale",
-      )
+      scriptFlags(decompDir, "InsideOfTruck_EventScript_SetIntroFlagsMale")
 
   fun femaleIntroFlags(decompDir: File): List<String> =
-      scriptFlags(
-          decompDir,
-          "data/maps/InsideOfTruck/scripts.inc",
-          "InsideOfTruck_EventScript_SetIntroFlagsFemale",
-      )
+      scriptFlags(decompDir, "InsideOfTruck_EventScript_SetIntroFlagsFemale")
 
-  private fun scriptFlags(decompDir: File, relativePath: String, label: String): List<String> {
-    val file = File(decompDir, relativePath)
-    if (!file.exists()) return emptyList()
+  /**
+   * The flags one decomp script sets, found by its label. Each game keeps these scripts in a
+   * different file (Emerald in data/scripts/new_game.inc, FireRed in data/event_scripts.s), so the
+   * label is looked up across the data folder instead of at a fixed path.
+   */
+  private fun scriptFlags(decompDir: File, label: String): List<String> {
+    val file = findScriptFile(decompDir, label) ?: return emptyList()
     val result = mutableListOf<String>()
     var inBlock = false
     for (rawLine in file.readLines()) {
@@ -61,6 +56,15 @@ object FlagVarParser {
       if (line == "end" || line == "return") break
     }
     return result.distinct()
+  }
+
+  private fun findScriptFile(decompDir: File, label: String): File? {
+    val definition = "$label::"
+    return File(decompDir, "data")
+        .walkTopDown()
+        .filter { it.isFile && it.extension in SCRIPT_EXTENSIONS }
+        .sortedBy(File::getPath)
+        .firstOrNull { file -> file.useLines { lines -> lines.any { it.trim() == definition } } }
   }
 
   private fun constants(
@@ -309,4 +313,6 @@ object FlagVarParser {
 
   private fun parseNumber(value: String): Int =
       if (value.startsWith("0x", ignoreCase = true)) value.drop(2).toInt(16) else value.toInt()
+
+  private val SCRIPT_EXTENSIONS = setOf("inc", "s")
 }
