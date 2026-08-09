@@ -15,6 +15,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -392,6 +393,10 @@ constructor(
         repository.saveChanges(persisted[id], stored)
         // The written instance, not the current one, so a racing mutation stays dirty.
         persisted[id] = stored
+      } catch (e: CancellationException) {
+        // A disconnect cancelling the caller must not read as a failed write.
+        dirtySince.putIfAbsent(id, since)
+        throw e
       } catch (e: Exception) {
         log.warn(e) { "Failed to persist character $id, will retry" }
         dirtySince.putIfAbsent(id, since)

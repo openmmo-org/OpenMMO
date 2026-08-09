@@ -123,17 +123,21 @@ constructor(
     on<CancelSocialInteractionPacket> { event -> socialService.onCancelSocialInteraction(event) }
 
     onSuspend<GuildCreatePacket> { event -> guildService.onCreateGuild(event) }
-    on<GuildInvitePacket> { event -> guildService.onGuildInvite(event) }
-    on<GuildRankPermissionUpdatePacket> { event -> guildService.onRankPermissionUpdate(event) }
-    on<GuildMemberRankAssignPacket> { event -> guildService.onRankAssign(event) }
-    on<GuildMemberKickPacket> { event -> guildService.onKick(event) }
-    on<GuildLeavePacket> { event -> guildService.onLeave(event) }
-    on<GuildDisbandPacket> { event -> guildService.onDisband(event) }
-    on<GuildMotdUpdatePacket> { event -> guildService.onMotdUpdate(event) }
-    on<GuildRankLabelUpdatePacket> { event -> guildService.onRankLabelUpdate(event) }
-    on<GuildActivityLogPageRequestPacket> { event -> guildService.onActivityLogPageRequest(event) }
+    onSuspend<GuildInvitePacket> { event -> guildService.onGuildInvite(event) }
+    onSuspend<GuildRankPermissionUpdatePacket> { event ->
+      guildService.onRankPermissionUpdate(event)
+    }
+    onSuspend<GuildMemberRankAssignPacket> { event -> guildService.onRankAssign(event) }
+    onSuspend<GuildMemberKickPacket> { event -> guildService.onKick(event) }
+    onSuspend<GuildLeavePacket> { event -> guildService.onLeave(event) }
+    onSuspend<GuildDisbandPacket> { event -> guildService.onDisband(event) }
+    onSuspend<GuildMotdUpdatePacket> { event -> guildService.onMotdUpdate(event) }
+    onSuspend<GuildRankLabelUpdatePacket> { event -> guildService.onRankLabelUpdate(event) }
+    onSuspend<GuildActivityLogPageRequestPacket> { event ->
+      guildService.onActivityLogPageRequest(event)
+    }
 
-    on<MoveLearnReplyPacket> { event -> battleService.onMoveLearnReply(event) }
+    onSuspend<MoveLearnReplyPacket> { event -> battleService.onMoveLearnReply(event) }
     on<BattlePartySwitchPacket> { event -> battleService.onBattlePacket(event) }
     on<BattleActionPacket> { event -> battleService.onBattlePacket(event) }
     onSuspend<BattleActionSelectPacket> { event -> battleService.onBattleAction(event) }
@@ -154,7 +158,7 @@ constructor(
     on<BattleTransitionReadyPacket> { event -> battleService.onBattlePacket(event) }
     on<BattleTeamPreviewConfirmPacket> { event -> battleService.onBattlePacket(event) }
     on<BattleRewardSelectPacket> { event -> battleService.onBattlePacket(event) }
-    on<MapLoadedAckPacket> { event -> battleService.onClientReady(event) }
+    onSuspend<MapLoadedAckPacket> { event -> battleService.onClientReady(event) }
 
     // The client sends an empty heartbeat packet.
     on<NullPacket> {}
