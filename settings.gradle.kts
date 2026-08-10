@@ -2,6 +2,8 @@ dependencyResolutionManagement {
   @Suppress("UnstableApiUsage")
   repositories {
     mavenCentral()
+    // Compose Multiplatform pulls its androidx artifacts from here and nowhere else.
+    google { content { includeGroupByRegex("androidx.*") } }
   }
 }
 
@@ -12,7 +14,7 @@ plugins {
 rootProject.name = "openmmo"
 
 include(":keys")
-include(":patcher")
+include(":launcher")
 include(":common")
 include(":bytecodec")
 include(":common.test")
