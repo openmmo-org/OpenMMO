@@ -65,10 +65,10 @@
           - codegen/**
           - decomp/**
 
-"area: patcher":
+"area: launcher":
   - changed-files:
       - any-glob-to-any-file:
-          - patcher/**
+          - launcher/**
           - keys/**
 
 "area: build":
