@@ -28,8 +28,7 @@ constructor(
     val text = message.trim()
     if (!text.startsWith(PREFIX)) return false
 
-    // TODO: Support quoted arguments, for a command that takes a name with a space in it.
-    val parts = text.drop(1).split(Regex("\\s+")).filter { it.isNotEmpty() }
+    val parts = tokenizeCommandLine(text.drop(1))
     val name = parts.firstOrNull()?.lowercase()
     if (name == null) {
       session.send(notice("Type /help to see what you can run."))
