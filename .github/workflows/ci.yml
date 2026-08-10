@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: ci-${{ github.head_ref || github.ref }}
+  group: ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -45,7 +45,10 @@ jobs:
           submodules: recursive
           # On pull requests check out the branch itself, not the detached merge
           # commit, so the formatting commit can be pushed back.
-          ref: ${{ github.head_ref || github.sha }}
+          ref: >-
+            ${{ github.event_name != 'pull_request' && github.sha
+            || github.event.pull_request.head.repo.full_name == github.repository && github.head_ref
+            || format('refs/pull/{0}/head', github.event.pull_request.number) }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up JDK 25
