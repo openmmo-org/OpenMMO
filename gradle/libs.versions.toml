@@ -20,7 +20,7 @@ testcontainers = "1.21.3"
 netty = "4.2.16.Final"
 typesafe-config = "1.4.9"
 dagger = "2.60.1"
-ksp = "2.3.10"
+ksp = "2.3.11"
 ineter = "0.3.1"
 dotenv = "4.0.0"
 
