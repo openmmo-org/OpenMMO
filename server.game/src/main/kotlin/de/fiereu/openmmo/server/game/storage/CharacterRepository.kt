@@ -4,18 +4,22 @@ import de.fiereu.openmmo.common.CharacterInfo
 import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.PokemonMove
+import de.fiereu.openmmo.common.Skin
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
+import de.fiereu.openmmo.common.enums.SkinSlot
 import de.fiereu.openmmo.db.game.tables.records.CharacterFlagsRecord
 import de.fiereu.openmmo.db.game.tables.records.CharacterItemsRecord
+import de.fiereu.openmmo.db.game.tables.records.CharacterSkinsRecord
 import de.fiereu.openmmo.db.game.tables.records.CharacterVarsRecord
 import de.fiereu.openmmo.db.game.tables.records.CharactersRecord
 import de.fiereu.openmmo.db.game.tables.records.PokemonRecord
 import de.fiereu.openmmo.db.game.tables.references.CHARACTERS
 import de.fiereu.openmmo.db.game.tables.references.CHARACTER_FLAGS
 import de.fiereu.openmmo.db.game.tables.references.CHARACTER_ITEMS
+import de.fiereu.openmmo.db.game.tables.references.CHARACTER_SKINS
 import de.fiereu.openmmo.db.game.tables.references.CHARACTER_VARS
 import de.fiereu.openmmo.db.game.tables.references.POKEMON
 import javax.inject.Inject
@@ -110,6 +114,12 @@ constructor(
         { CHARACTER_VARS.CHARACTER_ID.eq(id).and(CHARACTER_VARS.VAR_KEY.eq(it)) },
         { key, value -> CharacterVarsRecord(id, key, value) },
     )
+    tx.writeDelta(
+        CHARACTER_SKINS,
+        rowDelta(previous?.skins.orEmpty(), current.skins),
+        { CHARACTER_SKINS.CHARACTER_ID.eq(id).and(CHARACTER_SKINS.SLOT.eq(it.name)) },
+        { slot, skin -> skin.toRecord(id, slot) },
+    )
   }
 
   private fun StoredCharacter?.monstersById(): Map<Long, Pokemon> =
@@ -139,6 +149,10 @@ constructor(
           .set(CHARACTER_VARS.CHARACTER_ID, stored.info.id)
           .set(CHARACTER_VARS.VAR_KEY, key)
           .set(CHARACTER_VARS.VAR_VALUE, value)
+          .execute()
+    }
+    if (stored.skins.isNotEmpty()) {
+      tx.batchInsert(stored.skins.map { (slot, skin) -> skin.toRecord(stored.info.id, slot) })
           .execute()
     }
   }
@@ -172,6 +186,12 @@ constructor(
             .fetch()
             .groupBy({ it.characterId }, { it.varKey to it.varValue })
             .mapValues { (_, pairs) -> pairs.toMap() }
+    val skinsByOwner: Map<Long, Map<SkinSlot, Skin>> =
+        dsl.selectFrom(CHARACTER_SKINS)
+            .where(CHARACTER_SKINS.CHARACTER_ID.`in`(ids))
+            .fetch()
+            .groupBy({ it.characterId }, { it.toSkin() })
+            .mapValues { (_, skins) -> skins.associateBy { it.slot } }
     return rows.map { row ->
       val monsters = monstersByOwner[row.id].orEmpty()
       val (party, pc) = monsters.partition { it.container == PokemonContainer.PARTY }
@@ -182,6 +202,7 @@ constructor(
           items = itemsByOwner[row.id].orEmpty().toMutableMap(),
           storyFlags = flagsByOwner[row.id].orEmpty().toMutableSet(),
           storyVars = varsByOwner[row.id].orEmpty().toMutableMap(),
+          skins = skinsByOwner[row.id].orEmpty(),
       )
     }
   }
@@ -193,6 +214,7 @@ constructor(
           name = name,
           namePrefix = namePrefix,
           rivalSex = rivalSex.toShort(),
+          skinRegionSelectionIndex = skinRegionSelectionIndex.toShort(),
           lastLogin = lastLogin,
           createdAt = createdAt,
           money = money,
@@ -227,6 +249,7 @@ constructor(
           namePrefix = namePrefix ?: "",
           userId = userId,
           rivalSex = rivalSex.toByte(),
+          skinRegionSelectionIndex = skinRegionSelectionIndex?.toInt() ?: 0,
           lastLogin = lastLogin,
           createdAt = createdAt,
           money = money,
@@ -266,6 +289,21 @@ constructor(
         facing = Direction.entries[facing.toInt()],
     )
   }
+
+  private fun Skin.toRecord(characterId: Long, slot: SkinSlot): CharacterSkinsRecord =
+      CharacterSkinsRecord(
+          characterId = characterId,
+          slot = slot.name,
+          skinType = type?.toShort(),
+          skinColor = color?.toShort(),
+      )
+
+  private fun CharacterSkinsRecord.toSkin(): Skin =
+      Skin(
+          slot = SkinSlot.valueOf(slot),
+          type = skinType?.toUShort(),
+          color = skinColor?.toUByte(),
+      )
 
   private fun Pokemon.toRecord(): PokemonRecord =
       PokemonRecord(

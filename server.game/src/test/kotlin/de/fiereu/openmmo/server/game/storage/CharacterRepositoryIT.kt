@@ -4,10 +4,12 @@ import de.fiereu.openmmo.common.CharacterInfo
 import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.PokemonMove
+import de.fiereu.openmmo.common.Skin
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
+import de.fiereu.openmmo.common.enums.SkinSlot
 import de.fiereu.openmmo.common.test.DockerAvailable
 import de.fiereu.openmmo.db.game.tables.references.CHARACTER_ITEMS
 import de.fiereu.openmmo.db.game.tables.references.POKEMON
@@ -238,6 +240,44 @@ class CharacterRepositoryIT :
         val loaded = repository.loadById(stored.info.id).shouldNotBeNull()
         loaded.pokemon shouldBe stored.pokemon
         loaded.items shouldBe stored.items
+      }
+
+      test("insert and load round-trips the appearance") {
+        val stored =
+            aggregate(userId = 97).let {
+              it.copy(
+                  info = it.info.copy(skinRegionSelectionIndex = 3),
+                  skins =
+                      mapOf(
+                          SkinSlot.HAIR to Skin(SkinSlot.HAIR, 4u, 24u),
+                          SkinSlot.EYES to Skin(SkinSlot.EYES, 15u, 0u),
+                      ),
+              )
+            }
+        repository.insertAggregate(stored)
+
+        val loaded = repository.loadById(stored.info.id).shouldNotBeNull()
+        loaded.info.skinRegionSelectionIndex shouldBe 3
+        loaded.skins shouldBe stored.skins
+      }
+
+      test("saveChanges rewrites a changed slot and drops a removed one") {
+        val stored =
+            aggregate(userId = 98).let {
+              it.copy(
+                  skins =
+                      mapOf(
+                          SkinSlot.HAIR to Skin(SkinSlot.HAIR, 4u, 24u),
+                          SkinSlot.HAT to Skin(SkinSlot.HAT, 2u, 7u),
+                      ))
+            }
+        repository.insertAggregate(stored)
+
+        val current = stored.copy(skins = mapOf(SkinSlot.HAIR to Skin(SkinSlot.HAIR, 9u, 24u)))
+        repository.saveChanges(stored, current)
+
+        val loaded = repository.loadById(stored.info.id).shouldNotBeNull()
+        loaded.skins shouldBe mapOf(SkinSlot.HAIR to Skin(SkinSlot.HAIR, 9u, 24u))
       }
 
       test("loadById returns null for an unknown id") {

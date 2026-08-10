@@ -30,6 +30,19 @@ class CreateCharacterPacketTest :
         CreateCharacterPacketCodec.encodeToBytes(packet).toHex() shouldBe bytes.toHex()
       }
 
+      test("splits a packed slot into a ten bit type and a six bit color") {
+        val bytes = fixture("game/c2s/03/female_hoenn.bin")
+
+        val packet = CreateCharacterPacketCodec.decodeBytes(bytes)
+
+        val hair = packet.appearance[SkinSlot.HAIR]!!
+        hair.type shouldBe 4.toUShort()
+        hair.color shouldBe 24.toUByte()
+        val leggings = packet.appearance[SkinSlot.LEGGINGS]!!
+        leggings.type shouldBe 0.toUShort()
+        leggings.color shouldBe 33.toUByte()
+      }
+
       test("roundtrips the new male Hoenn character creation capture") {
         val bytes = fixture("game/c2s/03/male_hoenn_32710.bin")
 

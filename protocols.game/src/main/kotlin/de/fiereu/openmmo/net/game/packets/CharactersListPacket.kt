@@ -8,6 +8,8 @@ import de.fiereu.openmmo.net.game.codecs.*
 data class CharacterEntry(
     val characterInfo: CharacterInfo,
     val skinSet: SkinSet,
+    /** A second set of the same shape, empty in every capture and still unidentified. */
+    val secondarySkinSet: SkinSet = SkinSet(),
     val guildId: Int? = null,
     val pokemon: List<Pokemon>,
 ) {
@@ -31,7 +33,7 @@ private object CharacterEntryCodec : PacketCodec<CharacterEntry>() {
   override fun CodecScope<CharacterEntry>.body(): CharacterEntry {
     val info = field(CharacterInfoAsymmetric, CharacterEntry::characterInfo)
     val skin = field(DefaultSkinSetCodec, CharacterEntry::skinSet)
-    field(SkinSetCodecNoLeading, CharacterEntry::skinSet)
+    val secondarySkin = field(SkinSetCodecNoLeading, CharacterEntry::secondarySkinSet)
     val hasGuild = field(Bool) { it.guildId != null }
     val guildId =
         if (hasGuild) {
@@ -42,7 +44,7 @@ private object CharacterEntryCodec : PacketCodec<CharacterEntry>() {
         }
     val partySize = field(U8) { it.pokemon.size }
     val party = List(partySize) { field(PokemonCodec) { entry -> entry.pokemon[it] } }
-    return CharacterEntry(info, skin, guildId, party)
+    return CharacterEntry(info, skin, secondarySkin, guildId, party)
   }
 }
 

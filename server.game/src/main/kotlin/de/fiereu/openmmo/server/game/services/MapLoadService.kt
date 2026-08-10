@@ -3,8 +3,10 @@ package de.fiereu.openmmo.server.game.services
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.CharacterInfo
 import de.fiereu.openmmo.common.Pokemon
+import de.fiereu.openmmo.common.Skin
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.EntityStatus
+import de.fiereu.openmmo.common.enums.SkinSlot
 import de.fiereu.openmmo.maps.MapDef
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.codecs.SkinSet
@@ -27,10 +29,11 @@ constructor(
       facing: Direction = Direction.DOWN,
       z: Int = 0,
       party: List<Pokemon> = emptyList(),
+      skins: Map<SkinSlot, Skin> = emptyMap(),
   ): LoadEntityPacket {
     return LoadEntityPacket(
         entityId = info.id,
-        skin = SkinSet(),
+        skin = SkinSet(info.skinRegionSelectionIndex, skins),
         name = info.name,
         regionId = info.positionRegionId.toInt(),
         bankId = info.positionBankId.toInt(),
