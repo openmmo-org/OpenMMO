@@ -7,6 +7,7 @@ import de.fiereu.openmmo.common.enums.BattleAction
 import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.common.enums.Region
+import de.fiereu.openmmo.items.ItemRegistry
 import de.fiereu.openmmo.items.generated.Items
 import de.fiereu.openmmo.moves.MoveRegistry
 import de.fiereu.openmmo.net.game.packets.MapLoadedAckPacket
@@ -43,8 +44,6 @@ import javax.inject.Singleton
 
 private val log = KotlinLogging.logger {}
 
-private val POKE_BALL_ITEM: Short = Items.POKE_BALL.toShort()
-
 /**
  * A prompt waiting for its answer, kept after the battle ends. A trainer battle can raise one
  * monster past a level more than once, so these are held per monster rather than per player.
@@ -75,7 +74,10 @@ constructor(
     private val speciesRegistry: SpeciesRegistry,
     private val moveRegistry: MoveRegistry,
     private val trainers: TrainerRegistry,
+    private val items: ItemRegistry,
 ) {
+
+  private val pokeBallItemId: Short by lazy { items.idOf(Items.POKE_BALL).toShort() }
 
   private val pendingLearns = ConcurrentHashMap<Long, PendingMoveLearn>()
 
@@ -425,7 +427,7 @@ constructor(
     battle.session.send(
         BattleListEventPacket(
             kind = 0,
-            value = POKE_BALL_ITEM,
+            value = pokeBallItemId,
             subKind = 4,
             detail = BattleListEventDetail(listType = 1, value = 1),
         ),

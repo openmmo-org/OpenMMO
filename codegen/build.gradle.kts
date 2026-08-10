@@ -13,6 +13,7 @@ dependencies {
   "generatorImplementation"(libs.jte)
   "generatorImplementation"(libs.kotlinx.serialization.json)
   testImplementation(sourceSets["generator"].output)
+  testImplementation(libs.kotlinx.serialization.json)
   testImplementation(libs.bundles.kotest)
 }
 
@@ -28,6 +29,11 @@ val regionSources =
 // is the canonical pick, same as byRegion is for maps.
 val sourceDecompDir = rootProject.layout.projectDirectory.dir("decomp/pokeemerald")
 
+// The Gen 5 table the live client speaks, not the GBA decomps, which number the same items
+// differently. Committed rather than a submodule because openmmo-org/pokeblack is private, taken
+// from its src/data/items.json and container 54 of its src/data/text1.json.
+val itemDataDir = rootProject.layout.projectDirectory.dir("decomp/pokeblack")
+
 // ROMs (gitignored) that dialog codegen reads offsets from
 val romsDir = rootProject.layout.projectDirectory.dir("roms")
 
@@ -41,15 +47,10 @@ jteCodegen {
           "$region|${rootProject.layout.projectDirectory.dir("decomp/$decomp").asFile.absolutePath}"
         })
   }
-  // Item ids scripts hand to giveItem. Both GBA games number items the same, so one decomp is
-  // enough, like moves and species. The client holds one item table per region, so the region
-  // decides what a number means. Checked against a real client: region 0 reads 3, 4 and 13 as
-  // Great Ball, Poke Ball and Potion, matching the decomp, while region 1 and region 5 read the
-  // same numbers as unrelated items.
   register("item") {
     mainClass.set("de.fiereu.openmmo.codegen.item.Main")
-    inputDirs.from(sourceDecompDir)
-    extraArgs.set(listOf("kanto|${sourceDecompDir.asFile.absolutePath}"))
+    inputDirs.from(itemDataDir)
+    extraArgs.set(listOf(itemDataDir.asFile.absolutePath))
   }
   register("moves") {
     mainClass.set("de.fiereu.openmmo.codegen.move.Main")

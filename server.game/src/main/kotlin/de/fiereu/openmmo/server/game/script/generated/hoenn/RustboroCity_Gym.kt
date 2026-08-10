@@ -1,6 +1,7 @@
 package de.fiereu.openmmo.server.game.script.generated.hoenn
 
 import de.fiereu.openmmo.dialog.generated.hoenn.RustboroCity_Gym
+import de.fiereu.openmmo.items.generated.Items
 import de.fiereu.openmmo.server.game.battle.BattleResult
 import de.fiereu.openmmo.server.game.script.Script
 import de.fiereu.openmmo.server.game.script.ScriptContext
@@ -9,7 +10,6 @@ import de.fiereu.openmmo.story.generated.hoenn.HoennVars
 
 private const val GEODUDE = 74
 private const val NOSEPASS = 299
-private const val TM39_ROCK_TOMB_ITEM = 5327
 
 /**
  * Not ported yet. Decomp body:
@@ -52,7 +52,7 @@ internal object RustboroCity_Gym_EventScript_Roxanne : Script {
 }
 
 private suspend fun giveRockTomb(ctx: ScriptContext) {
-  if (ctx.giveItem(TM39_ROCK_TOMB_ITEM)) {
+  if (ctx.giveItem(Items.TM39)) {
     ctx.setFlag(HoennFlags.FLAG_RECEIVED_TM_ROCK_TOMB)
     ctx.say(RustboroCity_Gym.ExplainRockTomb)
   }

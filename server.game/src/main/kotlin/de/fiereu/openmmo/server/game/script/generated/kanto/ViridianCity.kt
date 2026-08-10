@@ -60,16 +60,16 @@ internal object ViridianCity_EventScript_TutorialTriggerRight : Script {
   }
 }
 
-/** The old man's catching demonstration, which ends with him handing over the Teachy TV. */
 private suspend fun tutorialBattle(ctx: ScriptContext) {
   ctx.sayNpc(LOCALID_TUTORIAL_MAN, ViridianCity.ShowYouHowToCatchMons)
   // TODO Play the catching tutorial battle
   //  The decomp runs StartOldManTutorialBattle, a scripted battle the old man fights for the
   //  player. Scripted battles always use the player's own party today, so the demonstration is
-  //  skipped and only its reward is given.
+  //  skipped.
   ctx.sayNpc(LOCALID_TUTORIAL_MAN, ViridianCity.ThatWasEducationalTakeThis)
   ctx.setVar(KantoVars.VAR_MAP_SCENE_VIRIDIAN_CITY_OLD_MAN, 2)
-  ctx.giveItem(Items.TEACHY_TV)
+  // The decomp hands over a Teachy TV here. PokeMMO has no such item, so the reward is dropped
+  // rather than substituted, and the lines around it are all the player gets.
   ctx.sayNpc(LOCALID_TUTORIAL_MAN, ViridianCity.WatchThatToLearnBasics)
 }
 

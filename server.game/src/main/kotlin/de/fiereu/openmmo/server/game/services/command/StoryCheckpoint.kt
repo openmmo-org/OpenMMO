@@ -2,6 +2,7 @@ package de.fiereu.openmmo.server.game.services.command
 
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.Region
+import de.fiereu.openmmo.items.ItemDef
 
 data class CheckpointMon(val dexId: Int, val level: Int, val moveIds: List<Int>)
 
@@ -20,5 +21,5 @@ data class StoryCheckpoint(
     val storyFlags: Set<String>,
     val storyVars: Map<String, Int> = emptyMap(),
     val party: List<CheckpointMon> = emptyList(),
-    val items: Map<Int, Int> = emptyMap(),
+    val items: Map<ItemDef, Int> = emptyMap(),
 )

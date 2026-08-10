@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.server.game.testsupport
 
+import de.fiereu.openmmo.items.ItemRegistry
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.moves.MoveRegistry
 import de.fiereu.openmmo.pokemon.LearnsetRegistry
@@ -23,6 +24,7 @@ import de.fiereu.openmmo.server.game.services.NpcService
 import de.fiereu.openmmo.server.game.services.PresenceService
 import de.fiereu.openmmo.server.game.services.ScriptMovementService
 import de.fiereu.openmmo.server.game.services.ScriptWarpService
+import de.fiereu.openmmo.server.game.services.ShopService
 import de.fiereu.openmmo.server.game.services.StoryPlayerService
 import de.fiereu.openmmo.server.game.services.StoryService
 import de.fiereu.openmmo.server.game.services.WarpService
@@ -77,16 +79,18 @@ fun scriptRunner(
   val species = SpeciesRegistry()
   val moves = MoveRegistry()
   val wildMons = WildMonFactory(species, moves, LearnsetRegistry(), EntityIdService())
+  val items = ItemRegistry()
   return ScriptRunner(
       DialogService(),
       story,
       ScriptMovementService(mapManager, npcs, store),
       ScriptWarpService(mapManager, mapLoad, store, presence),
-      StoryPlayerService(store, wildMons, species, moves),
+      StoryPlayerService(store, wildMons, species, moves, items),
       battles,
       store,
       mapManager,
       MapEntryScripts(ScriptRegistry(emptyMap()), story),
+      ShopService(store, items),
   )
 }
 
@@ -105,5 +109,6 @@ private fun battleService(store: CharacterStore, interest: InterestManager): Bat
       speciesRegistry = species,
       moveRegistry = moves,
       trainers = TrainerRegistry(),
+      items = ItemRegistry(),
   )
 }

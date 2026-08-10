@@ -7,6 +7,7 @@ import de.fiereu.openmmo.server.game.services.DialogService
 import de.fiereu.openmmo.server.game.services.MapEntryScripts
 import de.fiereu.openmmo.server.game.services.ScriptMovementService
 import de.fiereu.openmmo.server.game.services.ScriptWarpService
+import de.fiereu.openmmo.server.game.services.ShopService
 import de.fiereu.openmmo.server.game.services.StoryPlayerService
 import de.fiereu.openmmo.server.game.services.StoryService
 import de.fiereu.openmmo.server.game.session.PlayerState
@@ -44,6 +45,7 @@ constructor(
     private val characterStore: CharacterStore,
     private val mapManager: MapManager,
     private val entryScripts: MapEntryScripts,
+    private val shopService: ShopService,
 ) {
   fun run(session: SessionContext, state: PlayerState, script: Script, entityId: Long) =
       runAll(session, state, listOf(script), entityId)
@@ -94,6 +96,7 @@ constructor(
             characterStore,
             mapManager,
             entryScripts,
+            shopService,
         )
     scope.launch {
       var finished = false

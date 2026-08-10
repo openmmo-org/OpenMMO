@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.server.game.script.generated.kanto
 
+import de.fiereu.openmmo.dialog.generated.kanto.Misc
 import de.fiereu.openmmo.dialog.generated.kanto.ViridianCity_Mart
 import de.fiereu.openmmo.items.generated.Items
 import de.fiereu.openmmo.server.game.script.MovementStep.FACE_DOWN
@@ -23,7 +24,7 @@ internal object ViridianCity_Mart_EventScript_ParcelScene : Script {
     )
     ctx.sayNpc(LOCALID_MART_CLERK, ViridianCity_Mart.TakeThisToProfOak)
     ctx.setVar(KantoVars.VAR_MAP_SCENE_VIRIDIAN_CITY_MART, 1)
-    ctx.giveItem(Items.OAKS_PARCEL)
+    ctx.giveItem(Items.PARCEL)
     ctx.sign(ViridianCity_Mart.ReceivedOaksParcelFromClerk)
     ctx.setVar(KantoVars.VAR_MAP_SCENE_PALLET_TOWN_PROFESSOR_OAKS_LAB, 5)
   }
@@ -34,8 +35,8 @@ internal object ViridianCity_Mart_EventScript_Clerk : Script {
     if (ctx.getVar(KantoVars.VAR_MAP_SCENE_VIRIDIAN_CITY_MART) == 1) {
       return ctx.say(ViridianCity_Mart.SayHiToOakForMe)
     }
-    // TODO Open the mart shop
-    //  The decomp runs pokemart with the shop's item list. Buying and selling needs a shop verb.
+    ctx.say(Misc.Text_MayIHelpYou)
+    ctx.pokemart(Items.POKE_BALL, Items.POTION, Items.ANTIDOTE, Items.PARLYZ_HEAL)
   }
 }
 

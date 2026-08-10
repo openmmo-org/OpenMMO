@@ -4,9 +4,6 @@
 [submodule "decomp/pokefirered"]
 	path = decomp/pokefirered
 	url = https://github.com/pret/pokefirered.git
-[submodule "decomp/pokeblack"]
-	path = decomp/pokeblack
-	url = https://github.com/pokemodding/pokeblack.git
 [submodule "decomp/pokeheartgold"]
 	path = decomp/pokeheartgold
 	url = https://github.com/pret/pokeheartgold.git

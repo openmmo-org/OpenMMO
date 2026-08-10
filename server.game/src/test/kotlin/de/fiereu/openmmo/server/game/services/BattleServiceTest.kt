@@ -9,6 +9,7 @@ import de.fiereu.openmmo.common.enums.EVs
 import de.fiereu.openmmo.common.enums.IVs
 import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.common.enums.Region
+import de.fiereu.openmmo.items.ItemRegistry
 import de.fiereu.openmmo.moves.MoveRegistry
 import de.fiereu.openmmo.net.game.packets.EntityMovePpPacket
 import de.fiereu.openmmo.net.game.packets.EntityPresencePacket
@@ -17,6 +18,7 @@ import de.fiereu.openmmo.net.game.packets.battle.BattleActionSelectPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleBulkStatePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleEntityDeltaPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleFieldStatePacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleListEventPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleQueuedEventPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleSidePacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleSwitchInPacket
@@ -103,6 +105,7 @@ private class Fixture(scope: CoroutineScope) {
           speciesRegistry = SpeciesRegistry(),
           moveRegistry = MoveRegistry(),
           trainers = TrainerRegistry(),
+          items = ItemRegistry(),
       )
 
   suspend fun playerWithParty(level: Byte = 50, hp: Short = 999): Pair<FakeSession, Long> {
@@ -300,6 +303,21 @@ class BattleServiceTest :
 
           // The second monster pays on top of the first, rather than replacing it.
           battle.activeMon().source.xp shouldBeGreaterThan xpBefore
+        }
+      }
+
+      test("the ball throw names the Poke Ball by the id the client knows") {
+        runTest {
+          val fx = Fixture(this)
+          val (session, _) = fx.playerWithParty()
+          session.startBattle(fx.service)
+
+          session.act(fx.service, BattleAction.ITEM)
+
+          session.sent
+              .filterIsInstance<BattleListEventPacket>()
+              .single { it.subKind == 4.toByte() }
+              .value shouldBe 5004.toShort()
         }
       }
 
