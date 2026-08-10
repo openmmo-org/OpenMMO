@@ -34,7 +34,10 @@ class DialogRenderer(
           val className = RenderUtil.className(location)
           val entries =
               group
-                  .map { DialogEntry(RenderUtil.entryName(it.label), it.textId, it.preview) }
+                  .map {
+                    DialogEntry(
+                        RenderUtil.entryName(it.label), it.textId, RenderUtil.preview(it.text))
+                  }
                   .distinctBy { it.name }
                   .sortedBy { it.textId }
           FileOutput(File(packageRoot, "${className.trim('`')}.kt").toPath()).use { out ->

@@ -54,7 +54,6 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      # No ROMs on the runner, so dialog ids are placeholders.
       - name: Build distributions
         run: >
           ./gradlew :server.login:assembleDist :server.game:assembleDist
