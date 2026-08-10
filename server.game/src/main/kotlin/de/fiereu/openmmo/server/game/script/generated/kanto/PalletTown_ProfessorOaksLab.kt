@@ -265,7 +265,7 @@ internal object PalletTown_ProfessorOaksLab_EventScript_ProfOak : Script {
 private suspend fun receiveDexScene(ctx: ScriptContext) {
   ctx.say(PalletTown_ProfessorOaksLab.OakHaveSomethingForMe)
   ctx.sign(PalletTown_ProfessorOaksLab.DeliveredOaksParcel)
-  ctx.takeItem(Items.OAKS_PARCEL)
+  ctx.takeItem(Items.PARCEL)
   ctx.say(PalletTown_ProfessorOaksLab.OakCustomBallIOrdered)
 
   ctx.sign(PalletTown_ProfessorOaksLab.RivalGramps)

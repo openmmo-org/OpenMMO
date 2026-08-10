@@ -21,6 +21,7 @@ import de.fiereu.openmmo.net.login.packets.TokenLogin
 import de.fiereu.openmmo.server.login.auth.InMemoryUserStore
 import de.fiereu.openmmo.server.login.auth.sha1Hex
 import de.fiereu.openmmo.server.login.catalog.GameServerCatalog
+import de.fiereu.openmmo.server.login.config.GameServerEndpointConfig
 import de.fiereu.openmmo.server.login.config.LoginServerConfig
 import de.fiereu.openmmo.server.login.di.DaggerLoginServerComponent
 import de.fiereu.openmmo.server.login.session.AUTHED_USER_ID
@@ -112,7 +113,7 @@ class LoginAppHandlerTest :
       ): LoginAppHandler =
           LoginAppHandler(
               users = users,
-              catalog = GameServerCatalog(),
+              catalog = GameServerCatalog(GameServerEndpointConfig()),
               tokenIssuer = SessionTokenIssuer(secret, clock),
               rememberMeIssuer = RememberMeTokenIssuer(secret, clock),
               rememberMeVerifier = RememberMeTokenVerifier(secret, maxAge, clock),

@@ -106,7 +106,7 @@ object GameProtocol : Protocol() {
     bidi<EntityInteractPacket>(0x22u, EntityInteractPacketCodec)
 
     c2s<ExchangeItemRequestPacket>(0x23u, ExchangeItemRequestPacketCodec)
-    s2c<EventOverlayStatePacket>(0x23u, EventOverlayStatePacketCodec)
+    s2c<ShopCatalogPacket>(0x23u, ShopCatalogPacketCodec)
 
     c2s<ShopSellRequestPacket>(0x24u, ShopSellRequestPacketCodec)
     s2c<NpcPanelTogglePacket>(0x24u, NpcPanelTogglePacketCodec)

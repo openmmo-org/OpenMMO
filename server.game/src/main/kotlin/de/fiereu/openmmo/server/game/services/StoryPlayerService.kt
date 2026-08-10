@@ -5,9 +5,13 @@ import de.fiereu.openmmo.common.MAX_PARTY_SIZE
 import de.fiereu.openmmo.common.Pokemon
 import de.fiereu.openmmo.common.PokemonMove
 import de.fiereu.openmmo.common.enums.PokemonContainer
+import de.fiereu.openmmo.items.ItemDef
+import de.fiereu.openmmo.items.ItemRegistry
 import de.fiereu.openmmo.moves.MoveRegistry
 import de.fiereu.openmmo.net.game.packets.PokemonContainerPacket
 import de.fiereu.openmmo.net.game.packets.SocialListEntryAddPacket
+import de.fiereu.openmmo.net.game.packets.battle.BattleAddPokemon
+import de.fiereu.openmmo.net.game.packets.battle.BattleSideAddPokemonPacket
 import de.fiereu.openmmo.net.game.packets.battle.ItemStack
 import de.fiereu.openmmo.net.game.packets.battle.itemStacksPacket
 import de.fiereu.openmmo.pokemon.SpeciesRegistry
@@ -29,6 +33,7 @@ constructor(
     private val pokemonFactory: WildMonFactory,
     private val species: SpeciesRegistry,
     private val moves: MoveRegistry,
+    private val items: ItemRegistry,
 ) {
 
   /** Gives a story Pokemon and syncs it. */
@@ -94,13 +99,13 @@ constructor(
   suspend fun giveItem(
       session: SessionContext,
       state: PlayerState,
-      itemId: Int,
+      item: ItemDef,
       quantity: Int
   ): Boolean {
     val characterId = state.characterId ?: return false
-    if (!characters.addItem(characterId, itemId, quantity)) return false
-    val items = characters.getCharacter(characterId)?.items ?: return false
-    session.send(storyItemStacksPacket(items))
+    if (!characters.addItem(characterId, items.idOf(item), quantity)) return false
+    val bag: Map<Int, Int> = characters.getCharacter(characterId)?.items ?: return false
+    session.send(storyItemStacksPacket(bag))
     return true
   }
 
@@ -126,5 +131,24 @@ fun storyItemStacksPacket(items: Map<Int, Int>) =
                   quantity = quantity.toShort(),
               )
             })
+
+/**
+ * A bag stack, not a monster. The open shop window only refreshes its count when the update arrives
+ * as this single stack rather than as a whole new bag.
+ */
+fun itemStackUpdatePacket(itemId: Int, quantity: Int) =
+    BattleSideAddPokemonPacket(
+        side = 1,
+        pokemon =
+            BattleAddPokemon(
+                entityId = (itemId.toLong() shl 16) or ITEM_ENTITY_TAG,
+                frontSpriteId = itemId.toShort(),
+                backSpriteId = quantity.toShort(),
+                side = 1,
+                slot = 0,
+                partyIndex = -1,
+                statusEffect = null,
+            ),
+    )
 
 private const val ITEM_ENTITY_TAG = 0x5000L

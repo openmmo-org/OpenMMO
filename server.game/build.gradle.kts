@@ -40,9 +40,9 @@ tasks.named<JavaExec>("run") {
           "GAME_DB_PORT",
           "GAME_DB_NAME",
           "GAME_DB_USER",
-          "GAME_DB_PASSWORD",
-          "GAME_DB_SEED_DEV")
+          "GAME_DB_PASSWORD")
       .forEach { key -> env.fetchOrNull(key)?.let { environment(key, it) } }
+  environment("GAME_DB_SEED_DEV", env.fetchOrNull("GAME_DB_SEED_DEV") ?: "true")
 }
 
 listOf("classes", "processResources").forEach { taskName ->

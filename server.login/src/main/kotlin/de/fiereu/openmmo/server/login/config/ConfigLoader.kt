@@ -1,10 +1,22 @@
 package de.fiereu.openmmo.server.login.config
 
+import com.github.maltalex.ineter.base.IPAddress
+import com.github.maltalex.ineter.base.IPv4Address
+import com.github.maltalex.ineter.base.IPv6Address
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 
 private fun Config.stringOrNull(path: String): String? =
     if (hasPath(path)) getString(path) else null
+
+private fun adminAccount(config: Config): AdminAccountConfig? {
+  val username = config.stringOrNull("server.admin.username").orEmpty().trim()
+  val password = config.stringOrNull("server.admin.password").orEmpty()
+  if (username.isEmpty() && password.isBlank()) return null
+  require(username.isNotEmpty()) { "server.admin.password is set without server.admin.username" }
+  require(password.isNotBlank()) { "server.admin.username is set without server.admin.password" }
+  return AdminAccountConfig(username, password)
+}
 
 object ConfigLoader {
   fun load(): LoginServerConfig {
@@ -34,6 +46,15 @@ object ConfigLoader {
                 poolSize = config.getInt("db.poolSize"),
                 seedDev = config.getBoolean("db.seedDev"),
             ),
+        gameServer =
+            GameServerEndpointConfig(
+                ipv4Address = IPv4Address.of(config.getString("gameServer.ipv4Address")),
+                ipv6Address = IPv6Address.of(config.getString("gameServer.ipv6Address")),
+                port = config.getInt("gameServer.port"),
+                localAddress = IPAddress.of(config.getString("gameServer.localAddress")),
+                localHostname = config.getString("gameServer.localHostname"),
+            ),
+        admin = adminAccount(config),
     )
   }
 }

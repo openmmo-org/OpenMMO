@@ -4,6 +4,7 @@ import de.fiereu.openmmo.common.CharacterPermissions
 import de.fiereu.openmmo.common.enums.CharacterGender
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.Region
+import de.fiereu.openmmo.items.ItemRegistry
 import de.fiereu.openmmo.maps.WarpTile
 import de.fiereu.openmmo.server.game.services.BattleService
 import de.fiereu.openmmo.server.game.services.StoryPlayerService
@@ -23,6 +24,7 @@ constructor(
     private val storyPlayerService: StoryPlayerService,
     private val warpService: WarpService,
     private val battleService: BattleService,
+    private val items: ItemRegistry,
 ) : ChatCommand {
   override val name = "story"
   override val usage = "/story [checkpoint|reset]"
@@ -103,7 +105,7 @@ constructor(
     characterStore.replaceProgress(
         characterId = charId,
         party = emptyList(),
-        items = checkpoint.items,
+        items = checkpoint.items.mapKeys { items.idOf(it.key) },
         storyFlags = checkpoint.storyFlags,
         storyVars = checkpoint.storyVars,
     )

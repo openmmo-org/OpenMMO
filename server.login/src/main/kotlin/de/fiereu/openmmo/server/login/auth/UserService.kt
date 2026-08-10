@@ -24,6 +24,11 @@ interface UserService {
   suspend fun getUserId(username: String): Int?
 
   suspend fun findForToken(userId: Int): TokenUser?
+
+  suspend fun hasAnyUser(): Boolean
+
+  /** Takes the plain password and hashes it the way the client would before sending. */
+  suspend fun addUser(username: String, password: String): Int
 }
 
 @Suppress("kotlin:S4790")
@@ -44,11 +49,15 @@ class InMemoryUserStore @Inject constructor() : UserService {
   private val nextId = AtomicInteger(1)
 
   init {
-    addUser("admin", "admin")
-    addUser("test", "test")
+    put("admin", "admin")
+    put("test", "test")
   }
 
-  fun addUser(username: String, password: String): Int {
+  override suspend fun hasAnyUser(): Boolean = users.isNotEmpty()
+
+  override suspend fun addUser(username: String, password: String): Int = put(username, password)
+
+  private fun put(username: String, password: String): Int {
     val id = nextId.getAndIncrement()
     users[username.lowercase()] = UserInfo(id, sha1Hex(password), username)
     return id

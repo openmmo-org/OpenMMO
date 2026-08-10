@@ -30,7 +30,7 @@ Gradle task (`generateMaps`, `generateMoves`, `generatePokemon`, ...).
 
 ## Pick a data source first
 
-There are two ways to choose which decomp to read from:
+There are three ways to choose which decomp to read from:
 
 - **By region:** for data that is different in each region, like maps. Hoenn
   maps come from `pokeemerald`, Kanto maps from `pokefirered`. The generator gets
@@ -39,13 +39,21 @@ There are two ways to choose which decomp to read from:
   and species. We just read one decomp (`pokeemerald`). Where the two games
   disagree on a detail (a wild held item, a flee rate) we accept the values from
   that one decomp instead of trying to merge them.
+- **Whatever the live client speaks:** for data the client indexes itself, like
+  items. The retail client answers in the Gen 5 table no matter which region the
+  player is in, so `generateItem` reads `decomp/pokeblack` and the GBA numbering
+  never enters the picture.
 
 Rule of thumb: if the same thing (a move, a Pokémon) exists in both games, use a
-single source. If the thing belongs to one region, use by-region.
+single source. If the thing belongs to one region, use by-region. If the client
+is the one doing the lookup, follow the client.
 
-> **Note:** the NDS decomps (`pokeblack`, `pokeheartgold`, `pokeplatinum`) are
-> **not implemented yet**. They use 3D maps and a different data format, so only
-> the GBA decomps (`pokeemerald`, `pokefirered`) are wired up today.
+> **Note:** the NDS decomps (`pokeheartgold`, `pokeplatinum`) are submodules but
+> **not implemented**. They use 3D maps and a different data format, so every
+> generator but the item one reads the GBA decomps (`pokeemerald`,
+> `pokefirered`). Item data is the exception: it comes from two JSON files
+> extracted from the Gen 5 decomp and committed under `decomp/pokeblack`, whose
+> source repository is private and so cannot be a submodule.
 
 ## The pieces of a generator
 

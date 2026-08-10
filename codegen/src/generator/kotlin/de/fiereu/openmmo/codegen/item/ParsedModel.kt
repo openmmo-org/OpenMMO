@@ -1,4 +1,9 @@
 package de.fiereu.openmmo.codegen.item
 
-/** One item constant: the decomp name without its ITEM_ prefix and the id the client uses. */
-data class ParsedItem(val name: String, val id: Int)
+/** [ids] is a list because the table lists some items in more than one slot. */
+data class ParsedItem(
+    val identifier: String,
+    val name: String,
+    val price: Int,
+    val ids: List<Int>,
+)

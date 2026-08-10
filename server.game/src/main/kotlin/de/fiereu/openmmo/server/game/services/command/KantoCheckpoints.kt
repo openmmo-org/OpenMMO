@@ -146,6 +146,6 @@ val KANTO_CHECKPOINTS: List<StoryCheckpoint> =
                     KantoVars.VAR_STARTER_MON to 0,
                 ),
             party = listOf(BULBASAUR),
-            items = mapOf(Items.OAKS_PARCEL to 1),
+            items = mapOf(Items.PARCEL to 1),
         ),
     )

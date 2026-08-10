@@ -4,6 +4,7 @@ import de.fiereu.openmmo.common.CharacterPermissions
 import de.fiereu.openmmo.common.enums.CharacterGender
 import de.fiereu.openmmo.common.enums.PokemonContainer
 import de.fiereu.openmmo.common.enums.Region
+import de.fiereu.openmmo.items.ItemRegistry
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.moves.MoveRegistry
 import de.fiereu.openmmo.net.game.packets.ChatMessagePacket
@@ -49,6 +50,7 @@ class StoryResetTest :
         val interest = InterestManager()
         val species = SpeciesRegistry()
         val moves = MoveRegistry()
+        val items = ItemRegistry()
         return StoryCommand(
             characterStore = store,
             worldStateService = WorldStateService(),
@@ -58,6 +60,7 @@ class StoryResetTest :
                     WildMonFactory(species, moves, LearnsetRegistry(), EntityIdService()),
                     species,
                     moves,
+                    items,
                 ),
             warpService =
                 WarpService(
@@ -80,7 +83,9 @@ class StoryResetTest :
                     speciesRegistry = species,
                     moveRegistry = moves,
                     trainers = TrainerRegistry(),
+                    items = items,
                 ),
+            items = items,
         )
       }
 
