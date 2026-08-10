@@ -42,7 +42,10 @@ constructor(
             .fetchOne(USERS.ID)
       }
 
-  suspend fun addUser(username: String, password: String): Int =
+  override suspend fun hasAnyUser(): Boolean =
+      withContext(dispatcher) { dsl.fetchExists(dsl.selectFrom(USERS)) }
+
+  override suspend fun addUser(username: String, password: String): Int =
       withContext(dispatcher) {
         dsl.insertInto(USERS)
             .set(USERS.USERNAME, username.lowercase())

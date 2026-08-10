@@ -7,7 +7,7 @@ data class DbConfig(
     val user: String = "openmmo_login_user",
     val password: String = "changeMe!",
     val poolSize: Int = 4,
-    val seedDev: Boolean = true,
+    val seedDev: Boolean = false,
 ) {
   val jdbcUrl: String
     get() = "jdbc:postgresql://$host:$port/$name"

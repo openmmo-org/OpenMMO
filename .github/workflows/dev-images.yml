@@ -1,48 +1,26 @@
-name: Release
+name: Dev images
 
 on:
   push:
     branches: [ "master" ]
 
 permissions:
-  contents: write
-  pull-requests: write
-  issues: write
+  contents: read
+  packages: write
 
+# Only the newest master is worth an image, so supersede a run still in flight.
 concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
+  group: dev-images-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  release-please:
-    name: Prepare release
-    runs-on: ubuntu-latest
-    outputs:
-      released: ${{ steps.release.outputs.releases_created }}
-      tag: ${{ steps.release.outputs.tag_name }}
-    steps:
-      - name: Run release-please
-        id: release
-        uses: googleapis/release-please-action@v4
-        with:
-          # A PAT is needed for CI to run on the release pull request.
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-
   publish:
-    name: Publish server distributions and images
-    needs: release-please
-    if: needs.release-please.outputs.released == 'true'
+    name: Publish dev server images
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
     steps:
-      - name: Checkout the release tag
+      - name: Checkout repository
         uses: actions/checkout@v7
         with:
-          ref: ${{ needs.release-please.outputs.tag }}
           submodules: recursive
 
       - name: Set up JDK 25
@@ -56,22 +34,10 @@ jobs:
 
       # No ROMs on the runner, so dialog ids are placeholders.
       - name: Build distributions
-        run: >
-          ./gradlew :server.login:assembleDist :server.game:assembleDist
-          :server.login:installDist :server.game:installDist
+        run: ./gradlew :server.login:installDist :server.game:installDist
 
       - name: Check no keys are bundled
         run: bash .github/scripts/check-no-keys.sh
-
-      # Before the images, so a registry failure cannot leave a tagged release with no archives.
-      - name: Attach distributions to the release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh release upload "${{ needs.release-please.outputs.tag }}" \
-            server.login/build/distributions/* \
-            server.game/build/distributions/* \
-            --clobber
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -88,12 +54,12 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository_owner }}/openmmo-login
-          flavor: latest=true
+          flavor: latest=false
           labels: org.opencontainers.image.title=OpenMMO login server
           annotations: org.opencontainers.image.title=OpenMMO login server
           tags: |
-            type=semver,pattern={{version}},value=${{ needs.release-please.outputs.tag }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ needs.release-please.outputs.tag }}
+            type=raw,value=dev
+            type=sha,format=short
 
       - name: Publish the login server image
         uses: docker/build-push-action@v7
@@ -110,12 +76,12 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository_owner }}/openmmo-game
-          flavor: latest=true
+          flavor: latest=false
           labels: org.opencontainers.image.title=OpenMMO game server
           annotations: org.opencontainers.image.title=OpenMMO game server
           tags: |
-            type=semver,pattern={{version}},value=${{ needs.release-please.outputs.tag }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ needs.release-please.outputs.tag }}
+            type=raw,value=dev
+            type=sha,format=short
 
       - name: Publish the game server image
         uses: docker/build-push-action@v7

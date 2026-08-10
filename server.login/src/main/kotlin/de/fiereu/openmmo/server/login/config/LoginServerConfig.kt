@@ -10,6 +10,8 @@ data class LoginServerConfig(
     val sessionSecret: ByteArray,
     val rememberMeMaxAge: Duration = Duration.ofDays(30),
     val db: DbConfig = DbConfig(),
+    val gameServer: GameServerEndpointConfig = GameServerEndpointConfig(),
+    val admin: AdminAccountConfig? = null,
     val rootKey: String? = null,
     val rootKeyFile: String? = null,
 ) {
@@ -23,7 +25,9 @@ data class LoginServerConfig(
           rootKeyFile == other.rootKeyFile &&
           sessionSecret.contentEquals(other.sessionSecret) &&
           rememberMeMaxAge == other.rememberMeMaxAge &&
-          db == other.db
+          db == other.db &&
+          gameServer == other.gameServer &&
+          admin == other.admin
 
   override fun hashCode(): Int {
     var h = host.hashCode()
@@ -35,6 +39,8 @@ data class LoginServerConfig(
     h = h * 31 + sessionSecret.contentHashCode()
     h = h * 31 + rememberMeMaxAge.hashCode()
     h = h * 31 + db.hashCode()
+    h = h * 31 + gameServer.hashCode()
+    h = h * 31 + admin.hashCode()
     return h
   }
 }

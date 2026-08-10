@@ -12,6 +12,7 @@ import de.fiereu.openmmo.common.io.PemKeyLoader
 import de.fiereu.openmmo.common.io.pemStream
 import de.fiereu.openmmo.server.login.auth.JooqUserStore
 import de.fiereu.openmmo.server.login.auth.UserService
+import de.fiereu.openmmo.server.login.config.GameServerEndpointConfig
 import de.fiereu.openmmo.server.login.config.LoginServerConfig
 import io.netty.channel.EventLoopGroup
 import io.netty.channel.MultiThreadIoEventLoopGroup
@@ -39,6 +40,10 @@ abstract class LoginServerModule {
     fun rootKey(config: LoginServerConfig): ECPrivateKey =
         PemKeyLoader.loadEcPrivate(
             pemStream(config.rootKey, config.rootKeyFile, config.rootKeyResource))
+
+    @Provides
+    @Singleton
+    fun gameServerEndpoint(config: LoginServerConfig): GameServerEndpointConfig = config.gameServer
 
     @Provides
     @Singleton

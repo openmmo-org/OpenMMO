@@ -1,0 +1,51 @@
+name: openmmo-login
+
+services:
+  database:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${LOGIN_DB_NAME:-openmmo_login_db}
+      POSTGRES_USER: ${LOGIN_DB_USER:-openmmo_login_user}
+      POSTGRES_PASSWORD: ${LOGIN_DB_PASSWORD:?Set LOGIN_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - database:/var/lib/postgresql
+
+  server:
+    image: ${OPENMMO_LOGIN_IMAGE:-ghcr.io/openmmo-org/openmmo-login:dev}
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      LOGIN_DB_HOST: database
+      LOGIN_DB_PORT: 5432
+      LOGIN_DB_NAME: ${LOGIN_DB_NAME:-openmmo_login_db}
+      LOGIN_DB_USER: ${LOGIN_DB_USER:-openmmo_login_user}
+      LOGIN_DB_PASSWORD: ${LOGIN_DB_PASSWORD:?Set LOGIN_DB_PASSWORD}
+      LOGIN_DB_SEED_DEV: ${LOGIN_DB_SEED_DEV:-false}
+      OPENMMO_SESSION_SECRET: ${OPENMMO_SESSION_SECRET:?Set OPENMMO_SESSION_SECRET}
+      OPENMMO_ADMIN_USERNAME: ${OPENMMO_ADMIN_USERNAME:-}
+      OPENMMO_ADMIN_PASSWORD: ${OPENMMO_ADMIN_PASSWORD:-}
+      OPENMMO_GAME_PRIVATE_KEY_FILE: /run/secrets/game.private.pem
+      GAME_SERVER_PUBLIC_IPV4: ${GAME_SERVER_PUBLIC_IPV4:?Set GAME_SERVER_PUBLIC_IPV4}
+      GAME_SERVER_PUBLIC_IPV6: "${GAME_SERVER_PUBLIC_IPV6:-::1}"
+      GAME_SERVER_PORT: ${GAME_SERVER_PORT:-7777}
+    ports:
+      - "2106:2106/tcp"
+    secrets:
+      - source: game_private_key
+        target: game.private.pem
+
+secrets:
+  game_private_key:
+    file: ${OPENMMO_GAME_PRIVATE_KEY_PATH:?Set OPENMMO_GAME_PRIVATE_KEY_PATH}
+
+volumes:
+  database:

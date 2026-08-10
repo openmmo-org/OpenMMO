@@ -33,13 +33,20 @@ dependencies {
 tasks.named<JavaExec>("run") {
   listOf(
           "OPENMMO_SESSION_SECRET",
+          "OPENMMO_ADMIN_USERNAME",
+          "OPENMMO_ADMIN_PASSWORD",
+          "GAME_SERVER_PUBLIC_IPV4",
+          "GAME_SERVER_PUBLIC_IPV6",
+          "GAME_SERVER_PORT",
+          "GAME_SERVER_LOCAL_ADDRESS",
+          "GAME_SERVER_LOCAL_HOSTNAME",
           "LOGIN_DB_HOST",
           "LOGIN_DB_PORT",
           "LOGIN_DB_NAME",
           "LOGIN_DB_USER",
-          "LOGIN_DB_PASSWORD",
-          "LOGIN_DB_SEED_DEV")
+          "LOGIN_DB_PASSWORD")
       .forEach { key -> env.fetchOrNull(key)?.let { environment(key, it) } }
+  environment("LOGIN_DB_SEED_DEV", env.fetchOrNull("LOGIN_DB_SEED_DEV") ?: "true")
 }
 
 listOf("classes", "processResources").forEach { taskName ->
