@@ -45,14 +45,15 @@ object DevFeedServerCli {
 
     if (System.getProperty(LAUNCH_UI_PROPERTY).toBoolean()) {
       println("starting the launcher, this feed stays up after it hands off")
-      startLauncher().waitFor()
+      startLauncher(trustStore).waitFor()
     }
 
     println("Leave this running while the client is open. Ctrl+C to stop.")
     Thread.currentThread().join()
   }
 
-  private fun startLauncher(): Process {
+  // The launcher reads the server key from the feed too, and this one signed its own certificate.
+  private fun startLauncher(trustStore: Path): Process {
     val java = Path.of(System.getProperty("java.home"), "bin", "java").toString()
     val forwarded =
         listOf(ROOT_PROPERTY, MANIFESTS_PROPERTY).mapNotNull { name ->
@@ -62,7 +63,11 @@ object DevFeedServerCli {
             listOf(java, "-cp", System.getProperty("java.class.path")) +
                 forwarded +
                 listOf(
-                    "--enable-native-access=ALL-UNNAMED", "de.fiereu.openmmo.launcher.ui.MainKt"))
+                    "-Djavax.net.ssl.trustStore=$trustStore",
+                    "-Djavax.net.ssl.trustStorePassword=${FeedTls.password.concatToString()}",
+                    "-Djavax.net.ssl.trustStoreType=PKCS12",
+                    "--enable-native-access=ALL-UNNAMED",
+                    "de.fiereu.openmmo.launcher.ui.MainKt"))
         .inheritIO()
         .start()
   }
