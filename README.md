@@ -20,7 +20,7 @@ The goal is it to provide a free and open-source alternative to the PokeMMO serv
 
 ## Building
 
-The map data is generated at build time from the [pret](https://github.com/pret)
+Game data is generated at build time from the [pret](https://github.com/pret)
 decompilation projects, which are vendored as git submodules under `decomp/`.
 Clone the repository with its submodules:
 
@@ -30,8 +30,10 @@ git clone --recurse-submodules <repo-url>
 git submodule update --init --recursive
 ```
 
-Without the submodules the `:maps` build fails, because the generator has no
-decomp data to read.
+Without the submodules the `:codegen` build fails, because the generators have no
+decomp data to read. The one exception is `decomp/pokeblack`, which holds the
+item data as committed files rather than a submodule, because its source
+repository is private.
 
 ### ROMs
 

@@ -10,6 +10,7 @@ class ItemsRenderer(
     private val templatesDir: File,
     private val outputDir: File,
     private val classCacheDir: File,
+    private val registryChunkSize: Int = 50,
 ) {
 
   fun render(items: List<ParsedItem>) {
@@ -27,6 +28,9 @@ class ItemsRenderer(
 
     FileOutput(File(packageRoot, "Items.kt").toPath()).use { out ->
       engine.render("Items.jte", mapOf("items" to items), out)
+    }
+    FileOutput(File(packageRoot, "GeneratedItems.kt").toPath()).use { out ->
+      engine.render("ItemsRegistry.jte", mapOf("chunks" to items.chunked(registryChunkSize)), out)
     }
   }
 

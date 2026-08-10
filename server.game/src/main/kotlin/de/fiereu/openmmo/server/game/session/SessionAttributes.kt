@@ -1,6 +1,8 @@
 package de.fiereu.openmmo.server.game.session
 
 import de.fiereu.network.SessionAttribute
+import de.fiereu.openmmo.items.ItemDef
+import de.fiereu.openmmo.net.game.packets.ShopItem
 import de.fiereu.openmmo.net.game.packets.dialog.DialogActionResponsePacket
 import de.fiereu.openmmo.server.game.storage.StoredCharacter
 import kotlinx.coroutines.CompletableDeferred
@@ -25,3 +27,16 @@ val SCRIPT_SCOPE = SessionAttribute.of<CoroutineScope>("scriptScope")
  * The character as it was before the running script started, so an unfinished one can be undone.
  */
 val SCRIPT_SNAPSHOT = SessionAttribute.of<StoredCharacter>("scriptSnapshot")
+
+/**
+ * Nothing tells the server the mart window closed, so the map it opened on is recorded and a shelf
+ * left behind stops applying once the player walks off that map.
+ */
+data class OpenShop(
+    val regionId: Int,
+    val bankId: Int,
+    val mapId: Int,
+    val shelf: Map<ItemDef, ShopItem>,
+)
+
+val OPEN_SHOP = SessionAttribute.of<OpenShop>("openShop")

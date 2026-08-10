@@ -1,0 +1,6272 @@
+[
+  {
+    "index": 0,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 1,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 3,
+    "rest": "000000001f080100000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 2,
+    "price": 1200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 2,
+    "rest": "000000001f080100000100000000000000000000000000000000000000"
+  },
+  {
+    "index": 3,
+    "price": 600,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 1,
+    "rest": "000000001f080100000200000000000000000000000000000000000000"
+  },
+  {
+    "index": 4,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 0,
+    "rest": "000000001f080100000300000000000000000000000000000000000000"
+  },
+  {
+    "index": 5,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 15,
+    "rest": "000000001f080100000400000000000000000000000000000000000000"
+  },
+  {
+    "index": 6,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 7,
+    "rest": "000000001f080100000500000000000000000000000000000000000000"
+  },
+  {
+    "index": 7,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 13,
+    "rest": "000000001f080100000600000000000000000000000000000000000000"
+  },
+  {
+    "index": 8,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 8,
+    "rest": "000000001f080100000700000000000000000000000000000000000000"
+  },
+  {
+    "index": 9,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 12,
+    "rest": "000000001f080100000800000000000000000000000000000000000000"
+  },
+  {
+    "index": 10,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 11,
+    "rest": "000000001f080100000900000000000000000000000000000000000000"
+  },
+  {
+    "index": 11,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 14,
+    "rest": "000000001f080100000a00000000000000000000000000000000000000"
+  },
+  {
+    "index": 12,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 4,
+    "rest": "000000001f080100000b00000000000000000000000000000000000000"
+  },
+  {
+    "index": 13,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 10,
+    "rest": "000000001f080100000c00000000000000000000000000000000000000"
+  },
+  {
+    "index": 14,
+    "price": 300,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 6,
+    "rest": "000000001f080100000d00000000000000000000000000000000000000"
+  },
+  {
+    "index": 15,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 9,
+    "rest": "000000001f080100000e00000000000000000000000000000000000000"
+  },
+  {
+    "index": 16,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 5,
+    "rest": "000000001f080100000f00000000000000000000000000000000000000"
+  },
+  {
+    "index": 17,
+    "price": 300,
+    "hold_effect": 0,
+    "amount": 20,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00001e009f200201000000000000040000000000000014000000000000"
+  },
+  {
+    "index": 18,
+    "price": 100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 21,
+    "rest": "00001e009f400201000200000000000000000000000000000000000000"
+  },
+  {
+    "index": 19,
+    "price": 250,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 23,
+    "rest": "00001e009f400201000400000000000000000000000000000000000000"
+  },
+  {
+    "index": 20,
+    "price": 250,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 24,
+    "rest": "00001e009f400201000800000000000000000000000000000000000000"
+  },
+  {
+    "index": 21,
+    "price": 250,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 25,
+    "rest": "00001e009f400201000100000000000000000000000000000000000000"
+  },
+  {
+    "index": 22,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 22,
+    "rest": "00001e009f400201001000000000000000000000000000000000000000"
+  },
+  {
+    "index": 23,
+    "price": 3000,
+    "hold_effect": 0,
+    "amount": 255,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 4,
+    "rest": "00001e009f600201003f000000000400000000000000ff000000000000"
+  },
+  {
+    "index": 24,
+    "price": 2500,
+    "hold_effect": 0,
+    "amount": 255,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 3,
+    "rest": "00001e009f2002010000000000000400000000000000ff000000000000"
+  },
+  {
+    "index": 25,
+    "price": 1200,
+    "hold_effect": 0,
+    "amount": 200,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 2,
+    "rest": "00001e009f2002010000000000000400000000000000c8000000000000"
+  },
+  {
+    "index": 26,
+    "price": 700,
+    "hold_effect": 0,
+    "amount": 50,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 1,
+    "rest": "00001e009f200201000000000000040000000000000032000000000000"
+  },
+  {
+    "index": 27,
+    "price": 600,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 26,
+    "rest": "00001e009f400201003f00000000000000000000000000000000000000"
+  },
+  {
+    "index": 28,
+    "price": 1500,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 5,
+    "rest": "00001e009f4002010000010000000000000000000000fe000000000000"
+  },
+  {
+    "index": 29,
+    "price": 4000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 6,
+    "rest": "00001e009f4002010000010000000000000000000000ff000000000000"
+  },
+  {
+    "index": 30,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 50,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 9,
+    "rest": "00001e009f200201000000000000040000000000000032000000000000"
+  },
+  {
+    "index": 31,
+    "price": 300,
+    "hold_effect": 0,
+    "amount": 60,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 10,
+    "rest": "00001e009f20020100000000000004000000000000003c000000000000"
+  },
+  {
+    "index": 32,
+    "price": 350,
+    "hold_effect": 0,
+    "amount": 80,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 11,
+    "rest": "00001e009f200201000000000000040000000000000050000000000000"
+  },
+  {
+    "index": 33,
+    "price": 500,
+    "hold_effect": 0,
+    "amount": 100,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 12,
+    "rest": "00001e009f200201000000000000040000000000000064000000000000"
+  },
+  {
+    "index": 34,
+    "price": 500,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 13,
+    "rest": "00001e009f200201000000000000041c0000000000003200fbfbf60000"
+  },
+  {
+    "index": 35,
+    "price": 800,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 14,
+    "rest": "00001e009f200201000000000000041c000000000000c800f6f6f10000"
+  },
+  {
+    "index": 36,
+    "price": 450,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 27,
+    "rest": "00001e009f400201003f00000000001c0000000000000000fbfbf60000"
+  },
+  {
+    "index": 37,
+    "price": 2800,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 15,
+    "rest": "00001e009f400201000001000000001c000000000000ff00f1f1ec0000"
+  },
+  {
+    "index": 38,
+    "price": 1200,
+    "hold_effect": 0,
+    "amount": 10,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 41,
+    "rest": "00001e009f2002010000000000000100000000000000000a0000000000"
+  },
+  {
+    "index": 39,
+    "price": 2000,
+    "hold_effect": 0,
+    "amount": 255,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 42,
+    "rest": "00001e009f2002010000000000000100000000000000007f0000000000"
+  },
+  {
+    "index": 40,
+    "price": 3000,
+    "hold_effect": 0,
+    "amount": 10,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 43,
+    "rest": "00001e009f2002010000000000000200000000000000000a0000000000"
+  },
+  {
+    "index": 41,
+    "price": 4500,
+    "hold_effect": 0,
+    "amount": 255,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 50,
+    "rest": "00001e009f2002010000000000000200000000000000007f0000000000"
+  },
+  {
+    "index": 42,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 28,
+    "rest": "00001e009f400201003f00000000000000000000000000000000000000"
+  },
+  {
+    "index": 43,
+    "price": 100,
+    "hold_effect": 1,
+    "amount": 20,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 7,
+    "rest": "00001e009f200201010000000000040000000000000014000000000000"
+  },
+  {
+    "index": 44,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 20,
+    "rest": "00001e009f0000010000030000000400000000000000ff000000000000"
+  },
+  {
+    "index": 45,
+    "price": 9800,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 51,
+    "rest": "00001e009f000001000000000000081c0a000000000000000503020000"
+  },
+  {
+    "index": 46,
+    "price": 9800,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 52,
+    "rest": "00001e009f000001000000000000101c000a0000000000000503020000"
+  },
+  {
+    "index": 47,
+    "price": 9800,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 53,
+    "rest": "00001e009f000001000000000000201c00000a00000000000503020000"
+  },
+  {
+    "index": 48,
+    "price": 9800,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 56,
+    "rest": "00001e009f000001000000000000401c0000000a000000000503020000"
+  },
+  {
+    "index": 49,
+    "price": 9800,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 54,
+    "rest": "00001e009f000001000000000000801c000000000a0000000503020000"
+  },
+  {
+    "index": 50,
+    "price": 4800,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "00001e009f000001000005000000001c00000000000000000503020000"
+  },
+  {
+    "index": 51,
+    "price": 9800,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 63,
+    "rest": "00001e009f000001000000000040001c00000000000000000503020000"
+  },
+  {
+    "index": 52,
+    "price": 9800,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 55,
+    "rest": "00001e009f000001000000000000001d00000000000a00000503020000"
+  },
+  {
+    "index": 53,
+    "price": 9800,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 64,
+    "rest": "00001e009f000001000000000080001c00000000000000000503020000"
+  },
+  {
+    "index": 54,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 29,
+    "rest": "00001e009f400201003f00000000000000000000000000000000000000"
+  },
+  {
+    "index": 55,
+    "price": 700,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 7,
+    "rest": "00001e001f100001008000000000000c00000000000000000101000000"
+  },
+  {
+    "index": 56,
+    "price": 650,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 6,
+    "rest": "00001e001f100001000000000010000c00000000000000000101000000"
+  },
+  {
+    "index": 57,
+    "price": 500,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 0,
+    "rest": "00001e001f100001000010000000000c00000000000000000101000000"
+  },
+  {
+    "index": 58,
+    "price": 550,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 1,
+    "rest": "00001e001f100001000000010000000c00000000000000000101000000"
+  },
+  {
+    "index": 59,
+    "price": 350,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 2,
+    "rest": "00001e001f100001000000001000000c00000000000000000101000000"
+  },
+  {
+    "index": 60,
+    "price": 950,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 5,
+    "rest": "00001e001f100001000000000001000c00000000000000000101000000"
+  },
+  {
+    "index": 61,
+    "price": 350,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 3,
+    "rest": "00001e001f100001000000100000000c00000000000000000101000000"
+  },
+  {
+    "index": 62,
+    "price": 350,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 4,
+    "rest": "00001e001f100001000000000100000000000000000000000000000000"
+  },
+  {
+    "index": 63,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 8,
+    "rest": "00001e001f100301000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 64,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 9,
+    "rest": "00001e001f100301000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 65,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 8,
+    "rest": "00001e001f000001000100000000000000000000000000000000000000"
+  },
+  {
+    "index": 66,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 82,
+    "rest": "00001e001f000001002000000000000000000000000000000000000000"
+  },
+  {
+    "index": 67,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 57,
+    "rest": "00001e001f000001004000000000000000000000000000000000000000"
+  },
+  {
+    "index": 68,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 5,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 69,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 80,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 70,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 69,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 71,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 70,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 72,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 58,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 73,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 9,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 74,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 83,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 75,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 20,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 76,
+    "price": 500,
+    "hold_effect": 0,
+    "amount": 200,
+    "field_use": "repel",
+    "use_class": 2,
+    "kind_index": 76,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 77,
+    "price": 700,
+    "hold_effect": 0,
+    "amount": 250,
+    "field_use": "repel",
+    "use_class": 2,
+    "kind_index": 42,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 78,
+    "price": 550,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "escape_rope",
+    "use_class": 2,
+    "kind_index": 17,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 79,
+    "price": 350,
+    "hold_effect": 0,
+    "amount": 100,
+    "field_use": "repel",
+    "use_class": 2,
+    "kind_index": 66,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 80,
+    "price": 2100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "evolution_stone",
+    "use_class": 2,
+    "kind_index": 75,
+    "rest": "00001e001f000001000008000000000000000000000000000000000000"
+  },
+  {
+    "index": 81,
+    "price": 2100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "evolution_stone",
+    "use_class": 2,
+    "kind_index": 43,
+    "rest": "00001e001f000001000008000000000000000000000000000000000000"
+  },
+  {
+    "index": 82,
+    "price": 2100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "evolution_stone",
+    "use_class": 2,
+    "kind_index": 18,
+    "rest": "00001e001f000001000008000000000000000000000000000000000000"
+  },
+  {
+    "index": 83,
+    "price": 2100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "evolution_stone",
+    "use_class": 2,
+    "kind_index": 77,
+    "rest": "00001e001f000001000008000000000000000000000000000000000000"
+  },
+  {
+    "index": 84,
+    "price": 2100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "evolution_stone",
+    "use_class": 2,
+    "kind_index": 79,
+    "rest": "00001e001f000001000008000000000000000000000000000000000000"
+  },
+  {
+    "index": 85,
+    "price": 2100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "evolution_stone",
+    "use_class": 2,
+    "kind_index": 41,
+    "rest": "00001e001f000001000008000000000000000000000000000000000000"
+  },
+  {
+    "index": 86,
+    "price": 500,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 78,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 87,
+    "price": 5000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 2,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 88,
+    "price": 1400,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 49,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 89,
+    "price": 7500,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 4,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 90,
+    "price": 2000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 73,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 91,
+    "price": 9800,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 74,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 92,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 44,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 93,
+    "price": 100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 23,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 94,
+    "price": 100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "honey",
+    "use_class": 2,
+    "kind_index": 25,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 95,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 22,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 96,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 13,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 97,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 72,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 98,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 19,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 99,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 67,
+    "rest": "000064001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 100,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 10,
+    "rest": "000064001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 101,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 24,
+    "rest": "000064001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 102,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 15,
+    "rest": "000064001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 103,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 46,
+    "rest": "000064001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 104,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 0,
+    "rest": "000064001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 105,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 71,
+    "rest": "000064001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 106,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 55,
+    "rest": "000064001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 107,
+    "price": 2100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "evolution_stone",
+    "use_class": 2,
+    "kind_index": 68,
+    "rest": "000050001f000001000008000000000000000000000000000000000000"
+  },
+  {
+    "index": 108,
+    "price": 2100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "evolution_stone",
+    "use_class": 2,
+    "kind_index": 16,
+    "rest": "000050001f000001000008000000000000000000000000000000000000"
+  },
+  {
+    "index": 109,
+    "price": 2100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "evolution_stone",
+    "use_class": 2,
+    "kind_index": 14,
+    "rest": "000050001f000001000008000000000000000000000000000000000000"
+  },
+  {
+    "index": 110,
+    "price": 2100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "evolution_stone",
+    "use_class": 2,
+    "kind_index": 47,
+    "rest": "000050001f000001000008000000000000000000000000000000000000"
+  },
+  {
+    "index": 111,
+    "price": 2100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 45,
+    "rest": "000050001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 112,
+    "price": 10000,
+    "hold_effect": 2,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 54,
+    "rest": "00003c001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 113,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 114,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 115,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 116,
+    "price": 1000,
+    "hold_effect": 3,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 25,
+    "rest": "000046001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 117,
+    "price": 1000,
+    "hold_effect": 3,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 120,
+    "rest": "000046001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 118,
+    "price": 1000,
+    "hold_effect": 3,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 12,
+    "rest": "000046001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 119,
+    "price": 1000,
+    "hold_effect": 3,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 15,
+    "rest": "000046001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 120,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 26,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 121,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 27,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 122,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 28,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 123,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 29,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 124,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 30,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 125,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 31,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 126,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 127,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 32,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 128,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 33,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 129,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 34,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 130,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 35,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 131,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 36,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 132,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 37,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 133,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 38,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 134,
+    "price": 100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 8,
+    "rest": "00001e009f200201000000000000041c00000000000014000101010000"
+  },
+  {
+    "index": 135,
+    "price": 10000,
+    "hold_effect": 3,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 1,
+    "rest": "00003c001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 136,
+    "price": 10000,
+    "hold_effect": 4,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 74,
+    "rest": "00003c001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 137,
+    "price": 50,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "mail",
+    "use_class": "mail",
+    "kind_index": 0,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 138,
+    "price": 50,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "mail",
+    "use_class": "mail",
+    "kind_index": 1,
+    "rest": "000000001f000000000100000000000000000000000000000000000000"
+  },
+  {
+    "index": 139,
+    "price": 50,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "mail",
+    "use_class": "mail",
+    "kind_index": 2,
+    "rest": "000000001f000000000200000000000000000000000000000000000000"
+  },
+  {
+    "index": 140,
+    "price": 50,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "mail",
+    "use_class": "mail",
+    "kind_index": 3,
+    "rest": "000000001f000000000300000000000000000000000000000000000000"
+  },
+  {
+    "index": 141,
+    "price": 50,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "mail",
+    "use_class": "mail",
+    "kind_index": 4,
+    "rest": "000000001f000000000400000000000000000000000000000000000000"
+  },
+  {
+    "index": 142,
+    "price": 50,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "mail",
+    "use_class": "mail",
+    "kind_index": 5,
+    "rest": "000000001f000000000500000000000000000000000000000000000000"
+  },
+  {
+    "index": 143,
+    "price": 50,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "mail",
+    "use_class": "mail",
+    "kind_index": 6,
+    "rest": "000000001f000000000600000000000000000000000000000000000000"
+  },
+  {
+    "index": 144,
+    "price": 50,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "mail",
+    "use_class": "mail",
+    "kind_index": 7,
+    "rest": "000000001f000000000700000000000000000000000000000000000000"
+  },
+  {
+    "index": 145,
+    "price": 50,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "mail",
+    "use_class": "mail",
+    "kind_index": 8,
+    "rest": "000000001f000000000800000000000000000000000000000000000000"
+  },
+  {
+    "index": 146,
+    "price": 50,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "mail",
+    "use_class": "mail",
+    "kind_index": 9,
+    "rest": "000000001f000000000900000000000000000000000000000000000000"
+  },
+  {
+    "index": 147,
+    "price": 50,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "mail",
+    "use_class": "mail",
+    "kind_index": 10,
+    "rest": "000000001f000000000a00000000000000000000000000000000000000"
+  },
+  {
+    "index": 148,
+    "price": 50,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "mail",
+    "use_class": "mail",
+    "kind_index": 11,
+    "rest": "000000001f000000000b00000000000000000000000000000000000000"
+  },
+  {
+    "index": 149,
+    "price": 20,
+    "hold_effect": 5,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "01010a3c89410001011000000000000000000000000000000000000000"
+  },
+  {
+    "index": 150,
+    "price": 20,
+    "hold_effect": 6,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "02020a3c8a410001010100000000000000000000000000000000000000"
+  },
+  {
+    "index": 151,
+    "price": 20,
+    "hold_effect": 7,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "03030a3c8c410001010200000000000000000000000000000000000000"
+  },
+  {
+    "index": 152,
+    "price": 20,
+    "hold_effect": 8,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "04040a3c8b410001010400000000000000000000000000000000000000"
+  },
+  {
+    "index": 153,
+    "price": 20,
+    "hold_effect": 9,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "05050a3c8e410001010800000000000000000000000000000000000000"
+  },
+  {
+    "index": 154,
+    "price": 20,
+    "hold_effect": 10,
+    "amount": 10,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "06060a3c812100010100000000000100000000000000000a0000000000"
+  },
+  {
+    "index": 155,
+    "price": 20,
+    "hold_effect": 1,
+    "amount": 10,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "07070a3c8321000101000000000004000000000000000a000000000000"
+  },
+  {
+    "index": 156,
+    "price": 20,
+    "hold_effect": 11,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "08080a3c84410001012000000000000000000000000000000000000000"
+  },
+  {
+    "index": 157,
+    "price": 20,
+    "hold_effect": 12,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "09090a3c82410001013f00000000000000000000000000000000000000"
+  },
+  {
+    "index": 158,
+    "price": 20,
+    "hold_effect": 13,
+    "amount": 25,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "0a0a0a3c8d2100010100000000000400000000000000fd000000000000"
+  },
+  {
+    "index": 159,
+    "price": 20,
+    "hold_effect": 14,
+    "amount": 8,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "0b0b0a3c86010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 160,
+    "price": 20,
+    "hold_effect": 15,
+    "amount": 8,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "0c0c0a3c85010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 161,
+    "price": 20,
+    "hold_effect": 16,
+    "amount": 8,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "0d0d0a3c87010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 162,
+    "price": 20,
+    "hold_effect": 17,
+    "amount": 8,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "0e0e0a3c8f010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 163,
+    "price": 20,
+    "hold_effect": 18,
+    "amount": 8,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "0f0f0a3c90010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 164,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c88010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 165,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a4689010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 166,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a468a010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 167,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a468c010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 168,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a468b010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 169,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a468e010001010000000000081cf6000000000000000a05020000"
+  },
+  {
+    "index": 170,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a4681010001010000000000101c00f60000000000000a05020000"
+  },
+  {
+    "index": 171,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a4683010001010000000000201c0000f600000000000a05020000"
+  },
+  {
+    "index": 172,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a4684010001010000000000801c00000000f60000000a05020000"
+  },
+  {
+    "index": 173,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a4682010001010000000000001d0000000000f600000a05020000"
+  },
+  {
+    "index": 174,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a468d010001010000000000401c000000f6000000000a05020000"
+  },
+  {
+    "index": 175,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a4686010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 176,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a4685010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 177,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a4687010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 178,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a468f010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 179,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a4690010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 180,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a4688010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 181,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a5089010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 182,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a508a010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 183,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a508c010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 184,
+    "price": 20,
+    "hold_effect": 19,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c89010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 185,
+    "price": 20,
+    "hold_effect": 20,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c8a010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 186,
+    "price": 20,
+    "hold_effect": 21,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c8c010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 187,
+    "price": 20,
+    "hold_effect": 22,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c8b010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 188,
+    "price": 20,
+    "hold_effect": 23,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c8e010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 189,
+    "price": 20,
+    "hold_effect": 24,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c81010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 190,
+    "price": 20,
+    "hold_effect": 25,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c83010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 191,
+    "price": 20,
+    "hold_effect": 26,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c84010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 192,
+    "price": 20,
+    "hold_effect": 27,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c82010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 193,
+    "price": 20,
+    "hold_effect": 28,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c8d010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 194,
+    "price": 20,
+    "hold_effect": 29,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c86010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 195,
+    "price": 20,
+    "hold_effect": 30,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c85010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 196,
+    "price": 20,
+    "hold_effect": 31,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c87010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 197,
+    "price": 20,
+    "hold_effect": 32,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c8f010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 198,
+    "price": 20,
+    "hold_effect": 33,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c90010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 199,
+    "price": 20,
+    "hold_effect": 34,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c88010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 200,
+    "price": 20,
+    "hold_effect": 35,
+    "amount": 0,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a3c80010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 201,
+    "price": 20,
+    "hold_effect": 36,
+    "amount": 4,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "10100a508b010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 202,
+    "price": 20,
+    "hold_effect": 37,
+    "amount": 4,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "11110a508e010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 203,
+    "price": 20,
+    "hold_effect": 38,
+    "amount": 4,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "12120a5081010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 204,
+    "price": 20,
+    "hold_effect": 39,
+    "amount": 4,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "13130a5083010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 205,
+    "price": 20,
+    "hold_effect": 40,
+    "amount": 4,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "14140a5084010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 206,
+    "price": 20,
+    "hold_effect": 41,
+    "amount": 4,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "15150a5082010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 207,
+    "price": 20,
+    "hold_effect": 42,
+    "amount": 4,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "16160a508d010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 208,
+    "price": 20,
+    "hold_effect": 43,
+    "amount": 4,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a5086010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 209,
+    "price": 20,
+    "hold_effect": 44,
+    "amount": 4,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "17170a5085010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 210,
+    "price": 20,
+    "hold_effect": 45,
+    "amount": 4,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a5087010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 211,
+    "price": 20,
+    "hold_effect": 46,
+    "amount": 8,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a508f010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 212,
+    "price": 20,
+    "hold_effect": 47,
+    "amount": 8,
+    "field_use": "berry",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "00000a5090010001010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 213,
+    "price": 10,
+    "hold_effect": 48,
+    "amount": 10,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 10,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 214,
+    "price": 100,
+    "hold_effect": 49,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 143,
+    "rest": "00180a001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 215,
+    "price": 3000,
+    "hold_effect": 50,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 75,
+    "rest": "00003c001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 216,
+    "price": 3000,
+    "hold_effect": 51,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 39,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 217,
+    "price": 100,
+    "hold_effect": 52,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 103,
+    "rest": "000050001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 218,
+    "price": 100,
+    "hold_effect": 53,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 127,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 219,
+    "price": 100,
+    "hold_effect": 54,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 79,
+    "rest": "00190a001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 220,
+    "price": 100,
+    "hold_effect": 55,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 16,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 221,
+    "price": 100,
+    "hold_effect": 56,
+    "amount": 10,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 64,
+    "rest": "001a1e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 222,
+    "price": 100,
+    "hold_effect": 57,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 122,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 223,
+    "price": 100,
+    "hold_effect": 58,
+    "amount": 10,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 3,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 224,
+    "price": 200,
+    "hold_effect": 59,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 19,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 225,
+    "price": 200,
+    "hold_effect": 60,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 128,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 226,
+    "price": 200,
+    "hold_effect": 61,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 23,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 227,
+    "price": 200,
+    "hold_effect": 62,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 22,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 228,
+    "price": 200,
+    "hold_effect": 63,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 124,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 229,
+    "price": 200,
+    "hold_effect": 64,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 36,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 230,
+    "price": 200,
+    "hold_effect": 65,
+    "amount": 10,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 47,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 231,
+    "price": 200,
+    "hold_effect": 66,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 72,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 232,
+    "price": 200,
+    "hold_effect": 67,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 115,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 233,
+    "price": 100,
+    "hold_effect": 68,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 80,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 234,
+    "price": 200,
+    "hold_effect": 69,
+    "amount": 10,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 67,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 235,
+    "price": 2100,
+    "hold_effect": 70,
+    "amount": 10,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 29,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 236,
+    "price": 100,
+    "hold_effect": 71,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 69,
+    "rest": "001b1e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 237,
+    "price": 100,
+    "hold_effect": 72,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 126,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 238,
+    "price": 100,
+    "hold_effect": 73,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 56,
+    "rest": "000064001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 239,
+    "price": 100,
+    "hold_effect": 74,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 84,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 240,
+    "price": 100,
+    "hold_effect": 75,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 7,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 241,
+    "price": 100,
+    "hold_effect": 76,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 6,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 242,
+    "price": 100,
+    "hold_effect": 77,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 77,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 243,
+    "price": 100,
+    "hold_effect": 78,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 86,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 244,
+    "price": 100,
+    "hold_effect": 79,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 117,
+    "rest": "000032001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 245,
+    "price": 100,
+    "hold_effect": 80,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 91,
+    "rest": "001c46001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 246,
+    "price": 100,
+    "hold_effect": 81,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 87,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 247,
+    "price": 100,
+    "hold_effect": 82,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 129,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 248,
+    "price": 100,
+    "hold_effect": 83,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 139,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 249,
+    "price": 9800,
+    "hold_effect": 84,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 14,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 250,
+    "price": 100,
+    "hold_effect": 85,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 27,
+    "rest": "000046001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 251,
+    "price": 100,
+    "hold_effect": 86,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 121,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 252,
+    "price": 2100,
+    "hold_effect": 87,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 140,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 253,
+    "price": 200,
+    "hold_effect": 88,
+    "amount": 8,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 119,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 254,
+    "price": 9600,
+    "hold_effect": 78,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 116,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 255,
+    "price": 9600,
+    "hold_effect": 48,
+    "amount": 10,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 66,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 256,
+    "price": 10,
+    "hold_effect": 89,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 73,
+    "rest": "000028001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 257,
+    "price": 10,
+    "hold_effect": 90,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 81,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 258,
+    "price": 500,
+    "hold_effect": 91,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 136,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 259,
+    "price": 200,
+    "hold_effect": 92,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 133,
+    "rest": "00003c001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 260,
+    "price": 100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 109,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 261,
+    "price": 100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 9,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 262,
+    "price": 100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 90,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 263,
+    "price": 100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 52,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 264,
+    "price": 100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 146,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 265,
+    "price": 200,
+    "hold_effect": 93,
+    "amount": 10,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 144,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 266,
+    "price": 200,
+    "hold_effect": 94,
+    "amount": 10,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 85,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 267,
+    "price": 200,
+    "hold_effect": 95,
+    "amount": 10,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 145,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 268,
+    "price": 200,
+    "hold_effect": 96,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 38,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 269,
+    "price": 200,
+    "hold_effect": 97,
+    "amount": 3,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 70,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 270,
+    "price": 200,
+    "hold_effect": 98,
+    "amount": 30,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 68,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 271,
+    "price": 100,
+    "hold_effect": 99,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 97,
+    "rest": "00000a001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 272,
+    "price": 100,
+    "hold_effect": 100,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 137,
+    "rest": "001d1e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 273,
+    "price": 100,
+    "hold_effect": 101,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 43,
+    "rest": "001e1e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 274,
+    "price": 10,
+    "hold_effect": 102,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 104,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 275,
+    "price": 200,
+    "hold_effect": 103,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 48,
+    "rest": "00000a001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 276,
+    "price": 200,
+    "hold_effect": 104,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 148,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 277,
+    "price": 200,
+    "hold_effect": 105,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 82,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 278,
+    "price": 200,
+    "hold_effect": 106,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 62,
+    "rest": "000082001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 279,
+    "price": 200,
+    "hold_effect": 107,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 65,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 280,
+    "price": 200,
+    "hold_effect": 108,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 24,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 281,
+    "price": 200,
+    "hold_effect": 109,
+    "amount": 16,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 8,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 282,
+    "price": 200,
+    "hold_effect": 110,
+    "amount": 3,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 60,
+    "rest": "000028001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 283,
+    "price": 200,
+    "hold_effect": 111,
+    "amount": 3,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 125,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 284,
+    "price": 200,
+    "hold_effect": 112,
+    "amount": 3,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 57,
+    "rest": "00003c001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 285,
+    "price": 200,
+    "hold_effect": 113,
+    "amount": 3,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 20,
+    "rest": "00003c001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 286,
+    "price": 200,
+    "hold_effect": 114,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 53,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 287,
+    "price": 200,
+    "hold_effect": 115,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 17,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 288,
+    "price": 200,
+    "hold_effect": 116,
+    "amount": 8,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 134,
+    "rest": "000050001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 289,
+    "price": 3000,
+    "hold_effect": 117,
+    "amount": 4,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 96,
+    "rest": "000046001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 290,
+    "price": 3000,
+    "hold_effect": 118,
+    "amount": 4,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 95,
+    "rest": "000046001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 291,
+    "price": 3000,
+    "hold_effect": 119,
+    "amount": 4,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 98,
+    "rest": "000046001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 292,
+    "price": 3000,
+    "hold_effect": 120,
+    "amount": 4,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 94,
+    "rest": "000046001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 293,
+    "price": 3000,
+    "hold_effect": 121,
+    "amount": 4,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 93,
+    "rest": "000046001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 294,
+    "price": 3000,
+    "hold_effect": 122,
+    "amount": 4,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 99,
+    "rest": "000046001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 295,
+    "price": 100,
+    "hold_effect": 123,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 118,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 296,
+    "price": 200,
+    "hold_effect": 124,
+    "amount": 30,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 4,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 297,
+    "price": 200,
+    "hold_effect": 125,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 18,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 298,
+    "price": 1000,
+    "hold_effect": 126,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 44,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 299,
+    "price": 1000,
+    "hold_effect": 127,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 130,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 300,
+    "price": 1000,
+    "hold_effect": 128,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 147,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 301,
+    "price": 1000,
+    "hold_effect": 129,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 78,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 302,
+    "price": 1000,
+    "hold_effect": 130,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 59,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 303,
+    "price": 1000,
+    "hold_effect": 131,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 42,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 304,
+    "price": 1000,
+    "hold_effect": 132,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 138,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 305,
+    "price": 1000,
+    "hold_effect": 133,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 32,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 306,
+    "price": 1000,
+    "hold_effect": 134,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 123,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 307,
+    "price": 1000,
+    "hold_effect": 135,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 83,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 308,
+    "price": 1000,
+    "hold_effect": 136,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 61,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 309,
+    "price": 1000,
+    "hold_effect": 137,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 135,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 310,
+    "price": 1000,
+    "hold_effect": 138,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 131,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 311,
+    "price": 1000,
+    "hold_effect": 139,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 26,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 312,
+    "price": 1000,
+    "hold_effect": 140,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 30,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 313,
+    "price": 1000,
+    "hold_effect": 141,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 63,
+    "rest": "00005a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 314,
+    "price": 9600,
+    "hold_effect": 83,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 89,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 315,
+    "price": 9600,
+    "hold_effect": 73,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 112,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 316,
+    "price": 9600,
+    "hold_effect": 107,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 49,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 317,
+    "price": 9600,
+    "hold_effect": 78,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 142,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 318,
+    "price": 9600,
+    "hold_effect": 74,
+    "amount": 20,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 114,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 319,
+    "price": 9600,
+    "hold_effect": 58,
+    "amount": 10,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 71,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 320,
+    "price": 9600,
+    "hold_effect": 59,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 102,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 321,
+    "price": 2100,
+    "hold_effect": 142,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 100,
+    "rest": "000050001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 322,
+    "price": 2100,
+    "hold_effect": 143,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 34,
+    "rest": "000050001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 323,
+    "price": 2100,
+    "hold_effect": 144,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 76,
+    "rest": "000050001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 324,
+    "price": 2100,
+    "hold_effect": 145,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 31,
+    "rest": "000032001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 325,
+    "price": 2100,
+    "hold_effect": 146,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 107,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 326,
+    "price": 2100,
+    "hold_effect": 67,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 105,
+    "rest": "000050001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 327,
+    "price": 2100,
+    "hold_effect": 56,
+    "amount": 10,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 106,
+    "rest": "001a1e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 328,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 329,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 1,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 330,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 2,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 331,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 3,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 332,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 4,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 333,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 5,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 334,
+    "price": 50000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 6,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 335,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 7,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 336,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 8,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 337,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 9,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 338,
+    "price": 50000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 10,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 339,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 11,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 340,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 12,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 341,
+    "price": 70000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 13,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 342,
+    "price": 90000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 14,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 343,
+    "price": 30000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 15,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 344,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 16,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 345,
+    "price": 50000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 17,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 346,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 18,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 347,
+    "price": 30000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 19,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 348,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 20,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 349,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 21,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 350,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 22,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 351,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 23,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 352,
+    "price": 70000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 24,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 353,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 25,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 354,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 26,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 355,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 27,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 356,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 28,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 357,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 29,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 358,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 30,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 359,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 31,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 360,
+    "price": 30000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 32,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 361,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 33,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 362,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 34,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 363,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 35,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 364,
+    "price": 50000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 36,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 365,
+    "price": 70000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 37,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 366,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 38,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 367,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 39,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 368,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 40,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 369,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 41,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 370,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 42,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 371,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 43,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 372,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 44,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 373,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 45,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 374,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 46,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 375,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 47,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 376,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 48,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 377,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 49,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 378,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 50,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 379,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 51,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 380,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 52,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 381,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 53,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 382,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 54,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 383,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 55,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 384,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 56,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 385,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 57,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 386,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 58,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 387,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 59,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 388,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 60,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 389,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 61,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 390,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 62,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 391,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 63,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 392,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 64,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 393,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 65,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 394,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 66,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 395,
+    "price": 90000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 67,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 396,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 68,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 397,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 69,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 398,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 70,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 399,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 71,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 400,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 72,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 401,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 73,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 402,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 74,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 403,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 75,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 404,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 76,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 405,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 77,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 406,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 78,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 407,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 79,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 408,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 80,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 409,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 81,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 410,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 82,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 411,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 83,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 412,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 84,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 413,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 85,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 414,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 86,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 415,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 87,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 416,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 88,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 417,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 89,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 418,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 90,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 419,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 91,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 420,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 95,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 421,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 96,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 422,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 97,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 423,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 98,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 424,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 99,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 425,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 426,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 39,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 427,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 40,
+    "rest": "0000000000000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 428,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 429,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 430,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 431,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 432,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 433,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 434,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 435,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 436,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 437,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "pal_pad",
+    "use_class": 0,
+    "kind_index": 5,
+    "rest": "000000007f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 438,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 439,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 440,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 441,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 442,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "town_map",
+    "use_class": 0,
+    "kind_index": 3,
+    "rest": "000000007f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 443,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 444,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 445,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 446,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000100000000000000000000000000000000000000"
+  },
+  {
+    "index": 447,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "super_rod",
+    "use_class": 0,
+    "kind_index": 1,
+    "rest": "000000007f020000000200000000000000000000000000000000000000"
+  },
+  {
+    "index": 448,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 449,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 450,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "bicycle",
+    "use_class": 0,
+    "kind_index": 0,
+    "rest": "000000007f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 451,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 452,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 453,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 454,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 455,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 456,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 457,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 458,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 459,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 460,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 461,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 462,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 463,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 464,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 465,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "vs_recorder",
+    "use_class": 0,
+    "kind_index": 4,
+    "rest": "000000007f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 466,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "gracidea",
+    "use_class": 0,
+    "kind_index": 6,
+    "rest": "000000007f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 467,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 468,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 469,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 470,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 471,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "dowsing_machine",
+    "use_class": 0,
+    "kind_index": 2,
+    "rest": "000000007f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 472,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 473,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 474,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 475,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 476,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 477,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 478,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 479,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 480,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 481,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 482,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 483,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 484,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 485,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 56,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 486,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 7,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 487,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 84,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 488,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 21,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 489,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 52,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 490,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 81,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 491,
+    "price": 20,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 6,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 492,
+    "price": 300,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 50,
+    "rest": "000000001f000100001000000000000000000000000000000000000000"
+  },
+  {
+    "index": 493,
+    "price": 300,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 50,
+    "rest": "000000001f000100001100000000000000000000000000000000000000"
+  },
+  {
+    "index": 494,
+    "price": 300,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 50,
+    "rest": "000000001f000100001200000000000000000000000000000000000000"
+  },
+  {
+    "index": 495,
+    "price": 300,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 50,
+    "rest": "000000001f000100001300000000000000000000000000000000000000"
+  },
+  {
+    "index": 496,
+    "price": 300,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 50,
+    "rest": "000000001f000100001400000000000000000000000000000000000000"
+  },
+  {
+    "index": 497,
+    "price": 300,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 50,
+    "rest": "000000001f000100001500000000000000000000000000000000000000"
+  },
+  {
+    "index": 498,
+    "price": 300,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 50,
+    "rest": "000000001f000100001600000000000000000000000000000000000000"
+  },
+  {
+    "index": 499,
+    "price": 300,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 50,
+    "rest": "000000001f000100001700000000000000000000000000000000000000"
+  },
+  {
+    "index": 500,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 50,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 501,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 502,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 503,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 504,
+    "price": 300,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 40,
+    "rest": "00001e009f200201000000000000040000000000000014000000000000"
+  },
+  {
+    "index": 505,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 506,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 507,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 508,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 509,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 510,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 511,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 512,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 513,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 514,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 515,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 516,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 517,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 518,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 519,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 520,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 521,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 522,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 523,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 524,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 525,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 526,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 527,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 528,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 529,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 530,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 531,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 100,
+    "rest": "000000001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 532,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 533,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 13,
+    "rest": "000000003f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 534,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 535,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 536,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 100,
+    "rest": "000000001f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 537,
+    "price": 500,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 54,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 538,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 37,
+    "rest": "000028001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 539,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 45,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 540,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 6,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 113,
+    "rest": "00003c001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 541,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 2,
+    "rest": "00000a001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 542,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 108,
+    "rest": "00000a001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 543,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 110,
+    "rest": "00000a001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 544,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 5,
+    "rest": "00001e001f000000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 545,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 0,
+    "rest": "00001e001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 546,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 13,
+    "rest": "00001e001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 547,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 33,
+    "rest": "00001e001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 548,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 41,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 549,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 141,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 550,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 35,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 551,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 51,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 552,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 58,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 553,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 40,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 554,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 92,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 555,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 55,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 556,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 46,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 557,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 101,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 558,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 11,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 559,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 111,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 560,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 50,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 561,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 28,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 562,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 21,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 563,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 132,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 564,
+    "price": 200,
+    "hold_effect": 147,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 1,
+    "kind_index": 88,
+    "rest": "000000001f000000010000000000000000000000000000000000000000"
+  },
+  {
+    "index": 565,
+    "price": 3000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 57,
+    "rest": "000014009f000001000000000000081e01000000000000000302010000"
+  },
+  {
+    "index": 566,
+    "price": 3000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 58,
+    "rest": "000014009f000001000000000000101e00010000000000000302010000"
+  },
+  {
+    "index": 567,
+    "price": 3000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 59,
+    "rest": "000014009f000001000000000000201e00000100000000000302010000"
+  },
+  {
+    "index": 568,
+    "price": 3000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 60,
+    "rest": "000014009f000001000000000000801e00000000010000000302010000"
+  },
+  {
+    "index": 569,
+    "price": 3000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 61,
+    "rest": "000014009f000001000000000000001f00000000000100000302010000"
+  },
+  {
+    "index": 570,
+    "price": 3000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 62,
+    "rest": "000014009f000001000000000000401e00000001000000000302010000"
+  },
+  {
+    "index": 571,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 53,
+    "rest": "000014001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 572,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 12,
+    "rest": "000064001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 573,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 51,
+    "rest": "000064001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 574,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 17,
+    "rest": "000000003f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 575,
+    "price": 200,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 48,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 576,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": "ball",
+    "kind_index": 16,
+    "rest": "000000001f080100001800000000000000000000000000000000000000"
+  },
+  {
+    "index": 577,
+    "price": 1000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 10,
+    "rest": "00001e001f100301000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 578,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 8,
+    "rest": "000000003f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 579,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 12,
+    "rest": "000000003f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 580,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 1,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 581,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 3,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 582,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 50,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 583,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 11,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 584,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 60,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 585,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 63,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 586,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 62,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 587,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 65,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 588,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 59,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 589,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 64,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 590,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 2,
+    "kind_index": 61,
+    "rest": "00001e001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 591,
+    "price": 100,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "medicine",
+    "use_class": 0,
+    "kind_index": 30,
+    "rest": "00001e009f400201003f00000000000000000000000000000000000000"
+  },
+  {
+    "index": 592,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000000020000000000000000000000000000000"
+  },
+  {
+    "index": 593,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000002000000000000000000000000000000000"
+  },
+  {
+    "index": 594,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000200000000000000000000000000000000000"
+  },
+  {
+    "index": 595,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000000200000000000000000000000000000000"
+  },
+  {
+    "index": 596,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000020000000000000000000000000000000000"
+  },
+  {
+    "index": 597,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000020000000000000000000000000000000000000"
+  },
+  {
+    "index": 598,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000000002000000000000000000000000000000"
+  },
+  {
+    "index": 599,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000003000000000000000000000000000000000"
+  },
+  {
+    "index": 600,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000300000000000000000000000000000000000"
+  },
+  {
+    "index": 601,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000000300000000000000000000000000000000"
+  },
+  {
+    "index": 602,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000030000000000000000000000000000000000"
+  },
+  {
+    "index": 603,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000030000000000000000000000000000000000000"
+  },
+  {
+    "index": 604,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000000003000000000000000000000000000000"
+  },
+  {
+    "index": 605,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000006000000000000000000000000000000000"
+  },
+  {
+    "index": 606,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000600000000000000000000000000000000000"
+  },
+  {
+    "index": 607,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000000600000000000000000000000000000000"
+  },
+  {
+    "index": 608,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000060000000000000000000000000000000000"
+  },
+  {
+    "index": 609,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000060000000000000000000000000000000000000"
+  },
+  {
+    "index": 610,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000000006000000000000000000000000000000"
+  },
+  {
+    "index": 611,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 612,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 613,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 614,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 615,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 3,
+    "kind_index": 50,
+    "rest": "000000001f000001000000000030000000000000000000000000000000"
+  },
+  {
+    "index": 616,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 9,
+    "rest": "000000003f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 617,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 10,
+    "rest": "000000003f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 618,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 92,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 619,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 93,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 620,
+    "price": 10000,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "machine",
+    "use_class": 0,
+    "kind_index": 94,
+    "rest": "000000003f010000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 621,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 7,
+    "rest": "000000003f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 622,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 11,
+    "rest": "000000003f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 623,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 14,
+    "rest": "000000003f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 624,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 15,
+    "rest": "000000003f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 625,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 16,
+    "rest": "000000003f020000000000000000000000000000000000000000000000"
+  },
+  {
+    "index": 626,
+    "price": 0,
+    "hold_effect": 0,
+    "amount": 0,
+    "field_use": "none",
+    "use_class": 0,
+    "kind_index": 7,
+    "rest": "000000003f020000000000000000000000000000000000000000000000"
+  }
+]

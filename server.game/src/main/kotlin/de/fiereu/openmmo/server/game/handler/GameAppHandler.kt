@@ -15,6 +15,7 @@ import de.fiereu.openmmo.net.game.packets.CreateCharacterPacket
 import de.fiereu.openmmo.net.game.packets.DeleteCharacterPacket
 import de.fiereu.openmmo.net.game.packets.DialogChoicePacket
 import de.fiereu.openmmo.net.game.packets.EntityInteractPacket
+import de.fiereu.openmmo.net.game.packets.ExchangeItemRequestPacket
 import de.fiereu.openmmo.net.game.packets.FaceDirectionPacket
 import de.fiereu.openmmo.net.game.packets.JoinPacket
 import de.fiereu.openmmo.net.game.packets.KeepAlivePacket
@@ -26,6 +27,7 @@ import de.fiereu.openmmo.net.game.packets.RequestCharactersPacket
 import de.fiereu.openmmo.net.game.packets.RequestPlayerPacket
 import de.fiereu.openmmo.net.game.packets.RequestSocialProfilePacket
 import de.fiereu.openmmo.net.game.packets.SelectCharacterPacket
+import de.fiereu.openmmo.net.game.packets.ShopSellRequestPacket
 import de.fiereu.openmmo.net.game.packets.TileInteractPacket
 import de.fiereu.openmmo.net.game.packets.UnblockPlayerPacket
 import de.fiereu.openmmo.net.game.packets.battle.BattleActionPacket
@@ -69,6 +71,7 @@ import de.fiereu.openmmo.server.game.services.LoginService
 import de.fiereu.openmmo.server.game.services.MovementService
 import de.fiereu.openmmo.server.game.services.MultiplayerService
 import de.fiereu.openmmo.server.game.services.PresenceService
+import de.fiereu.openmmo.server.game.services.ShopService
 import de.fiereu.openmmo.server.game.services.SocialService
 import de.fiereu.openmmo.server.game.services.command.ChatCommandService
 import de.fiereu.openmmo.server.game.session.PLAYER_STATE
@@ -95,6 +98,7 @@ constructor(
     private val guildService: GuildService,
     private val battleService: BattleService,
     private val chatCommandService: ChatCommandService,
+    private val shopService: ShopService,
     private val scriptRunner: ScriptRunner,
     private val sessionRegistry: SessionRegistry,
     private val characterStore: CharacterStore,
@@ -116,6 +120,8 @@ constructor(
     onSuspend<TileInteractPacket> { event -> interactionService.onTileInteract(event) }
     onSuspend<DialogActionResponsePacket> { event -> dialogService.onInteractive(event) }
     onSuspend<DialogChoicePacket> { event -> dialogService.onDialogChoice(event) }
+    onSuspend<ExchangeItemRequestPacket> { event -> shopService.onBuy(event) }
+    onSuspend<ShopSellRequestPacket> { event -> shopService.onSell(event) }
 
     on<AddFriendPacket> { event -> socialService.onAddFriend(event) }
     on<RemoveFriendPacket> { event -> socialService.onRemoveFriend(event) }

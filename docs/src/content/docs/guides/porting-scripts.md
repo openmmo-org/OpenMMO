@@ -67,12 +67,18 @@ end of your function.
 | `warp MAP, x, y` | `ctx.warp(region, bank, map, x, y, facing)` |
 | `setdynamicwarp ...` | `ctx.setDynamicWarp(region, bank, map, x, y, facing)` |
 
-Item ids come from the generated `Items` object, never a raw number:
-`ctx.giveItem(Items.POKE_BALL, 5)`. It is generated from the decomp item header,
-so every item the games know about is in it. The client keys an item by
-`regionId * 1000 + itemId` and holds one item table per region, so the ids in
-`Items` sit in the region whose table matches the decomp numbering. Sending the
-same number under another region reaches a different item entirely.
+Items are named, never numbered: `ctx.giveItem(Items.POKE_BALL, 5)`. A value in
+the generated `Items` object is an identity rather than an id, and `ItemRegistry`
+maps it to the ids the wire uses, so a script never sees a number and an item
+listed twice in the client's table still resolves. Services translate at the
+point they build a packet.
+
+`Items` is generated from the Gen 5 table the live client speaks, so it holds
+what the client can actually show. An item the decomp has and the client does not
+is simply absent, and naming it fails the build rather than handing the player
+something that arrives as another item or as nothing. The Teachy TV in Viridian
+City is the case that came up first. Where the decomp's item does not exist,
+drop the reward and say so, rather than substituting a different one.
 
 `ctx.warp` continues into the destination map's ON_TRANSITION and ON_FRAME
 scripts on the same coroutine, exactly the way the decomp's `warp` does, so a

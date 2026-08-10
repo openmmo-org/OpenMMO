@@ -1,15 +1,17 @@
 @import java.util.List
 @import de.fiereu.openmmo.codegen.item.ParsedItem
+@import de.fiereu.openmmo.codegen.item.RenderUtil
 
 @param List<ParsedItem> items
 package de.fiereu.openmmo.items.generated
 
-/**
- * Item ids the client uses, already carrying the region prefix of the decomp they were read from.
- * Generated from the GBA decomp item header, do not edit by hand.
- */
+import de.fiereu.openmmo.items.ItemDef
+
+/** Generated, do not edit by hand. The KDoc on an entry is the wire ids it answers to. */
 object Items {
 @for(ParsedItem item : items)
-  const val ${item.getName()} = ${item.getId()}
+${RenderUtil.INSTANCE.declaration(item)}
 @endfor
+
+  private fun item(name: String, price: Int) = ItemDef(name, price)
 }

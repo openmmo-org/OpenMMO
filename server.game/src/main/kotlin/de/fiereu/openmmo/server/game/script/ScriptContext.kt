@@ -5,6 +5,7 @@ import de.fiereu.openmmo.common.DynamicWarp
 import de.fiereu.openmmo.common.dialog.DialogLine
 import de.fiereu.openmmo.common.enums.Direction
 import de.fiereu.openmmo.common.enums.Region
+import de.fiereu.openmmo.items.ItemDef
 import de.fiereu.openmmo.maps.MapManager
 import de.fiereu.openmmo.net.game.packets.dialog.TextPokemonSpeciesArg
 import de.fiereu.openmmo.server.game.battle.BattleResult
@@ -14,6 +15,7 @@ import de.fiereu.openmmo.server.game.services.DialogService
 import de.fiereu.openmmo.server.game.services.MapEntryScripts
 import de.fiereu.openmmo.server.game.services.ScriptMovementService
 import de.fiereu.openmmo.server.game.services.ScriptWarpService
+import de.fiereu.openmmo.server.game.services.ShopService
 import de.fiereu.openmmo.server.game.services.StoryClientState
 import de.fiereu.openmmo.server.game.services.StoryPlayerService
 import de.fiereu.openmmo.server.game.services.StoryService
@@ -36,6 +38,7 @@ internal constructor(
     internal val characters: CharacterStore? = null,
     private val maps: MapManager? = null,
     private val entryScripts: MapEntryScripts? = null,
+    private val shops: ShopService? = null,
 ) {
   private val characterId: Long?
     get() = state.characterId
@@ -135,11 +138,18 @@ internal constructor(
 
   fun healParty() = checkNotNull(player) { STORY_PLAYER_UNAVAILABLE }.healParty(session, state)
 
-  suspend fun giveItem(itemId: Int, quantity: Int = 1): Boolean =
-      checkNotNull(player) { STORY_PLAYER_UNAVAILABLE }.giveItem(session, state, itemId, quantity)
+  suspend fun giveItem(item: ItemDef, quantity: Int = 1): Boolean =
+      checkNotNull(player) { STORY_PLAYER_UNAVAILABLE }.giveItem(session, state, item, quantity)
 
   /** Take an item back out of the bag, the decomp removeitem. False when the bag lacks it. */
-  suspend fun takeItem(itemId: Int, quantity: Int = 1): Boolean = giveItem(itemId, -quantity)
+  suspend fun takeItem(item: ItemDef, quantity: Int = 1): Boolean = giveItem(item, -quantity)
+
+  /**
+   * Opens the mart window on [items], the decomp pokemart. It does not wait: the player shops while
+   * the script ends, because nothing in the capture tells the server when the window closed.
+   */
+  fun pokemart(vararg items: ItemDef) =
+      checkNotNull(shops) { "Shop service is unavailable" }.open(session, entityId, items.toList())
 
   /** Run a non-catchable, non-escapable story battle and wait for its result. */
   suspend fun battle(dexId: Int, level: Int, vararg moveIds: Int): BattleResult =
