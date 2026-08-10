@@ -1,0 +1,48 @@
+name: openmmo-game
+
+services:
+  database:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${GAME_DB_NAME:-openmmo_game_db}
+      POSTGRES_USER: ${GAME_DB_USER:-openmmo_game_user}
+      POSTGRES_PASSWORD: ${GAME_DB_PASSWORD:?Set GAME_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - database:/var/lib/postgresql
+
+  server:
+    image: ${OPENMMO_GAME_IMAGE:-ghcr.io/openmmo-org/openmmo-game:dev}
+    pull_policy: always
+    restart: unless-stopped
+    # The shutdown hook flushes characters for up to 10s, which is docker's whole default budget.
+    stop_grace_period: 30s
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      GAME_DB_HOST: database
+      GAME_DB_PORT: 5432
+      GAME_DB_NAME: ${GAME_DB_NAME:-openmmo_game_db}
+      GAME_DB_USER: ${GAME_DB_USER:-openmmo_game_user}
+      GAME_DB_PASSWORD: ${GAME_DB_PASSWORD:?Set GAME_DB_PASSWORD}
+      GAME_DB_SEED_DEV: ${GAME_DB_SEED_DEV:-false}
+      OPENMMO_SESSION_SECRET: ${OPENMMO_SESSION_SECRET:?Set OPENMMO_SESSION_SECRET}
+      OPENMMO_GAME_PRIVATE_KEY_FILE: /run/secrets/game.private.pem
+    ports:
+      - "7777:7777/tcp"
+    secrets:
+      - source: game_private_key
+        target: game.private.pem
+
+secrets:
+  game_private_key:
+    file: ${OPENMMO_GAME_PRIVATE_KEY_PATH:?Set OPENMMO_GAME_PRIVATE_KEY_PATH}
+
+volumes:
+  database:

@@ -6,6 +6,7 @@ import de.fiereu.openmmo.common.hasPermission
 import de.fiereu.openmmo.server.game.config.ConfigLoader
 import de.fiereu.openmmo.server.game.testsupport.FakeCharacterRepository
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -13,7 +14,18 @@ import kotlinx.coroutines.test.runTest
 @OptIn(ExperimentalCoroutinesApi::class)
 class DevCharacterSeederTest :
     FunSpec({
-      val config = ConfigLoader.load()
+      val loaded = ConfigLoader.load()
+      val config = loaded.copy(db = loaded.db.copy(seedDev = true))
+
+      test("the shipped config does not seed, whatever the caller does") {
+        runTest {
+          val store = CharacterStore(FakeCharacterRepository(), EntityIdService(), backgroundScope)
+
+          DevCharacterSeeder(store, loaded).seed()
+
+          store.getCharactersByUser(1).shouldBeEmpty()
+        }
+      }
 
       test("seeds one developer character per region on its new game start") {
         runTest {
