@@ -4,6 +4,7 @@ import de.fiereu.openmmo.launcher.client.ManagedInstall
 import de.fiereu.openmmo.launcher.client.RemoteFile
 import de.fiereu.openmmo.launcher.client.UpdateFeed
 import de.fiereu.openmmo.launcher.client.sha256
+import de.fiereu.openmmo.launcher.parseHexBytes
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -123,6 +124,42 @@ class PatchEngineTest :
                         "PokeMMO.exe", "Key", "loginserver.pokemmo.com", replaceRef = "absent")))
 
         shouldThrow<PatchFailedException> { PatchEngine(install).apply(manifest, feed) }
+      }
+
+      test("rewrites the bytes a signature points at and leaves the rest of the match alone") {
+        val (install, feed) = setup()
+        val code = parseHexBytes("CC 83 7A 20 03 75 1F E8 44 33 22 11 90 41 83 7F 10 00 CC")
+        Files.write(install.resolve("PokeMMO.exe"), code)
+        val manifest =
+            PatchManifest(
+                32763,
+                listOf(
+                    BinarySignaturePatch(
+                        "PokeMMO.exe",
+                        "SkipCall",
+                        signature = "83 7A 20 03 75 ?? E8 ?? ?? ?? ?? 90 41 83 7F 10 00",
+                        replace = "B8 01 00 00 00",
+                        offset = 6,
+                    )))
+
+        val tree = PatchEngine(install).apply(manifest, feed)
+
+        Files.readAllBytes(install.runtime.resolve("PokeMMO.exe")) shouldBe
+            parseHexBytes("CC 83 7A 20 03 75 1F B8 01 00 00 00 90 41 83 7F 10 00 CC")
+        Files.readAllBytes(install.resolve("PokeMMO.exe")) shouldBe code
+        tree.files["PokeMMO.exe"] shouldBe Origin.PATCHED
+      }
+
+      test("fails loudly when a signature no longer matches") {
+        val (install, feed) = setup()
+        Files.write(install.resolve("PokeMMO.exe"), parseHexBytes("CC CC CC CC"))
+        val manifest =
+            PatchManifest(
+                32763, listOf(BinarySignaturePatch("PokeMMO.exe", "Gone", "83 7A ?? 03", "90 90")))
+
+        val error = shouldThrow<PatchFailedException> { PatchEngine(install).apply(manifest, feed) }
+
+        error.message shouldContain "found nothing to replace"
       }
 
       test("adds strings without disturbing the ones already there") {

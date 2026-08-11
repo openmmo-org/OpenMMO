@@ -1,6 +1,9 @@
 package de.fiereu.openmmo.launcher.patch
 
+import de.fiereu.openmmo.launcher.BytePattern
+import de.fiereu.openmmo.launcher.ClientPatcher
 import de.fiereu.openmmo.launcher.client.FeedParser
+import de.fiereu.openmmo.launcher.parseHexBytes
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
@@ -23,6 +26,16 @@ sealed interface Patch {
   fun validate()
 }
 
+/** Shared by the patches that replace bytes in a file, however they find them. */
+interface BinaryPatch {
+  val target: String
+
+  val name: String
+
+  /** [values] holds what is only known at apply time, such as a generated key. */
+  fun compile(values: Map<String, String>): ClientPatcher.Patch
+}
+
 // [replaceRef] names a value supplied at apply time, such as a generated key.
 @Serializable
 @SerialName("binary_string")
@@ -32,7 +45,7 @@ data class BinaryStringPatch(
     val find: String,
     val replace: String? = null,
     @SerialName("replace_ref") val replaceRef: String? = null,
-) : Patch {
+) : Patch, BinaryPatch {
   override fun validate() {
     require((replace == null) != (replaceRef == null)) {
       "$name needs exactly one of replace or replace_ref"
@@ -41,6 +54,35 @@ data class BinaryStringPatch(
       "$name replaces ${find.length} characters with ${replace?.length}"
     }
   }
+
+  override fun compile(values: Map<String, String>): ClientPatcher.Patch {
+    val replacement =
+        replace
+            ?: requireNotNull(replaceRef?.let(values::get)) {
+              "$name needs a value for $replaceRef"
+            }
+    return ClientPatcher.Patch.ofText(name, find, replacement)
+  }
+}
+
+// Finds code, which has no constant to search for. [signature] locates the site, "??" matching any
+// byte, and only [replace] is written, [offset] bytes into the match.
+@Serializable
+@SerialName("binary_signature")
+data class BinarySignaturePatch(
+    override val target: String,
+    override val name: String,
+    val signature: String,
+    val replace: String,
+    val offset: Int = 0,
+) : Patch, BinaryPatch {
+  // Building the patch checks the hex and that the replacement fits.
+  override fun validate() {
+    compile(emptyMap())
+  }
+
+  override fun compile(values: Map<String, String>): ClientPatcher.Patch =
+      ClientPatcher.Patch(name, BytePattern.parse(signature), parseHexBytes(replace), offset)
 }
 
 // Adds entries to data/strings/strings_*.xml.
@@ -83,6 +125,7 @@ object PatchManifestParser {
     serializersModule = SerializersModule {
       polymorphic(Patch::class) {
         subclass(BinaryStringPatch::class)
+        subclass(BinarySignaturePatch::class)
         subclass(StringsPatch::class)
         subclass(FilePatch::class)
       }

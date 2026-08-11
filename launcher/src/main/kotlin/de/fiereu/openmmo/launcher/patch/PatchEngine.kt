@@ -115,22 +115,20 @@ class PatchEngine(
   private fun run(patch: Patch, bytes: ByteArray): ByteArray =
       when (patch) {
         is BinaryStringPatch -> applyBinary(patch, bytes)
+        is BinarySignaturePatch -> applyBinary(patch, bytes)
         is StringsPatch -> applyStrings(patch, bytes)
         is FilePatch -> applyFile(patch)
       }
 
-  private fun applyBinary(patch: BinaryStringPatch, bytes: ByteArray): ByteArray {
-    val replacement =
-        patch.replace
-            ?: values[patch.replaceRef]
-            ?: throw PatchFailedException("${patch.name} needs a value for ${patch.replaceRef}")
-    if (replacement.length != patch.find.length) {
-      throw PatchFailedException(
-          "${patch.name} replaces ${patch.find.length} characters with ${replacement.length}")
-    }
+  private fun applyBinary(patch: BinaryPatch, bytes: ByteArray): ByteArray {
+    val single =
+        try {
+          patch.compile(values)
+        } catch (e: IllegalArgumentException) {
+          throw PatchFailedException(e.message ?: "${patch.name} cannot be applied")
+        }
 
     val copy = bytes.copyOf()
-    val single = ClientPatcher.Patch(patch.name, patch.find, replacement)
     val matches = ClientPatcher(listOf(single)).apply(copy).getValue(single)
     if (matches == 0) {
       throw PatchFailedException("${patch.name} found nothing to replace in ${patch.target}")

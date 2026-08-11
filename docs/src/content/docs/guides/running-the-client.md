@@ -75,6 +75,28 @@ stores the length of every string separately, so a longer one cannot fit and a
 shorter one leaves rubbish behind. For a url you can pad the end with `?xxx`,
 which servers ignore.
 
+### Patching code
+
+Code has no constant to search for, so `binary_signature` finds it by the bytes
+around it instead. `??` matches any byte, which lets a signature keep working
+when operands move between builds:
+
+```toml
+[[patches]]
+type = "binary_signature"
+name = "SkipCall"
+target = "@client"
+signature = "83 7A 20 03 75 ?? E8 ?? ?? ?? ?? 90 41 83 7F 10 00"
+offset = 6
+replace = "B8 01 00 00 00"
+```
+
+`offset` counts from the start of the match, so this one overwrites the five
+bytes of `E8 ?? ?? ?? ??` and leaves the rest of the signature alone. It defaults
+to `0`. The replacement has to fit inside the match, because the file is patched
+in place and nothing may move. Every match is replaced, as with a string patch,
+so a signature has to be narrow enough to name one site.
+
 Two other patch types exist. `strings` adds lines to `data/strings/strings_*.xml`
 using ids from 1000000000 up, which is above anything PokeMMO uses. `file` writes
 a whole file from an asset next to the manifest.

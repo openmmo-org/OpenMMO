@@ -36,6 +36,14 @@ class PatchManifestParserTest :
                 replace_ref = "key.game.public"
 
                 [[patches]]
+                type = "binary_signature"
+                name = "Call"
+                target = "@client"
+                signature = "83 7A 20 03 75 ?? E8 ?? ?? ?? ?? 90 41 83 7F 10 00"
+                offset = 6
+                replace = "B8 01 00 00 00"
+
+                [[patches]]
                 type = "strings"
                 name = "Branding"
                 target = "data/strings/strings_en.xml"
@@ -50,11 +58,69 @@ class PatchManifestParserTest :
                 """)
 
         parsed.revision shouldBe 32763
-        parsed.patches.size shouldBe 4
+        parsed.patches.size shouldBe 5
         (parsed.patches[0] as BinaryStringPatch).replace shouldBe "bbbb"
         (parsed.patches[1] as BinaryStringPatch).replaceRef shouldBe "key.game.public"
-        (parsed.patches[2] as StringsPatch).strings shouldBe mapOf(1000000000 to "OpenMMO")
-        (parsed.patches[3] as FilePatch).source shouldBe "mod.zip"
+        (parsed.patches[2] as BinarySignaturePatch).offset shouldBe 6
+        (parsed.patches[2] as BinarySignaturePatch).replace shouldBe "B8 01 00 00 00"
+        (parsed.patches[3] as StringsPatch).strings shouldBe mapOf(1000000000 to "OpenMMO")
+        (parsed.patches[4] as FilePatch).source shouldBe "mod.zip"
+      }
+
+      test("a signature patch overwrites the match from its start by default") {
+        val parsed =
+            manifest(
+                """
+                [[patches]]
+                type = "binary_signature"
+                name = "Nop"
+                target = "@client"
+                signature = "E8 ?? ?? ?? ??"
+                replace = "90 90 90 90 90"
+                """)
+
+        (parsed.patches[0] as BinarySignaturePatch).offset shouldBe 0
+      }
+
+      test("rejects a signature patch that would write past what it matched") {
+        shouldThrowAny {
+          manifest(
+              """
+              [[patches]]
+              type = "binary_signature"
+              name = "N"
+              target = "@client"
+              signature = "83 7A 20 03 75 ?? E8 ?? ?? ?? ??"
+              offset = 6
+              replace = "B8 01 00 00 00 00"
+              """)
+        }
+      }
+
+      test("rejects a signature or a replacement that is not hex") {
+        shouldThrowAny {
+          manifest(
+              """
+              [[patches]]
+              type = "binary_signature"
+              name = "N"
+              target = "@client"
+              signature = "83 7A ZZ"
+              replace = "90"
+              """)
+        }
+        // A wildcard does not say what to write, so a replacement may not hold one.
+        shouldThrowAny {
+          manifest(
+              """
+              [[patches]]
+              type = "binary_signature"
+              name = "N"
+              target = "@client"
+              signature = "83 7A 20"
+              replace = "90 ??"
+              """)
+        }
       }
 
       test("keeps a value that another format might coerce") {

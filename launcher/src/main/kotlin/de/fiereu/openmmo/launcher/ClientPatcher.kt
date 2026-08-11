@@ -1,17 +1,41 @@
 package de.fiereu.openmmo.launcher
 
 /**
- * Replaces string constants inside the PokeMMO executable.
+ * Replaces bytes inside the PokeMMO executable.
  *
- * The image heap stores strings as Latin-1 bytes with a separate length field, so a replacement has
- * to be exactly as long as the original.
+ * The file is patched in place, so a replacement has to fit inside what the pattern matched.
  */
 class ClientPatcher(private val patches: List<Patch>) {
 
-  data class Patch(val name: String, val original: String, val replacement: String) {
+  /** Writes [replacement] [offset] bytes into every match of [pattern]. */
+  class Patch(
+      val name: String,
+      val pattern: BytePattern,
+      val replacement: ByteArray,
+      val offset: Int = 0,
+  ) {
     init {
-      require(original.length == replacement.length) {
-        "$name: replacement is ${replacement.length} chars but the original is ${original.length}"
+      require(offset >= 0) { "$name: offset $offset starts before the match" }
+      require(replacement.isNotEmpty()) { "$name: replaces nothing" }
+      require(offset + replacement.size <= pattern.size) {
+        "$name: writes ${replacement.size} bytes at offset $offset, " +
+            "past the ${pattern.size} the pattern matched"
+      }
+    }
+
+    companion object {
+      /**
+       * Matches a string literal.
+       *
+       * Strings carry their length in a separate field, so a replacement has to be exactly as long
+       * as the original.
+       */
+      fun ofText(name: String, original: String, replacement: String): Patch {
+        require(original.length == replacement.length) {
+          "$name: replacement is ${replacement.length} chars but the original is ${original.length}"
+        }
+        return Patch(
+            name, BytePattern.ofText(original), replacement.toByteArray(Charsets.ISO_8859_1))
       }
     }
   }
@@ -20,24 +44,17 @@ class ClientPatcher(private val patches: List<Patch>) {
   fun apply(bytes: ByteArray): Map<Patch, Int> = patches.associateWith { replaceAll(bytes, it) }
 
   private fun replaceAll(bytes: ByteArray, patch: Patch): Int {
-    val pattern = patch.original.toByteArray(Charsets.ISO_8859_1)
-    val replacement = patch.replacement.toByteArray(Charsets.ISO_8859_1)
     var count = 0
     var offset = 0
-    while (offset <= bytes.size - pattern.size) {
-      if (matchesAt(bytes, offset, pattern)) {
-        replacement.copyInto(bytes, offset)
-        offset += pattern.size
+    while (offset <= bytes.size - patch.pattern.size) {
+      if (patch.pattern.matchesAt(bytes, offset)) {
+        patch.replacement.copyInto(bytes, offset + patch.offset)
+        offset += patch.pattern.size
         count++
       } else {
         offset++
       }
     }
     return count
-  }
-
-  private fun matchesAt(bytes: ByteArray, offset: Int, pattern: ByteArray): Boolean {
-    for (i in pattern.indices) if (bytes[offset + i] != pattern[i]) return false
-    return true
   }
 }
