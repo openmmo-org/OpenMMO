@@ -1,0 +1,19 @@
+revision = 32824
+
+# Client tweaks for revision 32824.
+
+[[patches]]
+type = "binary_signature"
+name = "KickingOutRotom"
+target = "@client"
+signature = "83 7A 20 03 75 ?? E8 ?? ?? ?? ?? 90 41 83 7F 10 00"
+offset = 6
+replace = "B8 01 00 00 00"
+
+[[patches]]
+type = "binary_signature"
+name = "ShooingTheZubats"
+target = "@client"
+signature = "83 7A 20 03 75 ?? 85 FF 0F 8C ?? ?? ?? ?? 41 3B 78 0C 0F 8F ?? ?? ?? ?? 41 B9 00 00 00 00 E8 ?? ?? ?? ?? 90"
+offset = 30
+replace = "B8 01 00 00 00"
