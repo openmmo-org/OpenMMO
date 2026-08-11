@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<main_feed>
+  <ip>loginserver.pokemmo.com</ip>
+  <ip_cn>loginserver.cn.pokemmo.com</ip_cn>
+  <port>2106</port>
+  <revision>32763</revision>
+  <min_revision>32763</min_revision>
+  <min_ipa_revision>32707</min_ipa_revision>
+  <updater_location>https://dl.pokemmo.com/live/current/updater/pokemmo_updater.jar</updater_location>
+  <updater_location>https://files.pokemmo.com/live/current/updater/pokemmo_updater.jar</updater_location>
+  <updater_hash_sha256>ab69929d7c9c77e528baae2b8d9ccd0400ae0a2a83cbd060cf0bae7320507d63</updater_hash_sha256>
+  <updaters>
+    <base_location>https://dl.pokemmo.com/live/current/updater/</base_location>
+    <base_location>https://files.pokemmo.com/live/current/updater/</base_location>
+    <updater arch="x64" name="PokeMMO-Updater.exe" os="windows" sha256="abd893da2634fdc944f870048a85e6994661b912a8291e0e7732240bf50a36e2" size="43095088"/>
+    <updater arch="x64" name="PokeMMO-Updater" os="linux" sha256="de80a228f8f8f2da85a319a796699270f6c18dc0f83d3617cab07b7571838787" size="45484296"/>
+    <updater arch="arm64" name="PokeMMO-Updater" os="linux" sha256="72a4ada1b05d348fa4881dac2675dd5c23251919703d91009895e485453a508d" size="46663800"/>
+    <updater arch="x64" name="PokeMMO-Updater" os="macos" sha256="7357571839c075f722526f3aa55541de69bd04b5056655a4e31bce657e8ed6be" size="42258224"/>
+    <updater arch="arm64" name="PokeMMO-Updater" os="macos" sha256="b125c1e6fff4936b6f1a8f26a4127e773356c91bd19afefecf12fcaa478d20d7" size="43779176"/>
+    <updater arch="arm32" name="PokeMMO-Updater" os="android" sha256="deadbeefcafebabedeadbeefcafebabedeadbeefcafebabedeadbeefcafebabe" size="69420"/>
+    <updater arch="arm64" name="PokeMMO-Updater" os="android" sha256="deadbeefcafebabedeadbeefcafebabedeadbeefcafebabedeadbeefcafebabe" size="69420"/>
+  </updaters>
+  <android_apk_location>https://dl.pokemmo.com/live/current/PokeMMO-Client.apk</android_apk_location>
+  <android_apk_location>https://files.pokemmo.com/live/current/PokeMMO-Client.apk</android_apk_location>
+  <android_apk_sha256>0c12d65064980d03675c2187e693529f6a8daeb5d6622f4b1ec74077a89c6072</android_apk_sha256>
+  <android_apk_size>96729399</android_apk_size>
+  <android_patches>
+    <base_location>https://dl.pokemmo.com/live/current/patches/</base_location>
+    <base_location>https://files.pokemmo.com/live/current/patches/</base_location>
+    <patch name="apk-32710-32763.apd" r="32710" sha256="20af40373ac6fa952186e8c0d578b6bb82bfb8635450fec500e59b2115b1a4fd" size="2033063"/>
+    <patch name="apk-32762-32763.apd" r="32762" sha256="939a08ad3c43e21acc3e64f6e60189bb84ad30897bc30dddc5838c287de1c095" size="1795926"/>
+    <patch name="apk-32626-32763.apd" r="32626" sha256="96891e81c506350a53c49137920ce9e025412c56e5d45d161830e8507068bcb2" size="7415362"/>
+    <patch name="apk-32616-32763.apd" r="32616" sha256="1e208c1672a23fb94fd6d78da9eee294153f0587f20ce845097b6f7292437679" size="7445100"/>
+    <patch name="apk-32637-32763.apd" r="32637" sha256="f3f6dde7f33eba47fc8b7007d1de545a6bf5608c3a77cd36b87f5fc6b6161082" size="7509342"/>
+    <patch name="apk-32645-32763.apd" r="32645" sha256="27e233ce701a5bb64cdfc3780aa538867e76ee0dd8e9246467f88d30d2628735" size="7424144"/>
+    <patch name="apk-32707-32763.apd" r="32707" sha256="22d9e66e7c12455e73b9b8303d67fa0454e979835b691ee73ca38857fcaa10be" size="2066064"/>
+    <patch name="apk-32661-32763.apd" r="32661" sha256="c2ce9fbdc0a745d0893d2b92f686d5a5b9eaca4720ef2c71a2305d392364be27" size="7416803"/>
+    <patch_bsd name="apk-32616-32763.bsd" r="32616" sha256="b313759e21ada3f0248607c1b26f18de85a204484e5b36f8c97748f592d95f99" size="11338710"/>
+    <patch_bsd name="apk-32626-32763.bsd" r="32626" sha256="8b0443cb10da2a7add477f93ddacbb7f5291f78a37deb3010843c1588668bcff" size="11282409"/>
+    <patch_bsd name="apk-32762-32763.bsd" r="32762" sha256="d058c7087c2d81abc3bdcd67941a0b70156e0b23217a9aa80e8c4d756e7f3c76" size="5108832"/>
+    <patch_bsd name="apk-32710-32763.bsd" r="32710" sha256="2ce81ecd09fcb60c3fcc89710b49c92973a928a473d44188576fc7c927bbf4ba" size="5602598"/>
+    <patch_bsd name="apk-32707-32763.bsd" r="32707" sha256="d5548ee9d4c84f6c4e19ece1cc483e7750d58980bdfeb23e202accf2cc7ae242" size="5710781"/>
+    <patch_bsd name="apk-32661-32763.bsd" r="32661" sha256="59c65056ee3b8601660bedf785f581b44f56bb420c21a4690c40dc89724b706d" size="11286211"/>
+    <patch_bsd name="apk-32637-32763.bsd" r="32637" sha256="805f39bc955b9b9a2b58a98728ae0c6754b99fec8b31abf2ab82e58d83596db0" size="11340810"/>
+    <patch_bsd name="apk-32645-32763.bsd" r="32645" sha256="120fb301669f799d09d0832f5be0ba0ad1735158b641294a9f9a7e8926830373" size="11299834"/>
+  </android_patches>
+</main_feed>

@@ -41,12 +41,20 @@ A dialog id is a file offset into the retail GBA ROM. The decomp is byte-identic
 to it, so the generator encodes a text from the decomp, finds those bytes in the
 ROM, and packs the offset into the id. The decomp alone has no offsets.
 
-Put the Emerald (`BPEE`, Hoenn) and FireRed (`BPRE`, Kanto) ROMs in `roms/`.
-Filenames do not matter, each is identified by the game code in its GBA header.
-The folder is **gitignored**, this project ships no ROMs.
+Resolving them needs the retail ROMs, so the result is committed instead, one
+file per region under `codegen/dialog/`. The build reads only those, which is
+why CI and the release images get the same dialog as a local build.
 
-Without them the build still succeeds and every dialog id is `0`, so CI passes but
-the client shows the wrong text.
+ROMs are needed only to **change** that table, after a decomp bump renames or
+adds a label. Put the Emerald (`BPEE`) and FireRed (`BPRE`) ROMs in `roms/`,
+which is **gitignored** because this project ships no ROMs, and run:
+
+```bash
+./gradlew :codegen:refreshDialogTable   # then commit codegen/dialog/
+```
+
+Filenames do not matter, each ROM is identified by the game code in its GBA
+header.
 
 ## Configuration
 

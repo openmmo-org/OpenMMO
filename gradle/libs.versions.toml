@@ -22,6 +22,8 @@ typesafe-config = "1.4.9"
 dagger = "2.60.1"
 ksp = "2.3.11"
 ineter = "0.3.1"
+compose = "1.11.1"
+tomlkt = "0.5.0"
 dotenv = "4.0.0"
 
 [libraries]
@@ -62,6 +64,7 @@ dagger = { module = "com.google.dagger:dagger", version.ref = "dagger" }
 dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = "dagger" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 ineter = { module = "com.github.maltalex:ineter", version.ref = "ineter" }
+tomlkt = { module = "net.peanuuutz.tomlkt:tomlkt-jvm", version.ref = "tomlkt" }
 
 [bundles]
 crypto = ["bouncycastle-pkix", "bouncycastle-provider"]
@@ -74,3 +77,5 @@ jooq = { id = "org.jooq.jooq-codegen-gradle", version.ref = "jooq" }
 flyway = { id = "org.flywaydb.flyway", version.ref = "flyway" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 dotenv = { id = "co.uzzu.dotenv.gradle", version.ref = "dotenv" }
+compose = { id = "org.jetbrains.compose", version.ref = "compose" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

@@ -34,8 +34,11 @@ val sourceDecompDir = rootProject.layout.projectDirectory.dir("decomp/pokeemeral
 // from its src/data/items.json and container 54 of its src/data/text1.json.
 val itemDataDir = rootProject.layout.projectDirectory.dir("decomp/pokeblack")
 
-// ROMs (gitignored) that dialog codegen reads offsets from
+// Gitignored, and only the manual refresh tasks read them.
 val romsDir = rootProject.layout.projectDirectory.dir("roms")
+
+// Committed, because a ROM is the only place these ids exist and no runner has one.
+val dialogDataDir = layout.projectDirectory.dir("dialog")
 
 jteCodegen {
   register("maps") {
@@ -95,19 +98,26 @@ jteCodegen {
     inputDirs.from(sourceDecompDir)
     extraArgs.set(listOf(sourceDecompDir.asFile.absolutePath))
   }
-  // Dialog ids are ROM offsets, so the generator reads a ROM from the roms folder,
-  // picking it by its GBA header game code. Each region is "package|gameCode|decompDir".
   register("dialog") {
     mainClass.set("de.fiereu.openmmo.codegen.dialog.Main")
-    val fireredDir = rootProject.layout.projectDirectory.dir("decomp/pokefirered")
-    inputDirs.from(sourceDecompDir, fireredDir, romsDir)
-    extraArgs.set(
-        listOf(
-            romsDir.asFile.absolutePath,
-            "hoenn|BPEE|${sourceDecompDir.asFile.absolutePath}",
-            "kanto|BPRE|${fireredDir.asFile.absolutePath}",
-        ))
+    inputDirs.from(dialogDataDir)
+    extraArgs.set(listOf(dialogDataDir.asFile.absolutePath) + regionSources.keys)
   }
+}
+
+tasks.register<JavaExec>("refreshDialogTable") {
+  group = "codegen"
+  description =
+      "Re-resolve codegen/dialog from the ROMs in roms/ (manual, run after a decomp bump, commit the result)"
+  val fireredDir = rootProject.layout.projectDirectory.dir("decomp/pokefirered")
+  classpath = sourceSets["generator"].runtimeClasspath
+  mainClass.set("de.fiereu.openmmo.codegen.dialog.RefreshMain")
+  args(
+      romsDir.asFile.absolutePath,
+      dialogDataDir.asFile.absolutePath,
+      "hoenn|BPEE|${sourceDecompDir.asFile.absolutePath}",
+      "kanto|BPRE|${fireredDir.asFile.absolutePath}",
+  )
 }
 
 // One shot bootstrap of the overworld script stubs into server.game. Run by hand with

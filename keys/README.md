@@ -7,7 +7,7 @@
 
 ## Description
 The keys module is responsible for generating the keys used by the servers for signing packets and by the client for verifying them.
-It generates the public keys that are later used by the patcher module to replace the client's public keys.
+It generates the public keys that are later used by the launcher module to replace the client's public keys.
 
 > Generated keys are specifically excluded from git commits using `.gitignore` and should not be committed.
 
