@@ -25,6 +25,7 @@ ineter = "0.3.1"
 compose = "1.11.1"
 tomlkt = "0.5.0"
 dotenv = "4.0.0"
+vcdiff = "0.2.0"
 
 [libraries]
 kotlinGradlePlugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -65,6 +66,7 @@ dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = 
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 ineter = { module = "com.github.maltalex:ineter", version.ref = "ineter" }
 tomlkt = { module = "net.peanuuutz.tomlkt:tomlkt-jvm", version.ref = "tomlkt" }
+vcdiff-core = { module = "com.davidehrmann.vcdiff:vcdiff-core", version.ref = "vcdiff" }
 
 [bundles]
 crypto = ["bouncycastle-pkix", "bouncycastle-provider"]

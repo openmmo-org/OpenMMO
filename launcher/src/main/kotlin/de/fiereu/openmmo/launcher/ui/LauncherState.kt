@@ -88,6 +88,10 @@ class LauncherController(
                       if (p.totalBytes > 0) p.fetchedBytes.toFloat() / p.totalBytes else null,
               )
             }
+        is LaunchStage.DeltaPatching ->
+            update {
+              it.copy(status = "Delta Patching", detail = "Applying delta patches", progress = null)
+            }
         is LaunchStage.Patching ->
             update {
               it.copy(status = "Patching", detail = "Building the runtime", progress = null)

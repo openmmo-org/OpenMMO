@@ -47,6 +47,10 @@ object FeedOrigin {
     get() = configured.contains("127.0.0.1")
 }
 
+object DeltaOrigin {
+  val configured: String by lazy { property("delta.origin") ?: "https://delta.openmmo.dev" }
+}
+
 private const val LOGIN_HOST_SLOT = "loginserver.pokemmo.com"
 
 /** Same width as the slot, and parses to 127.0.0.1. A hostname could not be padded to fit. */

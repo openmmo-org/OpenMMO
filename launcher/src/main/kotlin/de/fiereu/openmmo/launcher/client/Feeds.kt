@@ -1,5 +1,7 @@
 package de.fiereu.openmmo.launcher.client
 
+import kotlinx.serialization.Serializable
+
 data class MainFeed(
     val loginHost: String,
     val loginPort: Int,
@@ -7,6 +9,7 @@ data class MainFeed(
     val minRevision: Int,
 )
 
+@Serializable
 data class RemoteFile(
     val name: String,
     val sha256: String,
