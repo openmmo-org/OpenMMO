@@ -1,7 +1,5 @@
 # OpenMMO
 
-[![](https://dcbadge.limes.pink/api/server/SQwGXyY2gz)](https://discord.gg/SQwGXyY2gz)
-
 ## ToC
 - [Description](#description)
 - [Building](#building)
