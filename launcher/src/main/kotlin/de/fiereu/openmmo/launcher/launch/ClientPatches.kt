@@ -1,10 +1,13 @@
 package de.fiereu.openmmo.launcher.launch
 
+import de.fiereu.openmmo.launcher.FeedTls
+import de.fiereu.openmmo.launcher.client.ManagedInstall
 import de.fiereu.openmmo.launcher.client.POKEMMO_MIRRORS
 import de.fiereu.openmmo.launcher.client.POKEMMO_NEWS_MIRRORS
 import de.fiereu.openmmo.launcher.patch.BinaryStringPatch
 import de.fiereu.openmmo.launcher.patch.CLIENT_TARGET
 import de.fiereu.openmmo.launcher.patch.Patch
+import java.nio.file.Files
 import java.util.Properties
 
 enum class FeedFile(val pokemmoPath: String) {
@@ -48,6 +51,7 @@ object FeedOrigin {
 }
 
 private const val LOGIN_HOST_SLOT = "loginserver.pokemmo.com"
+const val TLS_FEED_TRUST_PUBLIC = "key.tls.feed.spki"
 
 /** Same width as the slot, and parses to 127.0.0.1. A hostname could not be padded to fit. */
 @Suppress("kotlin:S1313") const val DEAD_LOGIN_HOST = "[0:0:0:0:0:ffff:7f00:1]"
@@ -60,6 +64,13 @@ private const val LOGIN_HOST_SLOT = "loginserver.pokemmo.com"
  */
 fun loginHostPatch(): Patch =
     BinaryStringPatch(CLIENT_TARGET, "LoginHost", LOGIN_HOST_SLOT, DEAD_LOGIN_HOST)
+
+fun feedTrustValues(install: ManagedInstall): Map<String, String> {
+  val store = install.root.resolve(DEV_TRUSTSTORE)
+  if (!Files.isRegularFile(store)) return emptyMap()
+  val spki = FeedTls.trustAnchor(store).publicKey.encoded
+  return mapOf(TLS_FEED_TRUST_PUBLIC to spki.joinToString(" ") { "%02X".format(it) })
+}
 
 // Pads with a query, not slashes, because main.xml/// is a 404.
 fun padUrl(url: String, width: Int): String {

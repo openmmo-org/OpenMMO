@@ -6,6 +6,7 @@ import de.fiereu.openmmo.launcher.client.Platform
 import de.fiereu.openmmo.launcher.launch.GeneratedKeys
 import de.fiereu.openmmo.launcher.launch.executableName
 import de.fiereu.openmmo.launcher.launch.feedPatches
+import de.fiereu.openmmo.launcher.launch.feedTrustValues
 import de.fiereu.openmmo.launcher.launch.loginHostPatch
 import java.net.http.HttpClient
 import java.nio.file.Files
@@ -46,7 +47,7 @@ object PatchCli {
           PatchEngine(
                   install,
                   assets,
-                  GeneratedKeys.values(),
+                  GeneratedKeys.values() + feedTrustValues(install),
                   executableName(platform),
                   platform = platform.feedName,
               )

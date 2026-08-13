@@ -44,6 +44,13 @@ class PatchManifestParserTest :
                 replace = "B8 01 00 00 00"
 
                 [[patches]]
+                type = "binary_signature"
+                name = "Trust anchor"
+                target = "@client"
+                signature = "30 82 01 22"
+                replace_ref = "key.tls.feed.spki"
+
+                [[patches]]
                 type = "strings"
                 name = "Branding"
                 target = "data/strings/strings_en.xml"
@@ -58,13 +65,14 @@ class PatchManifestParserTest :
                 """)
 
         parsed.revision shouldBe 32763
-        parsed.patches.size shouldBe 5
+        parsed.patches.size shouldBe 6
         (parsed.patches[0] as BinaryStringPatch).replace shouldBe "bbbb"
         (parsed.patches[1] as BinaryStringPatch).replaceRef shouldBe "key.game.public"
         (parsed.patches[2] as BinarySignaturePatch).offset shouldBe 6
         (parsed.patches[2] as BinarySignaturePatch).replace shouldBe "B8 01 00 00 00"
-        (parsed.patches[3] as StringsPatch).strings shouldBe mapOf(1000000000 to "OpenMMO")
-        (parsed.patches[4] as FilePatch).source shouldBe "mod.zip"
+        (parsed.patches[3] as BinarySignaturePatch).replaceRef shouldBe "key.tls.feed.spki"
+        (parsed.patches[4] as StringsPatch).strings shouldBe mapOf(1000000000 to "OpenMMO")
+        (parsed.patches[5] as FilePatch).source shouldBe "mod.zip"
       }
 
       test("a signature patch overwrites the match from its start by default") {

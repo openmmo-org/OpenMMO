@@ -74,6 +74,7 @@ class LauncherPipeline(
    */
   private fun keys(): Map<String, String> =
       GeneratedKeys.values() +
+          feedTrustValues(install) +
           (GeneratedKeys.GAME_PUBLIC to
               ServerKeys(http, FeedOrigin.configured, GeneratedKeys.feedPublicKey())
                   .gamePublicKeyBase64())

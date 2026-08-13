@@ -150,6 +150,28 @@ class PatchEngineTest :
         tree.files["PokeMMO.exe"] shouldBe Origin.PATCHED
       }
 
+      test("resolves a signature replacement supplied at apply time") {
+        val (install, feed) = setup()
+        Files.write(install.resolve("PokeMMO.exe"), parseHexBytes("30 82 01 22 CC"))
+        val manifest =
+            PatchManifest(
+                32824,
+                listOf(
+                    BinarySignaturePatch(
+                        "PokeMMO.exe",
+                        "Trust anchor",
+                        signature = "30 82 01 22",
+                        replaceRef = "key.tls.feed.spki",
+                    )),
+            )
+
+        PatchEngine(install, values = mapOf("key.tls.feed.spki" to "11 22 33 44"))
+            .apply(manifest, feed)
+
+        Files.readAllBytes(install.runtime.resolve("PokeMMO.exe")) shouldBe
+            parseHexBytes("11 22 33 44 CC")
+      }
+
       test("fails loudly when a signature no longer matches") {
         val (install, feed) = setup()
         Files.write(install.resolve("PokeMMO.exe"), parseHexBytes("CC CC CC CC"))

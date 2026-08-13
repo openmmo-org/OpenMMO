@@ -26,6 +26,7 @@ import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
 
 private const val ALIAS = "openmmo-feed"
 private const val VALID_DAYS = 365L
+private const val CAPTURED_AUTHORITY_NAME = "C=US,O=Amazon,CN=Amazon Root CA 1"
 
 /** Key material for the loopback HTTPS feed server and the trust store the client is given. */
 object FeedTls {
@@ -38,7 +39,9 @@ object FeedTls {
     val authorityPair = keys.generateKeyPair()
     val serverPair = keys.generateKeyPair()
     val now = Instant.now()
-    val authorityName = X500Name("CN=OpenMMO development feed authority")
+    // The client captures its roots into the native image. The manifest substitutes this root's
+    // public key with ours, so the generated authority must retain the captured root's identity.
+    val authorityName = X500Name(CAPTURED_AUTHORITY_NAME)
     val authority =
         JcaX509v3CertificateBuilder(
                 authorityName,
@@ -101,6 +104,12 @@ object FeedTls {
 
   fun certificate(keyStore: KeyStore): X509Certificate =
       keyStore.getCertificateChain(ALIAS).last() as X509Certificate
+
+  fun trustAnchor(store: Path): X509Certificate =
+      KeyStore.getInstance("PKCS12").run {
+        Files.newInputStream(store).use { load(it, password) }
+        getCertificate(ALIAS) as X509Certificate
+      }
 
   /**
    * Writes a trust store holding the client's usual roots plus [certificate] to [target].

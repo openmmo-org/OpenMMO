@@ -73,18 +73,30 @@ data class BinarySignaturePatch(
     override val target: String,
     override val name: String,
     val signature: String,
-    val replace: String,
+    val replace: String? = null,
+    @SerialName("replace_ref") val replaceRef: String? = null,
     val offset: Int = 0,
     val platforms: List<String> = emptyList(),
 ) : Patch, BinaryPatch {
   // Building the patch checks the hex and that the replacement fits.
   override fun validate() {
-    compile(emptyMap())
+    require((replace == null) != (replaceRef == null)) {
+      "$name needs exactly one of replace or replace_ref"
+    }
+    if (replace != null) compile(emptyMap())
+    else ClientPatcher.Patch(name, BytePattern.parse(signature), ByteArray(1), offset)
     platforms.forEach { require(it in SUPPORTED_PLATFORMS) { "$name names unknown platform $it" } }
   }
 
-  override fun compile(values: Map<String, String>): ClientPatcher.Patch =
-      ClientPatcher.Patch(name, BytePattern.parse(signature), parseHexBytes(replace), offset)
+  override fun compile(values: Map<String, String>): ClientPatcher.Patch {
+    val replacement =
+        replace
+            ?: requireNotNull(replaceRef?.let(values::get)) {
+              "$name needs a value for $replaceRef"
+            }
+    return ClientPatcher.Patch(
+        name, BytePattern.parse(signature), parseHexBytes(replacement), offset)
+  }
 }
 
 // Adds entries to data/strings/strings_*.xml.

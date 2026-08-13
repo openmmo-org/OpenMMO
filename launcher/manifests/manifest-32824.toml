@@ -4,6 +4,16 @@ feed_redirect = "proxy"
 # Client verification checks for revision 32824. GraalVM emits equivalent code with different
 # calling conventions and instruction sets, so each signature is scoped to its platform.
 
+# GraalVM captured this trust anchor into the native image and does not honor a replacement
+# truststore at runtime. Preserve PKIX validation by replacing only that anchor's SPKI with the
+# development feed authority generated for this run.
+[[patches]]
+type = "binary_signature"
+name = "DevelopmentFeedTrustAnchor"
+target = "@client"
+signature = "30 82 01 22 30 0d 06 09 2a 86 48 86 f7 0d 01 01 01 05 00 03 82 01 0f 00 30 82 01 0a 02 82 01 01 00 b2 78 80 71 ca 78 d5 e3 71 af 47 80 50 74 7d 6e d8 d7 88 76 f4 99 68 f7 58 21 60 f9 74 84 01 2f ac 02 2d 86 d3 a0 43 7a 4e b2 a4 d0 36 ba 01 be 8d db 48 c8 07 17 36 4c f4 ee 88 23 c7 3e eb 37 f5 b5 19 f8 49 68 b0 de d7 b9 76 38 1d 61 9e a4 fe 82 36 a5 e5 4a 56 e4 45 e1 f9 fd b4 16 fa 74 da 9c 9b 35 39 2f fa b0 20 50 06 6c 7a d0 80 b2 a6 f9 af ec 47 19 8f 50 38 07 dc a2 87 39 58 f8 ba d5 a9 f9 48 67 30 96 ee 94 78 5e 6f 89 a3 51 c0 30 86 66 a1 45 66 ba 54 eb a3 c3 91 f9 48 dc ff d1 e8 30 2d 7d 2d 74 70 35 d7 88 24 f7 9e c4 59 6e bb 73 87 17 f2 32 46 28 b8 43 fa b7 1d aa ca b4 f2 9f 24 0e 2d 4b f7 71 5c 5e 69 ff ea 95 02 cb 38 8a ae 50 38 6f db fb 2d 62 1b c5 c7 1e 54 e1 77 e0 67 c8 0f 9c 87 23 d6 3f 40 20 7f 20 80 c4 80 4c 3e 3b 24 26 8e 04 ae 6c 9a c8 aa 0d 02 03 01 00 01"
+replace_ref = "key.tls.feed.spki"
+
 [[patches]]
 type = "binary_signature"
 name = "KickingOutRotomWindowsX64"
