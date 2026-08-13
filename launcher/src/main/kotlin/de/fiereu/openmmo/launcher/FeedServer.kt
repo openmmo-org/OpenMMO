@@ -22,6 +22,9 @@ private const val TEMPLATE = "/main_feed_template.xml"
 const val MAIN_NAME = "main.xml"
 const val SIGNATURE_NAME = "main.sig256"
 const val NEWS_NAME = "news.xml"
+const val POKEMMO_MAIN_PATH = "/live/current/feeds/main_feed.txt"
+const val POKEMMO_SIGNATURE_PATH = "/live/current/feeds/main_feed.sig256"
+const val POKEMMO_NEWS_PATH = "/news_feed.txt"
 
 private val DEV_NEWS =
     ("""<?xml version="1.0"?><rss version="2.0"><channel><title>OpenMMO</title>""" +
@@ -93,9 +96,12 @@ class FeedServer(private val signingKey: PrivateKey, keyStore: KeyStore, port: I
   private fun handle(exchange: HttpExchange) {
     val data =
         when {
-          exchange.requestURI.path.endsWith(SIGNATURE_NAME) -> signature
-          exchange.requestURI.path.endsWith(MAIN_NAME) -> body
-          exchange.requestURI.path.endsWith(NEWS_NAME) -> DEV_NEWS
+          exchange.requestURI.path.endsWith(SIGNATURE_NAME) ||
+              exchange.requestURI.path == POKEMMO_SIGNATURE_PATH -> signature
+          exchange.requestURI.path.endsWith(MAIN_NAME) ||
+              exchange.requestURI.path == POKEMMO_MAIN_PATH -> body
+          exchange.requestURI.path.endsWith(NEWS_NAME) ||
+              exchange.requestURI.path == POKEMMO_NEWS_PATH -> DEV_NEWS
           exchange.requestURI.path.endsWith(GAME_KEY_FILE + SIGNATURE_SUFFIX) -> gameKeySignature
           exchange.requestURI.path.endsWith(GAME_KEY_FILE) -> gameKey
           else -> null

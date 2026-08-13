@@ -7,6 +7,7 @@ import de.fiereu.openmmo.launcher.client.Feeds
 import de.fiereu.openmmo.launcher.client.ManagedInstall
 import de.fiereu.openmmo.launcher.client.Platform
 import de.fiereu.openmmo.launcher.client.SyncProgress
+import de.fiereu.openmmo.launcher.patch.FeedRedirect
 import de.fiereu.openmmo.launcher.patch.PatchAssets
 import de.fiereu.openmmo.launcher.patch.PatchEngine
 import de.fiereu.openmmo.launcher.patch.PatchManifest
@@ -50,12 +51,21 @@ class LauncherPipeline(
     sync.sync(feeds) { onStage(LaunchStage.Syncing(it)) }
 
     onStage(LaunchStage.Patching)
+    val extra =
+        if (manifest.feedRedirect == FeedRedirect.BINARY) feedPatches() + loginHostPatch()
+        else listOf(loginHostPatch())
     val runtime: RuntimeTree =
-        PatchEngine(install, assets, keys(), executableName(platform))
-            .apply(manifest, feeds.update, feedPatches() + loginHostPatch())
+        PatchEngine(
+                install,
+                assets,
+                keys(),
+                executableName(platform),
+                platform = platform.feedName,
+            )
+            .apply(manifest, feeds.update, extra)
 
     onStage(LaunchStage.Starting)
-    return GameLaunch(install, platform).start(runtime)
+    return GameLaunch(install, platform).start(runtime, feedRedirect = manifest.feedRedirect)
   }
 
   /**

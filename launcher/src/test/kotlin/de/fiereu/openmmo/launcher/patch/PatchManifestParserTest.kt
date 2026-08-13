@@ -82,6 +82,42 @@ class PatchManifestParserTest :
         (parsed.patches[0] as BinarySignaturePatch).offset shouldBe 0
       }
 
+      test("reads a proxy redirect and platform-scoped signature") {
+        val parsed =
+            PatchManifestParser.parse(
+                """
+                revision = 32824
+                feed_redirect = "proxy"
+
+                [[patches]]
+                type = "binary_signature"
+                name = "Arm"
+                target = "@client"
+                platforms = ["macos/arm64"]
+                signature = "AA BB"
+                replace = "11 22"
+                """
+                    .trimIndent())
+
+        parsed.feedRedirect shouldBe FeedRedirect.PROXY
+        (parsed.patches.single() as BinarySignaturePatch).platforms shouldBe listOf("macos/arm64")
+      }
+
+      test("rejects an unknown signature platform") {
+        shouldThrowAny {
+          manifest(
+              """
+              [[patches]]
+              type = "binary_signature"
+              name = "N"
+              target = "@client"
+              platforms = ["macos/powerpc"]
+              signature = "AA BB"
+              replace = "11 22"
+              """)
+        }
+      }
+
       test("rejects a signature patch that would write past what it matched") {
         shouldThrowAny {
           manifest(

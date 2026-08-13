@@ -1,6 +1,8 @@
 package de.fiereu.openmmo.launcher
 
+import de.fiereu.openmmo.launcher.client.POKEMMO_MIRRORS
 import java.math.BigInteger
+import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.KeyPairGenerator
@@ -11,9 +13,13 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import org.bouncycastle.asn1.x500.X500Name
+import org.bouncycastle.asn1.x509.BasicConstraints
+import org.bouncycastle.asn1.x509.ExtendedKeyUsage
 import org.bouncycastle.asn1.x509.Extension
 import org.bouncycastle.asn1.x509.GeneralName
 import org.bouncycastle.asn1.x509.GeneralNames
+import org.bouncycastle.asn1.x509.KeyPurposeId
+import org.bouncycastle.asn1.x509.KeyUsage
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
@@ -26,37 +32,75 @@ object FeedTls {
 
   val password: CharArray = "openmmo".toCharArray()
 
-  /** A fresh key store holding a self signed certificate for 127.0.0.1. */
+  /** A fresh key store for loopback and the feed names tunneled to it. */
   fun keyStore(): KeyStore {
-    val pair = KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }.generateKeyPair()
+    val keys = KeyPairGenerator.getInstance("RSA").apply { initialize(2048) }
+    val authorityPair = keys.generateKeyPair()
+    val serverPair = keys.generateKeyPair()
     val now = Instant.now()
-    val name = X500Name("CN=127.0.0.1")
-    val certificate =
+    val authorityName = X500Name("CN=OpenMMO development feed authority")
+    val authority =
         JcaX509v3CertificateBuilder(
-                name,
+                authorityName,
                 BigInteger.valueOf(now.toEpochMilli()),
                 Date.from(now.minus(1, ChronoUnit.DAYS)),
                 Date.from(now.plus(VALID_DAYS, ChronoUnit.DAYS)),
-                name,
-                pair.public,
+                authorityName,
+                authorityPair.public,
             )
-            // Without a matching address the client rejects the certificate for an IP url.
+            .addExtension(Extension.basicConstraints, true, BasicConstraints(true))
+            .addExtension(
+                Extension.keyUsage,
+                true,
+                KeyUsage(KeyUsage.keyCertSign or KeyUsage.cRLSign),
+            )
+            .let {
+              JcaContentSignerBuilder("SHA256withRSA").build(authorityPair.private).let(it::build)
+            }
+            .let { JcaX509CertificateConverter().getCertificate(it) }
+
+    val serverName = X500Name("CN=127.0.0.1")
+    val server =
+        JcaX509v3CertificateBuilder(
+                authorityName,
+                BigInteger.valueOf(now.toEpochMilli() + 1),
+                Date.from(now.minus(1, ChronoUnit.DAYS)),
+                Date.from(now.plus(VALID_DAYS, ChronoUnit.DAYS)),
+                serverName,
+                serverPair.public,
+            )
+            // The proxy preserves the mirror's TLS hostname while tunneling it to loopback.
             .addExtension(
                 Extension.subjectAlternativeName,
                 false,
-                GeneralNames(GeneralName(GeneralName.iPAddress, LOOPBACK)),
+                GeneralNames(
+                    arrayOf(GeneralName(GeneralName.iPAddress, LOOPBACK)) +
+                        POKEMMO_MIRRORS.map { GeneralName(GeneralName.dNSName, URI(it).host) }),
             )
-            .let { JcaContentSignerBuilder("SHA256withRSA").build(pair.private).let(it::build) }
+            .addExtension(Extension.basicConstraints, true, BasicConstraints(false))
+            .addExtension(
+                Extension.keyUsage,
+                true,
+                KeyUsage(KeyUsage.digitalSignature or KeyUsage.keyEncipherment),
+            )
+            .addExtension(
+                Extension.extendedKeyUsage,
+                false,
+                ExtendedKeyUsage(KeyPurposeId.id_kp_serverAuth),
+            )
+            .let {
+              JcaContentSignerBuilder("SHA256withRSA").build(authorityPair.private).let(it::build)
+            }
             .let { JcaX509CertificateConverter().getCertificate(it) }
 
     return KeyStore.getInstance("PKCS12").apply {
       load(null, password)
-      setKeyEntry(ALIAS, pair.private, password, arrayOf<Certificate>(certificate))
+      setKeyEntry(ALIAS, serverPair.private, password, arrayOf<Certificate>(server, authority))
     }
   }
 
   fun certificate(keyStore: KeyStore): X509Certificate =
-      keyStore.getCertificate(ALIAS) as X509Certificate
+      keyStore.getCertificateChain(ALIAS).last() as X509Certificate
 
   /**
    * Writes a trust store holding the client's usual roots plus [certificate] to [target].

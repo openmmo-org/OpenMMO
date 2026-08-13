@@ -75,10 +75,12 @@ data class BinarySignaturePatch(
     val signature: String,
     val replace: String,
     val offset: Int = 0,
+    val platforms: List<String> = emptyList(),
 ) : Patch, BinaryPatch {
   // Building the patch checks the hex and that the replacement fits.
   override fun validate() {
     compile(emptyMap())
+    platforms.forEach { require(it in SUPPORTED_PLATFORMS) { "$name names unknown platform $it" } }
   }
 
   override fun compile(values: Map<String, String>): ClientPatcher.Patch =
@@ -116,7 +118,28 @@ data class FilePatch(
   }
 }
 
-@Serializable data class PatchManifest(val revision: Int, val patches: List<Patch>)
+@Serializable
+enum class FeedRedirect {
+  @SerialName("binary") BINARY,
+  @SerialName("proxy") PROXY,
+}
+
+private val SUPPORTED_PLATFORMS =
+    setOf(
+        "windows/x64",
+        "windows/arm64",
+        "linux/x64",
+        "linux/arm64",
+        "macos/x64",
+        "macos/arm64",
+    )
+
+@Serializable
+data class PatchManifest(
+    val revision: Int,
+    val patches: List<Patch>,
+    @SerialName("feed_redirect") val feedRedirect: FeedRedirect = FeedRedirect.BINARY,
+)
 
 object PatchManifestParser {
 

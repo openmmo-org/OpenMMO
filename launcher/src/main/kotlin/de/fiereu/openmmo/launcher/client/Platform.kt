@@ -31,6 +31,9 @@ enum class Arch(val feedName: String) {
 }
 
 data class Platform(val os: Os, val arch: Arch) {
+  val feedName: String
+    get() = "${os.feedName}/${arch.feedName}"
+
   companion object {
     fun current(): Platform = Platform(Os.current(), Arch.current())
   }

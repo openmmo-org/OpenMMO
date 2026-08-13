@@ -1,19 +1,59 @@
 revision = 32824
+feed_redirect = "proxy"
 
-# Client tweaks for revision 32824.
+# Client verification checks for revision 32824. GraalVM emits equivalent code with different
+# calling conventions and instruction sets, so each signature is scoped to its platform.
 
 [[patches]]
 type = "binary_signature"
-name = "KickingOutRotom"
+name = "KickingOutRotomWindowsX64"
 target = "@client"
+platforms = ["windows/x64"]
 signature = "83 7A 20 03 75 ?? E8 ?? ?? ?? ?? 90 41 83 7F 10 00"
 offset = 6
 replace = "B8 01 00 00 00"
 
 [[patches]]
 type = "binary_signature"
-name = "ShooingTheZubats"
+name = "ShooingTheZubatsWindowsX64"
 target = "@client"
+platforms = ["windows/x64"]
 signature = "83 7A 20 03 75 ?? 85 FF 0F 8C ?? ?? ?? ?? 41 3B 78 0C 0F 8F ?? ?? ?? ?? 41 B9 00 00 00 00 E8 ?? ?? ?? ?? 90"
 offset = 30
 replace = "B8 01 00 00 00"
+
+[[patches]]
+type = "binary_signature"
+name = "KickingOutRotomMacosX64"
+target = "@client"
+platforms = ["macos/x64"]
+signature = "83 7F 20 03 75 ?? E8 ?? ?? ?? ?? 90 41 83 7F 10 00"
+offset = 6
+replace = "B8 01 00 00 00"
+
+[[patches]]
+type = "binary_signature"
+name = "ShooingTheZubatsMacosX64"
+target = "@client"
+platforms = ["macos/x64"]
+signature = "83 7F 20 03 75 ?? 85 C9 0F 8C ?? ?? ?? ?? 3B 4E 0C 0F 8F ?? ?? ?? ?? BA 00 00 00 00 E8 ?? ?? ?? ?? 90"
+offset = 28
+replace = "B8 01 00 00 00"
+
+[[patches]]
+type = "binary_signature"
+name = "KickingOutRotomMacosArm64"
+target = "@client"
+platforms = ["macos/arm64"]
+signature = "02 20 40 B9 5F 0C 00 71 ?? ?? ?? 54 ?? ?? ?? 97 1F 20 03 D5 89 13 40 B9"
+offset = 12
+replace = "20 00 80 52"
+
+[[patches]]
+type = "binary_signature"
+name = "ShooingTheZubatsMacosArm64"
+target = "@client"
+platforms = ["macos/arm64"]
+signature = "04 20 40 B9 9F 0C 00 71 ?? ?? ?? 54 ?? ?? ?? 37 24 0C 40 B9 9F 00 03 6B ?? ?? ?? 54 E2 03 1F 2A ?? ?? ?? 97 1F 20 03 D5"
+offset = 32
+replace = "20 00 80 52"

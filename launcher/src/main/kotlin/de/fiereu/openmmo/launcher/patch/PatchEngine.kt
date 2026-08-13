@@ -44,6 +44,7 @@ class PatchEngine(
     private val assets: PatchAssets = PatchAssets.none(),
     private val values: Map<String, String> = emptyMap(),
     private val clientExecutable: String? = null,
+    private val platform: String? = null,
 ) {
 
   private val stateFile = install.runtime.resolve(STATE_FILE)
@@ -61,7 +62,15 @@ class PatchEngine(
       feed: UpdateFeed,
       extra: List<Patch> = emptyList(),
   ): RuntimeTree {
-    val byTarget = (manifest.patches + extra).groupBy { resolveTarget(it.target) }
+    val selected =
+        manifest.patches.filter { patch ->
+          patch !is BinarySignaturePatch || patch.platforms.isEmpty() || platform in patch.platforms
+        }
+    if (selected.isEmpty()) {
+      throw PatchFailedException(
+          "Manifest ${manifest.revision} has no patches for ${platform ?: "this platform"}")
+    }
+    val byTarget = (selected + extra).groupBy { resolveTarget(it.target) }
     val feedNames = feed.files.map { it.name }.toSet()
 
     for (target in byTarget.keys) {

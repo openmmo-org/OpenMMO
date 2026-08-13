@@ -162,6 +162,59 @@ class PatchEngineTest :
         error.message shouldContain "found nothing to replace"
       }
 
+      test("applies only signatures selected for the running platform") {
+        val (install, feed) = setup()
+        Files.write(install.resolve("PokeMMO.exe"), parseHexBytes("AA BB CC DD"))
+        val manifest =
+            PatchManifest(
+                32824,
+                listOf(
+                    BinarySignaturePatch(
+                        "PokeMMO.exe",
+                        "Windows",
+                        "AA BB",
+                        "11 22",
+                        platforms = listOf("windows/x64"),
+                    ),
+                    BinarySignaturePatch(
+                        "PokeMMO.exe",
+                        "Mac",
+                        "CC DD",
+                        "33 44",
+                        platforms = listOf("macos/arm64"),
+                    ),
+                ),
+            )
+
+        PatchEngine(install, platform = "macos/arm64").apply(manifest, feed)
+
+        Files.readAllBytes(install.runtime.resolve("PokeMMO.exe")) shouldBe
+            parseHexBytes("AA BB 33 44")
+      }
+
+      test("refuses a manifest that has no signatures for the running platform") {
+        val (install, feed) = setup()
+        val manifest =
+            PatchManifest(
+                32824,
+                listOf(
+                    BinarySignaturePatch(
+                        "PokeMMO.exe",
+                        "Windows",
+                        "AA BB",
+                        "11 22",
+                        platforms = listOf("windows/x64"),
+                    )),
+            )
+
+        val error =
+            shouldThrow<PatchFailedException> {
+              PatchEngine(install, platform = "linux/x64").apply(manifest, feed)
+            }
+
+        error.message shouldContain "no patches for linux/x64"
+      }
+
       test("adds strings without disturbing the ones already there") {
         val (install, feed) = setup()
         val manifest =

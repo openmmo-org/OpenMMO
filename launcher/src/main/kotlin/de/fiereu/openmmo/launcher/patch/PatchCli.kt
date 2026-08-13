@@ -37,10 +37,20 @@ object PatchCli {
     }
 
     val assets = PatchAssets.ofDirectory(manifestPath.parent ?: Path.of("."))
+    val platform = Platform.current()
     val tree =
         try {
-          PatchEngine(install, assets, GeneratedKeys.values(), executableName(Platform.current()))
-              .apply(manifest, feeds.update, feedPatches() + loginHostPatch())
+          val extras =
+              if (manifest.feedRedirect == FeedRedirect.BINARY) feedPatches() + loginHostPatch()
+              else listOf(loginHostPatch())
+          PatchEngine(
+                  install,
+                  assets,
+                  GeneratedKeys.values(),
+                  executableName(platform),
+                  platform = platform.feedName,
+              )
+              .apply(manifest, feeds.update, extras)
         } catch (e: PatchFailedException) {
           System.err.println("Patch failed: ${e.message}")
           exitProcess(1)

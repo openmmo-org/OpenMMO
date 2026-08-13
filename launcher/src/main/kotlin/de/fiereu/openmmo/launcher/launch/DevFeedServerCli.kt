@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.launcher.launch
 
+import de.fiereu.openmmo.launcher.FeedProxy
 import de.fiereu.openmmo.launcher.FeedServer
 import de.fiereu.openmmo.launcher.FeedTls
 import de.fiereu.openmmo.launcher.client.FeedClient
@@ -31,6 +32,7 @@ object DevFeedServerCli {
 
     val keyStore = FeedTls.keyStore()
     val server = FeedServer(GeneratedKeys.privateKey("/feed.private.pem"), keyStore, port)
+    val proxy = FeedProxy(server.port) { println("  feed proxy   $it") }
     server.publish(revision.toLong())
 
     val trustStore =
@@ -38,10 +40,17 @@ object DevFeedServerCli {
             server.certificate(), install.root, install.root.resolve(DEV_TRUSTSTORE))
 
     server.start()
+    proxy.start()
     println("dev feed on https://127.0.0.1:$port for revision $revision")
+    println("  feed proxy   127.0.0.1:${proxy.port}")
     println("  login server 127.0.0.1:2106")
     println("  trust store  $trustStore")
-    Runtime.getRuntime().addShutdownHook(Thread { server.stop() })
+    Runtime.getRuntime()
+        .addShutdownHook(
+            Thread {
+              proxy.stop()
+              server.stop()
+            })
 
     if (System.getProperty(LAUNCH_UI_PROPERTY).toBoolean()) {
       println("starting the launcher, this feed stays up after it hands off")

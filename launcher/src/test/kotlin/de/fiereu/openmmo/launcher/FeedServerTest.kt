@@ -4,6 +4,8 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import java.io.StringReader
+import java.net.InetSocketAddress
+import java.net.ProxySelector
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -55,6 +57,43 @@ class FeedServerTest :
           news.statusCode() shouldBe 200
           news.body().decodeToString() shouldContain "<rss"
         } finally {
+          server.stop()
+        }
+      }
+
+      test("tunnels an encrypted official feed url to the development server") {
+        val keyStore = FeedTls.keyStore()
+        val signingKey =
+            KeyFactory.getInstance("RSA")
+                .generatePrivate(PKCS8EncodedKeySpec(pem("/feed.private.pem")))
+        val server = FeedServer(signingKey, keyStore)
+        val proxy = FeedProxy(server.port, 0)
+        server.publish(32824)
+        server.start()
+        proxy.start()
+
+        try {
+          val client =
+              HttpClient.newBuilder()
+                  .proxy(ProxySelector.of(InetSocketAddress(LOOPBACK, proxy.port)))
+                  .sslContext(trusting(server.certificate()))
+                  .build()
+          val feed =
+              client.send(
+                  get("https://dl.pokemmo.com$POKEMMO_MAIN_PATH"),
+                  HttpResponse.BodyHandlers.ofByteArray(),
+              )
+          val signature =
+              client.send(
+                  get("https://dl.pokemmo.com$POKEMMO_SIGNATURE_PATH"),
+                  HttpResponse.BodyHandlers.ofByteArray(),
+              )
+
+          feed.statusCode() shouldBe 200
+          feed.body().decodeToString() shouldContain "<revision>32824</revision>"
+          verified(feed.body(), signature.body()) shouldBe true
+        } finally {
+          proxy.stop()
           server.stop()
         }
       }
