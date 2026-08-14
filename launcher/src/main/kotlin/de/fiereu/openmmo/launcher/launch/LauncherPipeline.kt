@@ -4,9 +4,13 @@ import de.fiereu.openmmo.launcher.client.ClientSync
 import de.fiereu.openmmo.launcher.client.Downloader
 import de.fiereu.openmmo.launcher.client.FeedClient
 import de.fiereu.openmmo.launcher.client.Feeds
+import de.fiereu.openmmo.launcher.client.MainFeed
 import de.fiereu.openmmo.launcher.client.ManagedInstall
 import de.fiereu.openmmo.launcher.client.Platform
+import de.fiereu.openmmo.launcher.client.RemoteFile
 import de.fiereu.openmmo.launcher.client.SyncProgress
+import de.fiereu.openmmo.launcher.client.UpdateFeed
+import de.fiereu.openmmo.launcher.client.sha256
 import de.fiereu.openmmo.launcher.patch.PatchAssets
 import de.fiereu.openmmo.launcher.patch.PatchEngine
 import de.fiereu.openmmo.launcher.patch.PatchManifest
@@ -42,9 +46,39 @@ class LauncherPipeline(
   suspend fun run(onStage: (LaunchStage) -> Unit = {}): Process {
     onStage(LaunchStage.Resolving)
     install.create()
-    val feeds: Feeds = FeedClient(http).load()
+
+    val forcedRevision = System.getProperty("openmmo.revision")?.toIntOrNull()
+    val feeds: Feeds = if (forcedRevision != null) {
+      val executable = executableName(platform)
+      val localExecutable = install.resolve(executable)
+      Feeds(
+          main = MainFeed(
+              loginHost = "127.0.0.1",
+              loginPort = 2106,
+              revision = forcedRevision,
+              minRevision = 0,
+          ),
+          update = UpdateFeed(
+              listOf(
+                  RemoteFile(
+                      name = executable,
+                      sha256 = sha256(localExecutable),
+                      size = Files.size(localExecutable),
+                      os = platform.os.feedName,
+                      arch = platform.arch.feedName,
+                      executable = true,
+                  ),
+              ),
+          ),
+          mirror = "local",
+      )
+    } else {
+      FeedClient(http).load()
+    }
+
     val manifest =
-        manifests(feeds.main.revision) ?: throw UnsupportedRevisionException(feeds.main.revision)
+        manifests(forcedRevision ?: feeds.main.revision)
+            ?: throw UnsupportedRevisionException(forcedRevision ?: feeds.main.revision)
 
     val sync = ClientSync(install, Downloader(http), platform)
     sync.sync(feeds) { onStage(LaunchStage.Syncing(it)) }

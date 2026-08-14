@@ -1,4 +1,4 @@
-package de.fiereu.openmmo.server.game.handler
+﻿package de.fiereu.openmmo.server.game.handler
 
 import de.fiereu.network.PacketEvent
 import de.fiereu.network.Side
@@ -14,6 +14,7 @@ import de.fiereu.openmmo.net.game.packets.ChatMessageSendPacket
 import de.fiereu.openmmo.net.game.packets.CreateCharacterPacket
 import de.fiereu.openmmo.net.game.packets.DeleteCharacterPacket
 import de.fiereu.openmmo.net.game.packets.DialogChoicePacket
+import de.fiereu.openmmo.net.game.packets.DialogOptionPacket
 import de.fiereu.openmmo.net.game.packets.EntityInteractPacket
 import de.fiereu.openmmo.net.game.packets.ExchangeItemRequestPacket
 import de.fiereu.openmmo.net.game.packets.FaceDirectionPacket
@@ -120,6 +121,7 @@ constructor(
     onSuspend<TileInteractPacket> { event -> interactionService.onTileInteract(event) }
     onSuspend<DialogActionResponsePacket> { event -> dialogService.onInteractive(event) }
     onSuspend<DialogChoicePacket> { event -> dialogService.onDialogChoice(event) }
+    onSuspend<DialogOptionPacket> { event -> dialogService.onDialogOption(event) }
     onSuspend<ExchangeItemRequestPacket> { event -> shopService.onBuy(event) }
     onSuspend<ShopSellRequestPacket> { event -> shopService.onSell(event) }
 
@@ -227,3 +229,4 @@ constructor(
     )
   }
 }
+

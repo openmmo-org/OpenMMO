@@ -1,4 +1,4 @@
-package de.fiereu.network
+﻿package de.fiereu.network
 
 import de.fiereu.bytecodec.Codec
 import de.fiereu.network.internal.OutgoingPacket

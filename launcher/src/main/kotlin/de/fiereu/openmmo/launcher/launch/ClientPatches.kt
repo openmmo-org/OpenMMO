@@ -41,7 +41,7 @@ internal fun property(key: String): String? =
 
 object FeedOrigin {
 
-  val configured: String by lazy { property("feed.origin") ?: "https://127.0.0.1:$DEV_FEED_PORT" }
+  val configured: String = "https://127.0.0.1:$DEV_FEED_PORT"
 
   val isLoopback: Boolean
     get() = configured.contains("127.0.0.1")

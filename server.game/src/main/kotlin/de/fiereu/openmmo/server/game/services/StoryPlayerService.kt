@@ -1,4 +1,4 @@
-package de.fiereu.openmmo.server.game.services
+﻿package de.fiereu.openmmo.server.game.services
 
 import de.fiereu.network.SessionContext
 import de.fiereu.openmmo.common.MAX_PARTY_SIZE
@@ -71,6 +71,24 @@ constructor(
     return pokemon
   }
 
+  fun healPokemon(session: SessionContext, state: PlayerState, slot: Int, amount: Int): Boolean {
+    val characterId = state.characterId ?: return false
+    val stored = characters.getCharacter(characterId) ?: return false
+    if (slot !in stored.pokemon.indices) return false
+    val pokemon = stored.pokemon[slot]
+    val definition = species.get(pokemon.dexId) ?: return false
+    val maxHp = StatCalculator.computeAll(definition, pokemon).hp
+    val updated = pokemon.copy(hp = (pokemon.hp + amount).coerceAtMost(maxHp).toShort())
+    characters.updatePokemon(characterId, updated)
+    session.send(
+        PokemonContainerPacket(
+            container = PokemonContainer.PARTY,
+            hasChange = true,
+            delete = false,
+            pokemon = characters.getCharacter(characterId)?.pokemon ?: stored.pokemon,
+        ))
+    return true
+  }
   fun healParty(session: SessionContext, state: PlayerState) {
     val characterId = state.characterId ?: return
     val stored = characters.getCharacter(characterId) ?: return
@@ -152,3 +170,5 @@ fun itemStackUpdatePacket(itemId: Int, quantity: Int) =
     )
 
 private const val ITEM_ENTITY_TAG = 0x5000L
+
+
