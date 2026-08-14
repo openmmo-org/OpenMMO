@@ -45,15 +45,31 @@ fun LauncherWindow(
         }
 
         Column(modifier = Modifier.fillMaxWidth()) {
-          Text(state.error ?: state.status, style = MaterialTheme.typography.titleMedium)
-          Spacer(Modifier.height(4.dp))
-          Text(
-              if (state.error != null) "Check the details and try a repair" else state.detail,
-              style = MaterialTheme.typography.bodySmall,
-              color = MaterialTheme.colorScheme.onSurfaceVariant,
-              maxLines = 2,
-              overflow = TextOverflow.Ellipsis,
-          )
+          if (state.error != null) {
+            Text(
+                "Error",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.error,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                state.error,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 4,
+                overflow = TextOverflow.Ellipsis,
+            )
+          } else {
+            Text(state.status, style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(4.dp))
+            Text(
+                state.detail,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+          }
           Spacer(Modifier.height(12.dp))
           if (state.busy) {
             val progress = state.progress

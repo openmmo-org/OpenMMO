@@ -18,30 +18,57 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
+import java.security.MessageDigest
 import java.time.Duration
 import java.util.zip.GZIPInputStream
 import java.util.zip.ZipInputStream
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 
 object XDeltaApplier {
 
-  const val XDELTA_RELEASES_API = "https://api.github.com/repos/jmacd/xdelta/releases/latest"
-
-  private val json = Json { ignoreUnknownKeys = true }
-
-  @Serializable
-  data class GitHubRelease(
-      @SerialName("tag_name") val tagName: String? = null,
-      val assets: List<GitHubAsset> = emptyList(),
+  data class PinnedXDelta(
+      val fileName: String,
+      val archiveSha256: String,
+      val executableName: String,
+      val executableSha256: String,
+      val downloadUrl: String,
   )
 
-  @Serializable
-  data class GitHubAsset(
-      val name: String,
-      @SerialName("browser_download_url") val browserDownloadUrl: String,
-  )
+  val PINNED_DISTRIBUTIONS: Map<Platform, PinnedXDelta> =
+      mapOf(
+          Platform(Os.LINUX, Arch.X64) to
+              PinnedXDelta(
+                  fileName = "xdelta3-3.2.0-linux-x86_64.tar.gz",
+                  archiveSha256 =
+                      "480295c7a41fea6503659f19ddc61676c0df4834e2292846ba97de30c68c2397",
+                  executableName = "xdelta3",
+                  executableSha256 =
+                      "0d38d86de5ab6bbc1adae531331d64585b5a09ce3604a5f090c27f71b6a64b23",
+                  downloadUrl =
+                      "https://github.com/jmacd/xdelta/releases/download/v3.2.0/xdelta3-3.2.0-linux-x86_64.tar.gz",
+              ),
+          Platform(Os.MACOS, Arch.ARM64) to
+              PinnedXDelta(
+                  fileName = "xdelta3-3.2.0-macos-arm64.tar.gz",
+                  archiveSha256 =
+                      "16221e74708157a7051614323445577219557a04109622abb583d32a8f86785f",
+                  executableName = "xdelta3",
+                  executableSha256 =
+                      "244a2643774155ab7dc563258a203674feafbbddc7f1f4a4f4486b00e78c1941",
+                  downloadUrl =
+                      "https://github.com/jmacd/xdelta/releases/download/v3.2.0/xdelta3-3.2.0-macos-arm64.tar.gz",
+              ),
+          Platform(Os.WINDOWS, Arch.X64) to
+              PinnedXDelta(
+                  fileName = "xdelta3-3.2.0-windows-x86_64.zip",
+                  archiveSha256 =
+                      "af8ef036cb077a48df080c9a8ac1be4a6e7511c32d11f8bec89b6803a9e52576",
+                  executableName = "xdelta3.exe",
+                  executableSha256 =
+                      "53d90226615f217d3380c39892833311b4e24acd863e1ca01f14b5e772e2e6d0",
+                  downloadUrl =
+                      "https://github.com/jmacd/xdelta/releases/download/v3.2.0/xdelta3-3.2.0-windows-x86_64.zip",
+              ),
+      )
 
   fun apply(
       source: Path,
@@ -67,13 +94,19 @@ object XDeltaApplier {
       return it
     }
 
-    // 2. Download latest release from GitHub
+    // 2. Download pinned release
     if (toolsDir != null) {
       val downloaded = downloadXDeltaBinary(toolsDir, platform, http)
       if (downloaded != null) return downloaded
     }
 
-    error("No usable xdelta3 binary found on system and could not download from GitHub releases")
+    if (platform !in PINNED_DISTRIBUTIONS) {
+      error(
+          "Automatic xdelta3 download is not supported for $platform. Please install xdelta3 natively on your system.")
+    } else {
+      error(
+          "No usable xdelta3 binary found on system and could not download pinned binary for $platform.")
+    }
   }
 
   private fun applyWithProcess(xdeltaBin: String, source: Path, patch: Path, target: Path) {
@@ -120,87 +153,45 @@ object XDeltaApplier {
     return null
   }
 
-  private fun testBinary(binPath: String): Boolean =
+  fun testBinary(binPath: String): Boolean =
       runCatching {
             val process = ProcessBuilder(binPath, "-V").start()
             process.waitFor() == 0
           }
           .getOrDefault(false)
 
-  fun selectAsset(assets: List<GitHubAsset>, platform: Platform): GitHubAsset? =
-      when (platform.os) {
-        Os.WINDOWS -> {
-          assets.firstOrNull {
-            it.name.contains("windows", ignoreCase = true) &&
-                it.name.endsWith(".zip", ignoreCase = true)
-          } ?: assets.firstOrNull { it.name.endsWith(".exe.zip", ignoreCase = true) }
-        }
-        Os.MACOS -> {
-          if (platform.arch == Arch.ARM64) {
-            assets.firstOrNull {
-              it.name.contains("macos", ignoreCase = true) &&
-                  (it.name.contains("arm64", ignoreCase = true) ||
-                      it.name.contains("aarch64", ignoreCase = true))
-            }
-                ?: assets.firstOrNull {
-                  it.name.contains("macos", ignoreCase = true) ||
-                      it.name.contains("darwin", ignoreCase = true)
-                }
-          } else {
-            assets.firstOrNull {
-              it.name.contains("macos", ignoreCase = true) &&
-                  (it.name.contains("x86_64", ignoreCase = true) ||
-                      it.name.contains("x64", ignoreCase = true))
-            }
-                ?: assets.firstOrNull {
-                  it.name.contains("macos", ignoreCase = true) ||
-                      it.name.contains("darwin", ignoreCase = true)
-                }
-          }
-        }
-        Os.LINUX -> {
-          if (platform.arch == Arch.ARM64) {
-            assets.firstOrNull {
-              it.name.contains("linux", ignoreCase = true) &&
-                  (it.name.contains("arm64", ignoreCase = true) ||
-                      it.name.contains("aarch64", ignoreCase = true))
-            } ?: assets.firstOrNull { it.name.contains("linux", ignoreCase = true) }
-          } else {
-            assets.firstOrNull {
-              it.name.contains("linux", ignoreCase = true) &&
-                  (it.name.contains("x86_64", ignoreCase = true) ||
-                      it.name.contains("x64", ignoreCase = true))
-            } ?: assets.firstOrNull { it.name.contains("linux", ignoreCase = true) }
-          }
-        }
+  fun sha256(path: Path): String {
+    val digest = MessageDigest.getInstance("SHA-256")
+    Files.newInputStream(path).use { input ->
+      val buffer = ByteArray(8192)
+      var read: Int
+      while (input.read(buffer).also { read = it } != -1) {
+        digest.update(buffer, 0, read)
       }
-
-  fun fallbackAsset(platform: Platform): GitHubAsset {
-    val version = "3.2.0"
-    val assetName =
-        when (platform.os) {
-          Os.WINDOWS -> "xdelta3-$version-windows-x86_64.zip"
-          Os.MACOS -> "xdelta3-$version-macos-arm64.tar.gz"
-          Os.LINUX -> "xdelta3-$version-linux-x86_64.tar.gz"
-        }
-    return GitHubAsset(
-        name = assetName,
-        browserDownloadUrl =
-            "https://github.com/jmacd/xdelta/releases/download/v$version/$assetName",
-    )
+    }
+    return digest.digest().joinToString("") { "%02x".format(it) }
   }
 
   fun downloadXDeltaBinary(
       toolsDir: Path,
       platform: Platform = Platform.current(),
       http: HttpClient = ArchiveClient.defaultHttpClient(),
-      releasesApiUrl: String = XDELTA_RELEASES_API,
+      pinnedOverride: PinnedXDelta? = null,
   ): String? {
-    Files.createDirectories(toolsDir)
-    val exeName = if (platform.os == Os.WINDOWS) "xdelta3.exe" else "xdelta3"
-    val targetExe = toolsDir.resolve(exeName)
+    val pinned =
+        pinnedOverride
+            ?: PINNED_DISTRIBUTIONS[platform]
+            ?: run {
+              System.err.println(
+                  "[XDeltaApplier] Unsupported platform for automatic xdelta3 download: $platform. Please install xdelta3 natively.")
+              return null
+            }
 
-    if (Files.isRegularFile(targetExe) && testBinary(targetExe.toString())) {
+    Files.createDirectories(toolsDir)
+    val targetExe = toolsDir.resolve(pinned.executableName)
+
+    val canExecute = (Platform.current().os == platform.os)
+    if (Files.isRegularFile(targetExe) && (!canExecute || testBinary(targetExe.toString()))) {
       return targetExe.toString()
     }
 
@@ -211,39 +202,14 @@ object XDeltaApplier {
           ArchiveClient.defaultHttpClient()
         }
 
-    val selectedAsset =
-        runCatching {
-              val releaseRequest =
-                  HttpRequest.newBuilder()
-                      .uri(URI.create(releasesApiUrl))
-                      .header("User-Agent", "OpenMMO-Launcher")
-                      .header("Accept", "application/vnd.github+json")
-                      .timeout(Duration.ofSeconds(15))
-                      .GET()
-                      .build()
-
-              val releaseResponse =
-                  redirectHttp.send(releaseRequest, HttpResponse.BodyHandlers.ofString())
-              if (releaseResponse.statusCode() in 200..299) {
-                val release = json.decodeFromString<GitHubRelease>(releaseResponse.body())
-                selectAsset(release.assets, platform)
-              } else {
-                System.err.println(
-                    "[XDeltaApplier] GitHub API returned status ${releaseResponse.statusCode()}, falling back to direct asset URL")
-                null
-              }
-            }
-            .getOrNull() ?: fallbackAsset(platform)
-
-    val downloadUrl = selectedAsset.browserDownloadUrl
-    val assetName = selectedAsset.name
-    println("[XDeltaApplier] Downloading xdelta3 binary from $downloadUrl to $toolsDir")
+    println(
+        "[XDeltaApplier] Downloading pinned xdelta3 (${pinned.fileName}) from ${pinned.downloadUrl} to $toolsDir")
 
     val tempArchive = Files.createTempFile(toolsDir, "xdelta3-dl", ".tmp")
     try {
       val downloadRequest =
           HttpRequest.newBuilder()
-              .uri(URI.create(downloadUrl))
+              .uri(URI.create(pinned.downloadUrl))
               .header("User-Agent", "OpenMMO-Launcher")
               .timeout(Duration.ofMinutes(2))
               .GET()
@@ -252,7 +218,7 @@ object XDeltaApplier {
           redirectHttp.send(downloadRequest, HttpResponse.BodyHandlers.ofInputStream())
       if (downloadResponse.statusCode() !in 200..299) {
         throw IOException(
-            "Failed to download xdelta3 from $downloadUrl: HTTP ${downloadResponse.statusCode()}")
+            "Failed to download xdelta3 from ${pinned.downloadUrl}: HTTP ${downloadResponse.statusCode()}")
       }
 
       downloadResponse.body().use { inStream ->
@@ -261,12 +227,26 @@ object XDeltaApplier {
         }
       }
 
-      val tempExe = toolsDir.resolve("$exeName.part")
+      // 1. Verify archive SHA-256
+      val actualArchiveSha256 = sha256(tempArchive)
+      if (!actualArchiveSha256.equals(pinned.archiveSha256, ignoreCase = true)) {
+        throw SecurityException(
+            "SHA-256 mismatch for downloaded xdelta archive ${pinned.fileName}: expected ${pinned.archiveSha256}, got $actualArchiveSha256")
+      }
+
+      val tempExe = toolsDir.resolve("${pinned.executableName}.part")
       try {
-        if (assetName.endsWith(".zip", ignoreCase = true)) {
-          extractFromZip(tempArchive, exeName, tempExe)
+        if (pinned.fileName.endsWith(".zip", ignoreCase = true)) {
+          extractFromZip(tempArchive, pinned.executableName, tempExe)
         } else {
-          extractFromTarGz(tempArchive, exeName, tempExe)
+          extractFromTarGz(tempArchive, pinned.executableName, tempExe)
+        }
+
+        // 2. Verify extracted binary SHA-256
+        val actualExeSha256 = sha256(tempExe)
+        if (!actualExeSha256.equals(pinned.executableSha256, ignoreCase = true)) {
+          throw SecurityException(
+              "SHA-256 mismatch for extracted xdelta binary ${pinned.executableName}: expected ${pinned.executableSha256}, got $actualExeSha256")
         }
 
         if (platform.os != Os.WINDOWS && !tempExe.toFile().setExecutable(true, false)) {
@@ -280,8 +260,9 @@ object XDeltaApplier {
               "[XDeltaApplier] Warning: Failed to set executable permission on $targetExe")
         }
 
-        if (testBinary(targetExe.toString())) {
-          println("[XDeltaApplier] Successfully installed xdelta3 at $targetExe")
+        val canExecuteOnHost = (Platform.current().os == platform.os)
+        if (!canExecuteOnHost || testBinary(targetExe.toString())) {
+          println("[XDeltaApplier] Successfully installed verified xdelta3 at $targetExe")
           return targetExe.toString()
         }
       } finally {
