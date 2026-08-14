@@ -2,6 +2,7 @@ package de.fiereu.openmmo.launcher.patch
 
 import de.fiereu.openmmo.launcher.client.ArchiveClient
 import de.fiereu.openmmo.launcher.client.ManagedInstall
+import de.fiereu.openmmo.launcher.client.Platform
 import de.fiereu.openmmo.launcher.client.UpdateFeed
 import java.nio.file.Files
 import kotlin.coroutines.cancellation.CancellationException
@@ -15,6 +16,7 @@ class ArchivePatchFailedException(message: String, cause: Throwable? = null) :
 class ArchivePatcher(
     private val install: ManagedInstall,
     private val client: ArchiveClient,
+    private val platform: Platform = Platform.current(),
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
 
@@ -37,7 +39,7 @@ class ArchivePatcher(
           client.downloadDelta(fromRevision, toRevision, deltaFile)
 
           println("[ArchivePatcher] 3. Applying xdelta patch to reconstruct target archive")
-          XDeltaApplier.apply(sourceTar, deltaFile, targetTar)
+          XDeltaApplier.apply(sourceTar, deltaFile, targetTar, install.tools, platform, client.http)
 
           println("[ArchivePatcher] 4. Extracting restored client into ${install.client}")
           CanonicalTar.extract(targetTar, install.client)

@@ -78,7 +78,7 @@ class LauncherPipeline(
 
             onStage(LaunchStage.DeltaPatching)
             val updatedFeed =
-                ArchivePatcher(install, archiveClient)
+                ArchivePatcher(install, archiveClient, platform)
                     .apply(currentRevision, targetRevision, feeds.update)
             Pair(targetManifest, updatedFeed)
           } else {

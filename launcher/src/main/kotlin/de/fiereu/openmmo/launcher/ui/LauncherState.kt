@@ -114,7 +114,8 @@ class LauncherController(
         }
         sync.syncAll(feeds) { report(LaunchStage.Syncing(it)) }
         report(LaunchStage.DeltaPatching)
-        ArchivePatcher(install, archiveClient).apply(currentRevision, targetRevision, feeds.update)
+        ArchivePatcher(install, archiveClient, platform)
+            .apply(currentRevision, targetRevision, feeds.update)
         update { it.copy(status = "Ready", detail = "Restored revision $targetRevision") }
       }
     }

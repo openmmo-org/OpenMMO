@@ -10,9 +10,10 @@ class ManagedInstall(val root: Path) {
   val client: Path = root.resolve("client")
   val runtime: Path = root.resolve("runtime")
   val manifests: Path = root.resolve("manifests")
+  val tools: Path = root.resolve("tools")
 
   fun create(): ManagedInstall {
-    listOf(client, runtime, manifests).forEach(Files::createDirectories)
+    listOf(client, runtime, manifests, tools).forEach(Files::createDirectories)
     return this
   }
 

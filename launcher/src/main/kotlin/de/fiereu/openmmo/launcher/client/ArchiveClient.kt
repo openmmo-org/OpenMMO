@@ -22,7 +22,7 @@ class ArchiveClient(
     private val trustedKeys: List<PublicKey> = pokemmoFeedPublicKeys(),
 ) {
 
-  private val http: HttpClient =
+  internal val http: HttpClient =
       if (http.followRedirects() != HttpClient.Redirect.NEVER) {
         http
       } else {
