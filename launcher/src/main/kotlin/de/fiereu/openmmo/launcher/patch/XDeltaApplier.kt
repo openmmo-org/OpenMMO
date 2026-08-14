@@ -175,6 +175,21 @@ object XDeltaApplier {
         }
       }
 
+  fun fallbackAsset(platform: Platform): GitHubAsset {
+    val version = "3.2.0"
+    val assetName =
+        when (platform.os) {
+          Os.WINDOWS -> "xdelta3-$version-windows-x86_64.zip"
+          Os.MACOS -> "xdelta3-$version-macos-arm64.tar.gz"
+          Os.LINUX -> "xdelta3-$version-linux-x86_64.tar.gz"
+        }
+    return GitHubAsset(
+        name = assetName,
+        browserDownloadUrl =
+            "https://github.com/jmacd/xdelta/releases/download/v$version/$assetName",
+    )
+  }
+
   fun downloadXDeltaBinary(
       toolsDir: Path,
       platform: Platform = Platform.current(),
@@ -189,35 +204,40 @@ object XDeltaApplier {
       return targetExe.toString()
     }
 
-    val releaseRequest =
-        HttpRequest.newBuilder()
-            .uri(URI.create(releasesApiUrl))
-            .header("User-Agent", "OpenMMO-Launcher")
-            .header("Accept", "application/vnd.github+json")
-            .timeout(Duration.ofSeconds(15))
-            .GET()
-            .build()
+    val redirectHttp =
+        if (http.followRedirects() != HttpClient.Redirect.NEVER) {
+          http
+        } else {
+          ArchiveClient.defaultHttpClient()
+        }
 
-    val releaseResponse = http.send(releaseRequest, HttpResponse.BodyHandlers.ofString())
-    if (releaseResponse.statusCode() !in 200..299) {
-      System.err.println(
-          "[XDeltaApplier] Failed to fetch latest xdelta release from $releasesApiUrl: HTTP ${releaseResponse.statusCode()}")
-      return null
-    }
-
-    val release = json.decodeFromString<GitHubRelease>(releaseResponse.body())
     val selectedAsset =
-        selectAsset(release.assets, platform)
-            ?: run {
-              System.err.println(
-                  "[XDeltaApplier] No matching asset found in latest release (${release.tagName}) for $platform")
-              return null
+        runCatching {
+              val releaseRequest =
+                  HttpRequest.newBuilder()
+                      .uri(URI.create(releasesApiUrl))
+                      .header("User-Agent", "OpenMMO-Launcher")
+                      .header("Accept", "application/vnd.github+json")
+                      .timeout(Duration.ofSeconds(15))
+                      .GET()
+                      .build()
+
+              val releaseResponse =
+                  redirectHttp.send(releaseRequest, HttpResponse.BodyHandlers.ofString())
+              if (releaseResponse.statusCode() in 200..299) {
+                val release = json.decodeFromString<GitHubRelease>(releaseResponse.body())
+                selectAsset(release.assets, platform)
+              } else {
+                System.err.println(
+                    "[XDeltaApplier] GitHub API returned status ${releaseResponse.statusCode()}, falling back to direct asset URL")
+                null
+              }
             }
+            .getOrNull() ?: fallbackAsset(platform)
 
     val downloadUrl = selectedAsset.browserDownloadUrl
     val assetName = selectedAsset.name
-    println(
-        "[XDeltaApplier] Downloading xdelta3 (${release.tagName ?: "latest"}) from $downloadUrl to $toolsDir")
+    println("[XDeltaApplier] Downloading xdelta3 binary from $downloadUrl to $toolsDir")
 
     val tempArchive = Files.createTempFile(toolsDir, "xdelta3-dl", ".tmp")
     try {
@@ -228,7 +248,8 @@ object XDeltaApplier {
               .timeout(Duration.ofMinutes(2))
               .GET()
               .build()
-      val downloadResponse = http.send(downloadRequest, HttpResponse.BodyHandlers.ofInputStream())
+      val downloadResponse =
+          redirectHttp.send(downloadRequest, HttpResponse.BodyHandlers.ofInputStream())
       if (downloadResponse.statusCode() !in 200..299) {
         throw IOException(
             "Failed to download xdelta3 from $downloadUrl: HTTP ${downloadResponse.statusCode()}")
