@@ -38,10 +38,11 @@ class ClientSync(
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
 
-  fun plan(feed: UpdateFeed): SyncPlan {
+  fun plan(feed: UpdateFeed, forPlatformOnly: Boolean = true): SyncPlan {
     val stale = mutableListOf<RemoteFile>()
     val current = mutableListOf<RemoteFile>()
-    for (file in feed.forPlatform(platform)) {
+    val fileList = if (forPlatformOnly) feed.forPlatform(platform) else feed.files
+    for (file in fileList) {
       if (isCurrent(file)) current += file else stale += file
     }
     return SyncPlan(stale, current)
@@ -84,7 +85,14 @@ class ClientSync(
 
   suspend fun sync(feeds: Feeds, onProgress: (SyncProgress) -> Unit = {}): SyncPlan {
     install.create()
-    val plan = withContext(dispatcher) { plan(feeds.update) }
+    val plan = withContext(dispatcher) { plan(feeds.update, forPlatformOnly = true) }
+    execute(plan, feeds.mirror, onProgress)
+    return plan
+  }
+
+  suspend fun syncAll(feeds: Feeds, onProgress: (SyncProgress) -> Unit = {}): SyncPlan {
+    install.create()
+    val plan = withContext(dispatcher) { plan(feeds.update, forPlatformOnly = false) }
     execute(plan, feeds.mirror, onProgress)
     return plan
   }

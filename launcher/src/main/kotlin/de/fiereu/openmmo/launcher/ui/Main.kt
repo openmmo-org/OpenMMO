@@ -35,6 +35,7 @@ fun main() = application {
         LauncherController(
             install = ManagedInstall(root),
             manifests = LauncherPipeline.manifestsIn(manifestDir),
+            highestRevision = LauncherPipeline.highestSupportedRevisionIn(manifestDir),
             assets = PatchAssets.ofDirectory(manifestDir),
             scope = scope,
             onState = { state = it },

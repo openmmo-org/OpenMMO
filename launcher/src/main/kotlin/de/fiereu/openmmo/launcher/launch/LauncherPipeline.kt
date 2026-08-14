@@ -1,14 +1,14 @@
 package de.fiereu.openmmo.launcher.launch
 
+import de.fiereu.openmmo.launcher.client.ArchiveClient
 import de.fiereu.openmmo.launcher.client.ClientSync
-import de.fiereu.openmmo.launcher.client.DeltaClient
 import de.fiereu.openmmo.launcher.client.Downloader
 import de.fiereu.openmmo.launcher.client.FeedClient
 import de.fiereu.openmmo.launcher.client.Feeds
 import de.fiereu.openmmo.launcher.client.ManagedInstall
 import de.fiereu.openmmo.launcher.client.Platform
 import de.fiereu.openmmo.launcher.client.SyncProgress
-import de.fiereu.openmmo.launcher.patch.DeltaPatcher
+import de.fiereu.openmmo.launcher.patch.ArchivePatcher
 import de.fiereu.openmmo.launcher.patch.PatchAssets
 import de.fiereu.openmmo.launcher.patch.PatchEngine
 import de.fiereu.openmmo.launcher.patch.PatchManifest
@@ -40,9 +40,10 @@ class LauncherPipeline(
     private val install: ManagedInstall,
     private val manifests: (Int) -> PatchManifest?,
     private val assets: PatchAssets = PatchAssets.none(),
-    private val http: HttpClient = HttpClient.newHttpClient(),
+    private val http: HttpClient = ArchiveClient.defaultHttpClient(),
     private val platform: Platform = Platform.current(),
-    private val deltaOrigin: String = DeltaOrigin.configured,
+    private val archiveOrigin: String = ArchiveOrigin.configured,
+    private val archiveRawOrigin: String = ArchiveOrigin.configuredRaw,
     private val highestRevision: () -> Int? = { null },
 ) {
 
@@ -60,24 +61,29 @@ class LauncherPipeline(
           sync.sync(feeds) { onStage(LaunchStage.Syncing(it)) }
           Pair(directManifest, feeds.update)
         } else {
-          val deltaClient = DeltaClient(http, deltaOrigin)
-          val deltaManifest =
-              deltaClient.fetchManifest(currentRevision)
-                  ?: throw UnsupportedRevisionException(currentRevision)
-
           val targetRevision =
-              highestRevision()
-                  ?: deltaManifest.toRevision.takeIf { manifests(it) != null }
-                  ?: throw UnsupportedRevisionException(currentRevision)
-
+              highestRevision() ?: throw UnsupportedRevisionException(currentRevision)
           val targetManifest =
               manifests(targetRevision) ?: throw UnsupportedRevisionException(targetRevision)
 
-          sync.sync(feeds) { onStage(LaunchStage.Syncing(it)) }
+          val archiveClient = ArchiveClient(http, archiveOrigin, archiveRawOrigin)
+          val targetUpdateFeed = archiveClient.fetchUpdateFeed(targetRevision)
 
-          onStage(LaunchStage.DeltaPatching)
-          val updatedFeed = DeltaPatcher(install, deltaClient).apply(deltaManifest, feeds.update)
-          Pair(targetManifest, updatedFeed)
+          val isUpToDate = sync.plan(targetUpdateFeed).isUpToDate
+          if (!isUpToDate) {
+            if (!archiveClient.hasDelta(currentRevision, targetRevision)) {
+              throw UnsupportedRevisionException(currentRevision)
+            }
+            sync.syncAll(feeds) { onStage(LaunchStage.Syncing(it)) }
+
+            onStage(LaunchStage.DeltaPatching)
+            val updatedFeed =
+                ArchivePatcher(install, archiveClient)
+                    .apply(currentRevision, targetRevision, feeds.update)
+            Pair(targetManifest, updatedFeed)
+          } else {
+            Pair(targetManifest, targetUpdateFeed)
+          }
         }
 
     onStage(LaunchStage.Patching)

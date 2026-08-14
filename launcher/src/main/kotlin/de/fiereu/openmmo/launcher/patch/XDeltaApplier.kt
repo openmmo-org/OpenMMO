@@ -12,33 +12,38 @@ object XDeltaApplier {
   fun apply(source: Path, patch: Path, target: Path) {
     target.parent?.let(Files::createDirectories)
 
-    var javaSuccess = false
-    try {
-      val dictBytes = Files.readAllBytes(source)
-      val patchBytes = Files.readAllBytes(patch)
-
-      FileOutputStream(target.toFile()).use { outStream ->
-        BufferedOutputStream(outStream).use { bOut ->
-          val decoder = VCDiffDecoderBuilder.builder().buildSimple()
-          decoder.decode(dictBytes, patchBytes, bOut)
-          bOut.flush()
-          javaSuccess = true
+    // 1. Prefer native xdelta3 binary if available (sub-second execution)
+    val xdeltaBin = findXDeltaBinary()
+    if (xdeltaBin != null) {
+      try {
+        println("[XDeltaApplier] Using native xdelta binary: $xdeltaBin")
+        applyWithProcess(xdeltaBin, source, patch, target)
+        if (Files.exists(target) && Files.size(target) > 0) {
+          println(
+              "[XDeltaApplier] Native xdelta completed successfully (${Files.size(target)} bytes)")
+          return
         }
+      } catch (e: Exception) {
+        println(
+            "[XDeltaApplier] Native xdelta execution failed, falling back to pure Java decoder: ${e.message}")
       }
-    } catch (_: Exception) {
-      javaSuccess = false
     }
 
-    if (javaSuccess && Files.exists(target) && Files.size(target) > 0) {
-      return
-    }
+    // 2. Pure Java VCDIFF fallback
+    println("[XDeltaApplier] Using pure Java VCDiff decoder")
+    val dictBytes = Files.readAllBytes(source)
+    val patchBytes = Files.readAllBytes(patch)
 
-    // Fallback to xdelta3 CLI process
-    applyWithProcess(source, patch, target)
+    FileOutputStream(target.toFile()).use { outStream ->
+      BufferedOutputStream(outStream).use { bOut ->
+        val decoder = VCDiffDecoderBuilder.builder().buildSimple()
+        decoder.decode(dictBytes, patchBytes, bOut)
+        bOut.flush()
+      }
+    }
   }
 
-  private fun applyWithProcess(source: Path, patch: Path, target: Path) {
-    val xdeltaBin = findXDeltaBinary() ?: error("xdelta3 binary not found on system")
+  private fun applyWithProcess(xdeltaBin: String, source: Path, patch: Path, target: Path) {
     val pb =
         ProcessBuilder(
             xdeltaBin,

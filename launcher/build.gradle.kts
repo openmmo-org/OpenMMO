@@ -68,8 +68,13 @@ tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(st
 val feedOrigin =
     (project.findProperty("openmmo.feedOrigin") as String?) ?: "https://127.0.0.1:20443"
 
-val deltaOrigin =
-    (project.findProperty("openmmo.deltaOrigin") as String?) ?: "https://delta.openmmo.dev"
+val archiveOrigin =
+    (project.findProperty("openmmo.archiveOrigin") as String?)
+        ?: "https://github.com/openmmo-org/archive"
+
+val archiveRawOrigin =
+    (project.findProperty("openmmo.archiveRawOrigin") as String?)
+        ?: "https://raw.githubusercontent.com/openmmo-org/archive/master"
 
 // Loopback by default. A hostname cannot be padded, so a replacement must be exactly 23 wide.
 
@@ -78,10 +83,11 @@ val launcherPropertiesDir = layout.buildDirectory.dir("launcherProperties")
 val writeLauncherProperties by
     tasks.registering(WriteProperties::class) {
       group = "openmmo"
-      description = "Bakes the feed and delta origins into the launcher"
+      description = "Bakes the feed and archive origins into the launcher"
       destinationFile.set(launcherPropertiesDir.map { it.file("launcher.properties") })
       property("feed.origin", feedOrigin)
-      property("delta.origin", deltaOrigin)
+      property("archive.origin", archiveOrigin)
+      property("archive.rawOrigin", archiveRawOrigin)
     }
 
 sourceSets.main.get().resources.srcDir(launcherPropertiesDir)
@@ -98,7 +104,8 @@ fun JavaExec.devFeed() {
           "openmmo.manifests",
           "openmmo.devFeedPort",
           "openmmo.revision",
-          "openmmo.deltaOrigin")
+          "openmmo.archiveOrigin",
+          "openmmo.archiveRawOrigin")
       .forEach { name -> (project.findProperty(name) as String?)?.let { systemProperty(name, it) } }
   standardInput = System.`in`
 }

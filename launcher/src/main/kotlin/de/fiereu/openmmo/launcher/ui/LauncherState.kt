@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.launcher.ui
 
+import de.fiereu.openmmo.launcher.client.ArchiveClient
 import de.fiereu.openmmo.launcher.client.ClientSync
 import de.fiereu.openmmo.launcher.client.Downloader
 import de.fiereu.openmmo.launcher.client.FeedClient
@@ -7,6 +8,7 @@ import de.fiereu.openmmo.launcher.client.ManagedInstall
 import de.fiereu.openmmo.launcher.client.Platform
 import de.fiereu.openmmo.launcher.launch.LaunchStage
 import de.fiereu.openmmo.launcher.launch.LauncherPipeline
+import de.fiereu.openmmo.launcher.patch.ArchivePatcher
 import de.fiereu.openmmo.launcher.patch.PatchAssets
 import de.fiereu.openmmo.launcher.patch.PatchManifest
 import java.net.http.HttpClient
@@ -35,8 +37,9 @@ private fun bytes(count: Long): String =
 class LauncherController(
     private val install: ManagedInstall,
     private val manifests: (Int) -> PatchManifest?,
+    private val highestRevision: () -> Int? = { null },
     private val assets: PatchAssets = PatchAssets.none(),
-    private val http: HttpClient = HttpClient.newHttpClient(),
+    private val http: HttpClient = ArchiveClient.defaultHttpClient(),
     private val platform: Platform = Platform.current(),
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val scope: CoroutineScope,
@@ -54,7 +57,15 @@ class LauncherController(
 
   fun play(onStarted: () -> Unit = {}) = run {
     withContext(dispatcher) {
-      LauncherPipeline(install, manifests, assets, http, platform).run(::report)
+      LauncherPipeline(
+              install = install,
+              manifests = manifests,
+              assets = assets,
+              http = http,
+              platform = platform,
+              highestRevision = highestRevision,
+          )
+          .run(::report)
     }
     update { it.copy(status = "Started", detail = "Handing off to the client") }
     onStarted()
@@ -62,16 +73,51 @@ class LauncherController(
 
   fun verify() = run {
     update { it.copy(status = "Verifying", detail = "Hashing the installed files") }
-    val feeds = withContext(dispatcher) { FeedClient(http).load() }
-    val sync = ClientSync(install, Downloader(http), platform)
-    val plan = withContext(dispatcher) { sync.plan(feeds.update) }
-    if (plan.isUpToDate) {
-      update { it.copy(status = "Ready", detail = "Everything matches the feed") }
-      return@run
+    withContext(dispatcher) {
+      val feeds = FeedClient(http).load()
+      val currentRevision = feeds.main.revision
+      val directManifest = manifests(currentRevision)
+
+      val targetRevision =
+          if (directManifest != null) {
+            currentRevision
+          } else {
+            highestRevision() ?: currentRevision
+          }
+
+      val sync = ClientSync(install, Downloader(http), platform)
+      val archiveClient = ArchiveClient(http)
+      val targetFeed =
+          if (directManifest != null) {
+            feeds.update
+          } else {
+            archiveClient.fetchUpdateFeed(targetRevision)
+          }
+
+      val plan = sync.plan(targetFeed)
+      if (plan.isUpToDate) {
+        update { it.copy(status = "Ready", detail = "Everything matches the feed") }
+        return@withContext
+      }
+
+      if (directManifest != null) {
+        update {
+          it.copy(detail = "Repairing ${plan.stale.size} files, ${bytes(plan.bytesToFetch)}")
+        }
+        sync.execute(plan, feeds.mirror) { report(LaunchStage.Syncing(it)) }
+        update { it.copy(status = "Ready", detail = "Repaired ${plan.stale.size} files") }
+      } else {
+        update {
+          it.copy(
+              detail =
+                  "Repairing client to revision $targetRevision. Please wait, this could take a while.")
+        }
+        sync.syncAll(feeds) { report(LaunchStage.Syncing(it)) }
+        report(LaunchStage.DeltaPatching)
+        ArchivePatcher(install, archiveClient).apply(currentRevision, targetRevision, feeds.update)
+        update { it.copy(status = "Ready", detail = "Restored revision $targetRevision") }
+      }
     }
-    update { it.copy(detail = "Repairing ${plan.stale.size} files, ${bytes(plan.bytesToFetch)}") }
-    sync.execute(plan, feeds.mirror) { report(LaunchStage.Syncing(it)) }
-    update { it.copy(status = "Ready", detail = "Repaired ${plan.stale.size} files") }
   }
 
   private fun report(stage: LaunchStage) =
@@ -90,7 +136,11 @@ class LauncherController(
             }
         is LaunchStage.DeltaPatching ->
             update {
-              it.copy(status = "Delta Patching", detail = "Applying delta patches", progress = null)
+              it.copy(
+                  status = "Delta Patching",
+                  detail = "Applying delta patches. Please wait, this could take a while.",
+                  progress = null,
+              )
             }
         is LaunchStage.Patching ->
             update {
@@ -109,6 +159,8 @@ class LauncherController(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
+        System.err.println("[Launcher] Encountered error during execution:")
+        e.printStackTrace()
         update { it.copy(status = "Stopped", detail = "", error = e.message ?: e.toString()) }
       } finally {
         update { it.copy(busy = false, progress = null) }
