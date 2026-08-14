@@ -5,9 +5,8 @@ import de.fiereu.openmmo.launcher.client.ManagedInstall
 import de.fiereu.openmmo.launcher.client.Platform
 import de.fiereu.openmmo.launcher.launch.GeneratedKeys
 import de.fiereu.openmmo.launcher.launch.executableName
-import de.fiereu.openmmo.launcher.launch.feedPatches
 import de.fiereu.openmmo.launcher.launch.feedTrustValues
-import de.fiereu.openmmo.launcher.launch.loginHostPatch
+import de.fiereu.openmmo.launcher.launch.redirectPatches
 import java.net.http.HttpClient
 import java.nio.file.Files
 import java.nio.file.Path
@@ -41,9 +40,7 @@ object PatchCli {
     val platform = Platform.current()
     val tree =
         try {
-          val extras =
-              if (manifest.feedRedirect == FeedRedirect.BINARY) feedPatches() + loginHostPatch()
-              else listOf(loginHostPatch())
+          val extras = redirectPatches(manifest)
           PatchEngine(
                   install,
                   assets,

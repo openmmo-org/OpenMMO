@@ -96,6 +96,7 @@ class PatchManifestParserTest :
                 """
                 revision = 32824
                 feed_redirect = "proxy"
+                login_redirect = "feed"
 
                 [[patches]]
                 type = "binary_signature"
@@ -108,6 +109,7 @@ class PatchManifestParserTest :
                     .trimIndent())
 
         parsed.feedRedirect shouldBe FeedRedirect.PROXY
+        parsed.loginRedirect shouldBe LoginRedirect.FEED
         (parsed.patches.single() as BinarySignaturePatch).platforms shouldBe listOf("macos/arm64")
       }
 

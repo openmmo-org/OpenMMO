@@ -6,7 +6,10 @@ import de.fiereu.openmmo.launcher.client.POKEMMO_MIRRORS
 import de.fiereu.openmmo.launcher.client.POKEMMO_NEWS_MIRRORS
 import de.fiereu.openmmo.launcher.patch.BinaryStringPatch
 import de.fiereu.openmmo.launcher.patch.CLIENT_TARGET
+import de.fiereu.openmmo.launcher.patch.FeedRedirect
+import de.fiereu.openmmo.launcher.patch.LoginRedirect
 import de.fiereu.openmmo.launcher.patch.Patch
+import de.fiereu.openmmo.launcher.patch.PatchManifest
 import java.nio.file.Files
 import java.util.Properties
 
@@ -64,6 +67,12 @@ const val TLS_FEED_TRUST_PUBLIC = "key.tls.feed.spki"
  */
 fun loginHostPatch(): Patch =
     BinaryStringPatch(CLIENT_TARGET, "LoginHost", LOGIN_HOST_SLOT, DEAD_LOGIN_HOST)
+
+/** Redirects only the locations the selected client revision still carries in its binary. */
+fun redirectPatches(manifest: PatchManifest): List<Patch> = buildList {
+  if (manifest.feedRedirect == FeedRedirect.BINARY) addAll(feedPatches())
+  if (manifest.loginRedirect == LoginRedirect.BINARY) add(loginHostPatch())
+}
 
 fun feedTrustValues(install: ManagedInstall): Map<String, String> {
   val store = install.root.resolve(DEV_TRUSTSTORE)

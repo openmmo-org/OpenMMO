@@ -134,6 +134,13 @@ data class FilePatch(
 enum class FeedRedirect {
   @SerialName("binary") BINARY,
   @SerialName("proxy") PROXY,
+  @SerialName("manifest") MANIFEST,
+}
+
+@Serializable
+enum class LoginRedirect {
+  @SerialName("binary") BINARY,
+  @SerialName("feed") FEED,
 }
 
 private val SUPPORTED_PLATFORMS =
@@ -151,6 +158,7 @@ data class PatchManifest(
     val revision: Int,
     val patches: List<Patch>,
     @SerialName("feed_redirect") val feedRedirect: FeedRedirect = FeedRedirect.BINARY,
+    @SerialName("login_redirect") val loginRedirect: LoginRedirect = LoginRedirect.BINARY,
 )
 
 object PatchManifestParser {

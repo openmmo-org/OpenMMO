@@ -8,8 +8,11 @@ import de.fiereu.openmmo.launcher.client.ManagedInstall
 import de.fiereu.openmmo.launcher.client.Os
 import de.fiereu.openmmo.launcher.client.Platform
 import de.fiereu.openmmo.launcher.patch.BinaryStringPatch
+import de.fiereu.openmmo.launcher.patch.FeedRedirect
+import de.fiereu.openmmo.launcher.patch.LoginRedirect
 import de.fiereu.openmmo.launcher.patch.Origin
 import de.fiereu.openmmo.launcher.patch.Patch
+import de.fiereu.openmmo.launcher.patch.PatchManifest
 import de.fiereu.openmmo.launcher.patch.RuntimeTree
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
@@ -118,6 +121,18 @@ class GameLaunchTest :
         patch.find shouldBe "loginserver.pokemmo.com"
         patch.replace shouldBe DEAD_LOGIN_HOST
         patch.replace!!.length shouldBe patch.find.length
+      }
+
+      test("a feed-routed login does not require an embedded hostname") {
+        val manifest =
+            PatchManifest(
+                revision = 32898,
+                patches = listOf(loginHostPatch()),
+                feedRedirect = FeedRedirect.PROXY,
+                loginRedirect = LoginRedirect.FEED,
+            )
+
+        redirectPatches(manifest) shouldBe emptyList()
       }
 
       test("refuses a url too narrow to hold the replacement") {

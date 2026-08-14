@@ -120,6 +120,20 @@ tasks.register<JavaExec>("launcherUi") {
   maxHeapSize = "1g"
 }
 
+tasks.register<JavaExec>("launchClient") {
+  group = "application"
+  description = "Synchronizes, patches, and starts the managed client without the launcher window"
+
+  mainClass.set("de.fiereu.openmmo.launcher.launch.LaunchClientCli")
+  classpath(sourceSets.main.get().runtimeClasspath)
+  systemProperty("openmmo.manifests", layout.projectDirectory.dir("manifests").asFile.path)
+  listOf("openmmo.root", "openmmo.manifests").forEach { name ->
+    (project.findProperty(name) as String?)?.let { systemProperty(name, it) }
+  }
+  jvmArgs("--enable-native-access=ALL-UNNAMED")
+  maxHeapSize = "1g"
+}
+
 tasks.register<JavaExec>("patchClient") {
   group = "application"
   description = "Applies a patch manifest to the managed install and builds the runtime tree"

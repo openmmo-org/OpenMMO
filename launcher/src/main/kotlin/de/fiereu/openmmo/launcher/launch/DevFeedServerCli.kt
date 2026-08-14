@@ -31,7 +31,10 @@ object DevFeedServerCli {
             ?: FeedClient(HttpClient.newHttpClient()).load().main.revision
 
     val keyStore = FeedTls.keyStore()
-    val server = FeedServer(GeneratedKeys.privateKey("/feed.private.pem"), keyStore, port)
+    val server =
+        FeedServer(GeneratedKeys.privateKey("/feed.private.pem"), keyStore, port) {
+          println("  feed server  $it")
+        }
     val proxy = FeedProxy(server.port) { println("  feed proxy   $it") }
     server.publish(revision.toLong())
 

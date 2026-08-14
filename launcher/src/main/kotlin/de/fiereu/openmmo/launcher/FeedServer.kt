@@ -47,7 +47,12 @@ private val BUSY_PORTS = setOf(2106, 3000, 3306, 5000, 5432, 5900, 6379, 8000, 8
  * pointing it here is the only way to reach a local server. The native image only enables the https
  * url protocol, so plain http is not an option.
  */
-class FeedServer(private val signingKey: PrivateKey, keyStore: KeyStore, port: Int? = null) {
+class FeedServer(
+    private val signingKey: PrivateKey,
+    keyStore: KeyStore,
+    port: Int? = null,
+    private val onEvent: (String) -> Unit = {},
+) {
 
   private val server: HttpsServer = if (port == null) bind() else bind(port)
   private val certificate = FeedTls.certificate(keyStore)
@@ -108,8 +113,10 @@ class FeedServer(private val signingKey: PrivateKey, keyStore: KeyStore, port: I
         }
     exchange.use {
       if (data == null) {
+        onEvent("${it.requestMethod} ${it.requestURI} -> 404")
         it.sendResponseHeaders(404, -1)
       } else {
+        onEvent("${it.requestMethod} ${it.requestURI} -> 200 (${data.size} bytes)")
         it.sendResponseHeaders(200, data.size.toLong())
         it.responseBody.write(data)
       }

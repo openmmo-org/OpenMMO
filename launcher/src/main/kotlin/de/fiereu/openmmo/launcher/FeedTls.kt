@@ -7,11 +7,14 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.security.KeyPairGenerator
 import java.security.KeyStore
+import java.security.SecureRandom
 import java.security.cert.Certificate
 import java.security.cert.X509Certificate
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManagerFactory
 import org.bouncycastle.asn1.x500.X500Name
 import org.bouncycastle.asn1.x509.BasicConstraints
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage
@@ -111,6 +114,16 @@ object FeedTls {
         getCertificate(ALIAS) as X509Certificate
       }
 
+  fun sslContext(store: Path): SSLContext {
+    val keys = KeyStore.getInstance("PKCS12")
+    Files.newInputStream(store).use { keys.load(it, password) }
+    val managers = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+    managers.init(keys)
+    return SSLContext.getInstance("TLS").apply {
+      init(null, managers.trustManagers, SecureRandom())
+    }
+  }
+
   /**
    * Writes a trust store holding the client's usual roots plus [certificate] to [target].
    *
@@ -120,9 +133,15 @@ object FeedTls {
   fun writeTrustStore(certificate: X509Certificate, installDir: Path, target: Path): Path {
     val store = KeyStore.getInstance("PKCS12").apply { load(null, password) }
     baseRoots(installDir)?.let { base ->
-      base.aliases().asSequence().filter(base::isCertificateEntry).forEach {
-        store.setCertificateEntry(it, base.getCertificate(it))
-      }
+      base
+          .aliases()
+          .asSequence()
+          .filter(base::isCertificateEntry)
+          .filter {
+            (base.getCertificate(it) as? X509Certificate)?.subjectX500Principal !=
+                certificate.subjectX500Principal
+          }
+          .forEach { store.setCertificateEntry(it, base.getCertificate(it)) }
     }
     store.setCertificateEntry(ALIAS, certificate)
     Files.newOutputStream(target).use { store.store(it, password) }

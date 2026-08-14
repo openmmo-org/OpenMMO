@@ -1,5 +1,6 @@
 package de.fiereu.openmmo.launcher.launch
 
+import de.fiereu.openmmo.launcher.FeedTls
 import de.fiereu.openmmo.launcher.client.ClientSync
 import de.fiereu.openmmo.launcher.client.Downloader
 import de.fiereu.openmmo.launcher.client.FeedClient
@@ -7,7 +8,6 @@ import de.fiereu.openmmo.launcher.client.Feeds
 import de.fiereu.openmmo.launcher.client.ManagedInstall
 import de.fiereu.openmmo.launcher.client.Platform
 import de.fiereu.openmmo.launcher.client.SyncProgress
-import de.fiereu.openmmo.launcher.patch.FeedRedirect
 import de.fiereu.openmmo.launcher.patch.PatchAssets
 import de.fiereu.openmmo.launcher.patch.PatchEngine
 import de.fiereu.openmmo.launcher.patch.PatchManifest
@@ -51,9 +51,7 @@ class LauncherPipeline(
     sync.sync(feeds) { onStage(LaunchStage.Syncing(it)) }
 
     onStage(LaunchStage.Patching)
-    val extra =
-        if (manifest.feedRedirect == FeedRedirect.BINARY) feedPatches() + loginHostPatch()
-        else listOf(loginHostPatch())
+    val extra = redirectPatches(manifest)
     val runtime: RuntimeTree =
         PatchEngine(
                 install,
@@ -76,8 +74,14 @@ class LauncherPipeline(
       GeneratedKeys.values() +
           feedTrustValues(install) +
           (GeneratedKeys.GAME_PUBLIC to
-              ServerKeys(http, FeedOrigin.configured, GeneratedKeys.feedPublicKey())
+              ServerKeys(serverKeysHttp(), FeedOrigin.configured, GeneratedKeys.feedPublicKey())
                   .gamePublicKeyBase64())
+
+  private fun serverKeysHttp(): HttpClient {
+    if (!FeedOrigin.isLoopback) return http
+    val trustStore = install.root.resolve(DEV_TRUSTSTORE)
+    return HttpClient.newBuilder().sslContext(FeedTls.sslContext(trustStore)).build()
+  }
 
   companion object {
     fun manifestsIn(directory: Path): (Int) -> PatchManifest? = { revision ->

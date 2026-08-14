@@ -76,6 +76,7 @@ class GameLaunch(
    */
   private fun trustArguments(feedRedirect: FeedRedirect): List<String> {
     if (!FeedOrigin.isLoopback) return emptyList()
+    if (feedRedirect == FeedRedirect.MANIFEST) return emptyList()
     val trustStore = install.root.resolve(DEV_TRUSTSTORE)
     if (!Files.isRegularFile(trustStore)) {
       error("No dev trust store at $trustStore. Start the feed server with :launcher:feedServer.")
