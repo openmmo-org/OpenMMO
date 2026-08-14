@@ -2,9 +2,9 @@ package de.fiereu.openmmo.launcher.launch
 
 import de.fiereu.openmmo.launcher.FeedServer
 import de.fiereu.openmmo.launcher.FeedTls
+import de.fiereu.openmmo.launcher.client.ArchiveClient
 import de.fiereu.openmmo.launcher.client.FeedClient
 import de.fiereu.openmmo.launcher.client.ManagedInstall
-import java.net.http.HttpClient
 import java.nio.file.Path
 
 private const val ROOT_PROPERTY = "openmmo.root"
@@ -22,12 +22,15 @@ object DevFeedServerCli {
   @JvmStatic
   fun main(args: Array<String>) {
     val root = System.getProperty(ROOT_PROPERTY)?.let(Path::of) ?: ManagedInstall.defaultRoot()
+    val manifestDir =
+        System.getProperty(MANIFESTS_PROPERTY)?.let(Path::of) ?: root.resolve("manifests")
     val port = System.getProperty(PORT_PROPERTY)?.toInt() ?: DEV_FEED_PORT
     val install = ManagedInstall(root).create()
 
     val revision =
         System.getProperty(REVISION_PROPERTY)?.toInt()
-            ?: FeedClient(HttpClient.newHttpClient()).load().main.revision
+            ?: LauncherPipeline.highestSupportedRevisionIn(manifestDir)()
+            ?: FeedClient(ArchiveClient.defaultHttpClient()).load().main.revision
 
     val keyStore = FeedTls.keyStore()
     val server = FeedServer(GeneratedKeys.privateKey("/feed.private.pem"), keyStore, port)
