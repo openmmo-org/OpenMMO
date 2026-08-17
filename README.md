@@ -1,5 +1,10 @@
 # OpenMMO
 
+> **Archived:** This repository is no longer maintained. Its purpose and
+> functionality conflict with the interests of the PokeMMO developers, and
+> continuing development would require working directly against them. See the
+> [formal request](POKEMMO_REQUEST.md) that prompted this archival decision.
+
 ## ToC
 - [Description](#description)
 - [Building](#building)
