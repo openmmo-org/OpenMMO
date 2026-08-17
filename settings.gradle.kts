@@ -14,7 +14,6 @@ plugins {
 rootProject.name = "openmmo"
 
 include(":keys")
-include(":launcher")
 include(":common")
 include(":bytecodec")
 include(":common.test")
